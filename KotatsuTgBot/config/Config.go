@@ -21,14 +21,14 @@ const (
 	CONFIG_PRINT_LOG_FILE = true
 
 	// Сервер
-	CONFIG_RELEASE_SERVER_PORT          = "8005"
-	CONFIG_DEBUG_SERVERLESS_SERVER_PORT = "8006"
+	CONFIG_RELEASE_SERVER_PORT          = "(PORT)"
+	CONFIG_DEBUG_SERVERLESS_SERVER_PORT = "(PORT)""
 
 	// Отладка бота внутри
 	IS_DEBUG_BOT = false
 
 	// ID конфы техподдержки
-	CONFIG_ID_CHAT_SUPPORT = -4017367566
+	CONFIG_ID_CHAT_SUPPORT = CHAT_SUPPORT
 
 	// ===========================================================
 	// 							ROUTER CONFIG
