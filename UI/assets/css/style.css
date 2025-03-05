@@ -1,0 +1,662 @@
+/*
+	RzhevskyRobotics 2024
+	CyberneticCore Team
+	style.css
+	Author: Burdin E.A.
+*/
+
+
+* {
+    margin: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: -webkit-fill-available;
+    color: black;
+    background: white;
+    font-family: 'UbuntuThin';
+}
+
+
+/* ==== Подгружаем шрифты ==== */
+@font-face {
+    font-family: "UbuntuThin";
+    src: url('/assets/fonts/Ubuntu-Th.ttf');
+}
+
+@font-face {
+    font-family: "UbuntuBold";
+    src: url('/assets/fonts/Ubuntu-B.ttf');
+}
+
+@font-face {
+    font-family: "UbuntuRbold";
+    src: url('/assets/fonts/Ubuntu-R.ttf');
+}
+/* ==== Подгружаем шрифты ==== */
+
+
+@media only screen and (max-device-width: 480px) {
+    .main-content .box-result .box-result-content p{
+      display: none;
+    }
+}
+
+hr {
+    width: 80%;
+    color: black;
+}
+
+.main-container header {
+    margin-top: 10px;
+    height: 80px;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.main-container header h1 {
+    color: black;
+    font-size: 1.8em;
+    font-weight: 800;
+    font-family: 'UbuntuThin';
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    font-family: 'UbuntuThin';
+}
+
+.box__main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.box__main {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.box__main button {
+    margin-top: 20px;
+}
+
+
+.input__block {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.input__block input {
+    margin-top: 10px;
+
+}
+
+.input__block p {
+    font-size: 1.1em;
+}
+
+input {
+    background-color: #ffffff36;
+    border: none;
+    outline: none;
+    padding: 5px 12px;
+    transition: 0.3s;
+    color:black;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+input::placeholder {
+    color: black;
+}
+
+button {
+    background-color:  #ffffff36;
+    border: none;
+    color: black;
+    padding: 8px 18px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+button:active {
+    background-color: rgba(255, 255, 255, 0.067);
+    transform: translateY(4px);
+}
+
+.login {
+    font-weight: normal;
+    font-size: 1.1em;
+}
+
+
+.text__box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.text__box h1 {
+    font-size: 1.4em;
+}
+
+.text__box h2 {
+     margin-top: 20px;
+     font-size: 1.1em;
+}
+
+.text__box p {
+    width: 360px;
+    margin-top: 20px;
+    font-size: 0.9em;
+    text-align: center;
+
+}
+
+.admin__block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.content__box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 40px
+}
+
+.content__box h2 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.green {
+    background-color: green;
+    padding: 10px 16px;
+    width: 60px;
+    border: none;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.status-active {
+    color: green;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.status-inactive {
+    color: red;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.status-button {
+    background-color: #ff6767;
+    margin-bottom: 15px;
+    width: 170px;
+    height: 35px;
+    color: white;
+}
+
+.status-button:active {
+    background-color: #fd3a3a;
+}
+
+.red {
+    background-color: red;
+    padding: 10px 16px;
+    width: 60px;
+    text-align: center;
+    border: none;
+    font-size: 0.9em;
+}
+
+textarea {
+	background-color: transparent;
+    border: 1px white solid;
+    width: 300px;
+    height: 150px;
+}
+
+.error__admin {
+    cursor: pointer;
+    position: fixed;
+    top: 0;
+    z-index: 4;
+    left: 50%;
+    width: 280px;
+    padding: 30px;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    background-color: #FF0606;
+    box-shadow: 0 5px 15px #ff06066b;  
+    overflow-y: auto;
+    overflow-x: hidden;
+    color: white;
+    text-align: center;
+    transform: translateX(-50%);
+}
+
+.error__admin p {
+    font-size: 1.1em;
+    font-family: 'UbuntuThin';
+    font-weight: bold;
+}
+
+.error__admin button {
+    width: 150px;
+    margin-top: 15px;
+    background-color: white;
+    color: black;
+    font-family: 'UbuntuThin';
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+.error__admin.warning {
+    width: 480px;
+    color: black;
+    background-color: #ffff06;
+    box-shadow: 0 5px 15px #ffee066b;  
+}
+
+.error__admin.success {
+    background-color: #06ff1b;
+    box-shadow: 0 5px 15px #06ff066b;
+    color: black;
+}
+
+.logs-list {
+    margin-top: 20px;
+    width: 70vw;
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    border: black solid 1px;
+    overflow-y: auto; 
+}
+
+.spec_admin_content__box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 40px
+}
+
+.spec_admin_content__box h1 {
+    font-size: 1.9em;
+    margin-bottom: 20px;
+    font-family: 'UbuntuRbold';
+}
+
+.spec_admin_content__box h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    font-family: 'UbuntuBold';
+}
+
+.spec_admin_content__box h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    font-family: 'UbuntuBold';
+}
+
+.spec_admin_content__box button {
+    width: 400px;
+    background-color:  #f6ff00;
+}
+
+.spec_admin_content__box button:hover {
+    background-color:  #e4eb00;
+}
+
+.spec_admin_content__box button:active {
+    background-color:  #d8e000;
+}
+
+.spec_admin_content__box button.green {
+    background-color:  #22ff00;
+    font-size: 1.2em;
+}
+
+.spec_admin_content__box button.green:hover {
+    background-color:  #1edf00;
+}
+
+.spec_admin_content__box button.green:active {
+    background-color:  #19bb00;
+}
+
+.spec_admin_content__box button.red {
+    background-color:  #ff2b2b;
+    font-size: 1.2em;
+    color: white;
+}
+
+.spec_admin_content__box button.red:hover {
+    background-color:  #ed2828;
+}
+
+.spec_admin_content__box button.red:active {
+    background-color:  #df2626;
+}
+
+.spec_admin_content__box button.delete {
+    width: 400px;
+    color: white;
+    background-color:  #ff3333;
+}
+
+.spec_admin_content__box button.delete:hover {
+    background-color:  #ef2828;
+}
+
+.spec_admin_content__box button.delete:active {
+    background-color:  #dc1818;
+}
+
+.spec_admin_content__box input {
+    width: 300px;
+    height: 30px;
+    margin-top: 20px;
+    background-color:  #fff19495;
+    font-size: 1.2em;
+}
+
+.spec_admin_content__box select {
+    width: 430px;
+    height: 35px;
+    margin-top: 20px;
+    background-color:  #f7fd4795;
+    font-size: 1.2em;
+    color: black;
+    text-align: center;
+    border: none;
+}
+
+.spec_admin_content__box textarea {
+    border: black solid 1px;
+    width: 500px;
+    height: 200px;
+    font-size: 1.3em;
+}
+
+.request-table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    /* width: 70%; */
+    /* max-width: 1200px; */
+    background-color: transparent; /* Прозрачный фон таблицы */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+  
+.request-table th,
+.request-table td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.request-table td.tg_url {
+    cursor: pointer;
+    color: blue;
+    font-weight: bold;
+}
+  
+.request-table th {
+    background-color: transparent;
+}
+
+.dropdown {
+    position: relative;
+    margin-bottom: 15px;
+}
+  
+.dropdown-select {
+    background-color: #94baff95;
+    color: white;
+    border: none;
+    padding: 8px;
+    font-size: 16px;
+    width: 200px;
+    cursor: pointer;
+    position: relative;
+    text-align-last: center;
+}
+
+.dropdown-select option {
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+}
+  
+.div-applications-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.div-applications-form h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    font-family: 'UbuntuBold';
+}
+
+.div-applications-form p {
+    font-size: 1.2em;
+    font-family: 'UbuntuRBold';
+}
+
+.div-applications-form input {
+    margin-top: 5px !important;
+    margin-bottom: 15px;
+}
+
+.div-applications-form .dropdown {
+    margin-top: 10px;
+}
+
+.div-applications-form .textarea-user-message {
+    margin-top: 15px;
+    color: white;
+    font-size: 1.3em;
+    width: 530px !important;
+}
+
+.block__row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+#block-loading-array textarea {
+    margin-top: 30px;
+    width: 500px;
+    height: 300px;
+    color: #ffffff;
+}
+
+#block-loading-array textarea::placeholder {
+    color: white; /* Изменяем цвет текста placeholder */
+    opacity: 1; /* Убираем эффект прозрачности */
+    text-align: center;
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    text-align: center;
+}
+
+.modal-content h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    font-family: 'UbuntuRBold';
+}
+
+.modal-content-data-style {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.modal-content .row_data {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.modal-content .row_data .title-name {
+    margin-right: 10px;
+    font-weight: 700;
+}
+
+.modal-content .row_data .title-tg-id {
+    margin-left: 20px;
+    margin-right: 10px;
+    font-weight: 700;
+}
+
+.modal-content .row_data .title-participants {
+    margin-left: 20px;
+    font-weight: 900;
+    color: blue;
+    cursor: pointer;
+}
+
+.modal-content .col_data {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    border: black solid 1px;
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+.modal-content .col_data .title {
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.modal-content .col_data .title-participants {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: 900;
+    color: blue;
+    cursor: pointer;
+}
+
+.modal-content .col_data a {
+    margin-bottom: 20px;
+    font-weight: 900;
+    color: blue;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Стили для кнопки закрытия модального окна */
+#closeModalBtn:hover {
+    color: red;
+}
+
+.dropdown {
+    position: relative;
+    margin-bottom: 15px;
+}
+  
+.dropdown-select {
+    background-color: #fffd9495;
+    color: white;
+    border: none;
+    padding: 8px;
+    font-size: 16px;
+    width: 200px;
+    cursor: pointer;
+    position: relative;
+    text-align-last: center;
+}
+
+.dropdown-select option {
+    background-color: #0000004d;
+    color: white;
+}
+
+.image-preview {
+    max-width: 100px; /* Максимальная ширина превью */
+    max-height: 100px; /* Максимальная высота превью */
+    margin: 5px; /* Отступ между превью */
+}
+
+.logout {
+    background-color: #c8c8c8c0;
+}
+
+.logout:hover {
+    background-color: #d2d2d2c0;
+}
+
+.logout:active {
+    background-color: #a3a2a2c0;
+}

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html style="height: auto !important;">
+<head>
+    <title>kotatsuBot</title>
+    <meta charset="utf-8">
+    <!-- Для корректного отображения на смартфоне -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Подключаем стилевую таблицу -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/assets/image/favicon.ico" />
+    
+    <!-- Подключаем Jquery -->
+    <script type="text/javascript" src="/assets/js/jquery-3.7.0.min.js"></script>
+    
+    <!-- Подключаем библиотеки для работы с Excel -->
+    <script type="text/javascript" src="/assets/js/exceljs.min.js"></script>
+    <script type="text/javascript" src="/assets/js/FileSaver.min.js"></script>
+    
+    <!-- Подключаем библиотеку для удобной работы с форматом преобразования даты -->
+    <script type="text/javascript" src="/assets/js/moment.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    
+    <!-- Подключаем наш скрипт ядра приложения -->
+    <script type="text/javascript" src="/assets/js/core.js"></script>
+    
+    <!-- Подключаем наш скрипт -->
+    <script type="text/javascript" src="/assets/js/admin_panel.js"></script>
+</head>
+<body>
+    <!-- Главный и основной контейнер -->
+    <div class="main-container">
+
+        <header>
+            <h1 style="margin-top: 20px; margin-bottom: 20px;">Kotatsu Admin Panel</h1>
+            <button class="logout" id="button-log-out">Выйти из сессии</button>
+        </header>
+            
+        <!-- Главный контент -->
+        <div class="main-content">
+
+            <div id="box-error" class="error__admin">
+                <p></p>
+                <button id="box-message-close">Закрыть</button>
+            </div>
+
+            <!-- Модальное окно -->
+            <div id="myModal" class="modal">
+                <div class="modal-content">
+                    <!-- Контент модального окна -->
+                    <span class="close" id="closeModalBtn">&times;</span>
+                    <h2 id="modal-title"></h2>
+                    <div class="modal-content-data-style" id="modal-content-data"></div>
+                </div>
+            </div>
+
+            <div class="box__main">
+                
+                <div class="spec_admin_content__box">
+                    <h2>Получение данных</h2>
+                    <button id="button-get-club-subscribers">Показать участников клуба</button>
+                    <button id="button-get-subscribers-news-letter">Показать подписчиков рассылки</button>
+                    <button id="button-get-activities-list">Показать список мероприятий</button>
+                </div>
+
+                <hr>
+
+                <div class="spec_admin_content__box">
+                    <h2>Регистрация мероприятия</h2>
+                    <p style="font-size: 1.2em; margin-bottom: 10px; font-family: 'UbuntuRBold';">Название мероприятия</p>
+                    <input type="text" style="margin-top: 0px !important;" id="input-activity-title" placeholder="Введите название мероприятия">
+                    
+                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Дата проведения мероприятия</p>
+                    <input style="margin-top: 0px !important;" type="text" id="datetime-picker">
+                    
+                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Место проведения мероприятия</p>
+                    <input style="margin-top: 0px !important;" type="text" id="input-activity-location" placeholder="Введите место проведения">
+                    
+                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Описание мероприятия</p>
+                    <textarea id="input-activity-description" placeholder="Описание мероприятия"></textarea>
+                    
+                    <p style="margin-top: 20px; font-size: 1.2em; font-family: 'UbuntuRBold';">Картинки для мероприятия</p>
+                    <form id="myForm-images" enctype="multipart/form-data">
+                        <input style="width: 400px;" type="file" accept="image/*" id="files-activity" multiple>
+                    </form>
+                    <div id="image-preview-activity-container">
+                        
+                    </div>
+                    <button id="button-activity-create">Зарегистрировать мероприятие</button>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Отправка изображения для списка мероприятий</h2>
+                    <form id="myForm" enctype="multipart/form-data">
+                        <input style="width: 350px;" type="file" id="fileInput" accept="image/*"/>
+                    </form>
+                    <button id="button-send-file">Отправить файл</button>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Модификация данных</h2>
+                    <input type="text" id="input-user-tg-id" placeholder="ID телеграмм пользователя">
+                    <button id="button-user-exclude-club">Исключить пользователя из клуба</button>
+                    <button id="button-user-add-to-club">Добавить пользователя в клуб</button>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Отправка сообщения на рассылку</h2>
+                    <textarea id="textarea-message"></textarea>
+                    <form id="myForm-message-images" enctype="multipart/form-data">
+                        <input style="width: 400px;" type="file" accept="image/*" id="files-message" multiple>
+                    </form>
+                    <div id="image-preview-message-container">
+                        
+                    </div>
+                    <button id="button-send-message">Отправить сообщение</button>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Просмотр заявок на вступление в клуб</h2>
+
+                    <div class="dropdown">
+                        <select id="request-type" class="dropdown-select">
+                            <option value="all_users">Все пользователи</option>
+                            <option value="itmo_users">Пользователи из ИТМО</option>
+                            <option value="no_itmo_users">Пользователи не из ИТМО</option>
+                        </select>
+                    </div>
+
+                    <button id="button-get-requests-list">Посмотреть входящие заявки</button>
+                    <div id="div-requests-list">
+                        
+                    </div>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Форма обработки заявки</h2>
+                    <input id="input-del-request-id" type="text" placeholder="Введите ID заявки">
+                    <button class="green" id="button-request-approve">Одобрить</button>
+                    <button class="red" id="button-request-deny">Отклонить</button>
+                </div>
+
+                <hr style="height: 2px; background-color: #000;">
+                <div class="spec_admin_content__box">
+                    <h1>Сервисные функции</h1>
+                </div>
+                
+                <div class="spec_admin_content__box">
+                    <h2>Получение данных в JSON</h2>
+                    <button id="button-get-json-users">Получить JSON всех пользователей</button>
+                    <button id="button-get-json-activities">Получить JSON всех мероприятий</button>
+                    <button id="button-get-json-requests">Получить JSON всех заявок</button>
+                    <button style="width: 550px;" id="button-get-json-users-club-subscribers">Получить JSON всех участников клуба</button>
+                    <button style="width: 550px;" id="button-get-json-users-no-club-subscribers">Получить JSON всех, кто не подписан на клуб</button>
+                </div>
+
+                <hr>
+                <div class="spec_admin_content__box">
+                    <h2>Удаление данных</h2>
+                    <button class="delete" id="button-all-delete">ОЧИСТИТЬ БД</button>
+                    <button class="delete" id="button-user-delete">Удалить пользователей</button>
+                    <button class="delete" id="button-activity-delete">Удалить мероприятия</button>
+                </div>
+        
+            </div>
+        </div>
+    </div>
+</body>
+</html>

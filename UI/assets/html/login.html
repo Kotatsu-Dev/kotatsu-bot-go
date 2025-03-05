@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>kotatsuBot</title>
+    <meta charset="utf-8">
+
+    <!-- Для корректного отображения на смартфоне -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Подключаем стилевую таблицу -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/assets/image/favicon.ico" />
+
+    <!-- Подключаем Jquery -->
+    <script type="text/javascript" src="/assets/js/jquery-3.7.0.min.js"></script>
+    
+    <!-- Подключаем наш скрипт ядра приложения -->
+    <script type="text/javascript" src="/assets/js/core.js"></script>
+    
+    <!-- Подключаем наш скрипт -->
+    <script type="text/javascript" src="/assets/js/login.js"></script>
+</head>
+<body>
+    <!-- Главный и основной контейнер -->
+    <div class="main-container">
+
+        <!-- Надпись и кноки сверху -->
+        <header>
+        </header>
+            
+            <!-- Главный контент -->
+        <div class="main-content">
+            <div id="box-error" class="error__admin">
+                <p></p>
+                <button id="box-message-close">Закрыть</button>
+            </div>
+            
+            <div class="box__main">
+                <h1>Вход в панель управления</h1>
+                
+                <div class="spec_admin_content__box">
+                    <input type="text" id="input-login" placeholder="Введите логин">
+                    <input type="password" id="input-password" placeholder="Введите пароль">
+                    <button style="width: 150px;" id="button-login" class="login">Войти</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

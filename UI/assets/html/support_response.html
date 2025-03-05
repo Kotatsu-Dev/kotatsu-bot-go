@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Поддержка Котацу</title>
+    
+    <meta charset="utf-8">
+
+    <!-- Для корректного отображения на смартфоне -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Подключаем стилевую таблицу -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+
+    <!-- Подключаем Jquery -->
+    <script type="text/javascript" src="/assets/js/jquery-3.7.0.min.js"></script>
+    
+    <!-- Подключаем наш скрипт ядра приложения -->
+    <script type="text/javascript" src="/assets/js/core.js"></script>
+    
+    <!-- Подключаем наш скрипт -->
+    <script type="text/javascript" src="/assets/js/support_response.js"></script>
+</head>
+<body>
+<!-- Главный и основной контейнер -->
+    <div class="main-container">
+                
+            <!-- Главный контент -->
+        <div class="main-content">
+            <div id="box-error" class="error__admin">
+                <p></p>
+                <button id="box-message-close">Закрыть</button>
+            </div>
+
+            <div class="box__main">
+                <h1>Техподдержка</h1>
+                <div class="spec_admin_content__box">
+                    <h2 id="h2-answer-user" style="margin-top: 20px; margin-bottom: 20px;">Ответ пользователю</h2>
+                
+                    <h3 style="margin-top: 20px;">Введите сообщение для ответа</h3>
+                    <textarea style="margin-top: 10px; height: 400px; width: 500px; font-size: 1.4em; color: #000000;" id="textarea-support-message"></textarea>
+                    <button id="button-send-reply">Отправить ответ</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
