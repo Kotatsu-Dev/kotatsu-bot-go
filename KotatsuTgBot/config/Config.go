@@ -22,13 +22,13 @@ const (
 
 	// Сервер
 	CONFIG_RELEASE_SERVER_PORT          = "(PORT)"
-	CONFIG_DEBUG_SERVERLESS_SERVER_PORT = "(PORT)""
+	CONFIG_DEBUG_SERVERLESS_SERVER_PORT = "(PORT)"
 
 	// Отладка бота внутри
 	IS_DEBUG_BOT = false
 
 	// ID конфы техподдержки
-	CONFIG_ID_CHAT_SUPPORT = CHAT_SUPPORT
+	CONFIG_ID_CHAT_SUPPORT = -1 // CHAT_SUPPORT
 
 	// ===========================================================
 	// 							ROUTER CONFIG
