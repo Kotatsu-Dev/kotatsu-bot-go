@@ -37,7 +37,7 @@ func DB_Init() {
 func DB_Database() *gorm.DB {
 	var logLevel logger.LogLevel
 
-	if config.CONFIG_DB_IS_DEBUG {
+	if config.GetConfig().CONFIG_DB_IS_DEBUG {
 		logLevel = logger.Error
 	} else {
 		logLevel = logger.Silent
@@ -51,7 +51,8 @@ func DB_Database() *gorm.DB {
 		},
 	)
 
-	db_credentials := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", config.CONFIG_DB_HOST, config.CONFIG_DB_PORT, config.CONFIG_DB_USER, config.CONFIG_DB_NAME, config.CONFIG_DB_PASSWORD)
+	cfg := config.GetConfig()
+	db_credentials := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", cfg.CONFIG_DB_HOST, cfg.CONFIG_DB_PORT, cfg.CONFIG_DB_USER, cfg.CONFIG_DB_NAME, cfg.CONFIG_DB_PASSWORD)
 
 	db, err := gorm.Open(postgres.Open(db_credentials), &gorm.Config{
 		Logger: errorLogger,

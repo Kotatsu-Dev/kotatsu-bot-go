@@ -1,0 +1,43 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /assets/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] HEAD   /assets/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] Loaded HTML Templates (5): 
+	- 
+	- admin_panel.html
+	- index.html
+	- login.html
+	- support_response.html
+
+[GIN-debug] GET    /                         --> rr/kotatsutgbot/routes.Handler_Index (4 handlers)
+[GIN-debug] GET    /admin-panel              --> rr/kotatsutgbot/routes.Handler_AdminPanel (4 handlers)
+[GIN-debug] GET    /get-calendar-file        --> rr/kotatsutgbot/routes.Handler_GetCalendarActivities_Image_File (4 handlers)
+[GIN-debug] GET    /support-response         --> rr/kotatsutgbot/routes.Handler_SupportResponse (4 handlers)
+[GIN-debug] POST   /send-message-user        --> rr/kotatsutgbot/routes.Handler_SendMessageUser (4 handlers)
+[GIN-debug] POST   /send-message-user-from-support --> rr/kotatsutgbot/routes.Handler_SendMessageUserFromSupport (4 handlers)
+[GIN-debug] POST   /upload-file-calendar-activities --> rr/kotatsutgbot/routes.Handler_UploadFile_CalendarActivities (4 handlers)
+[GIN-debug] DELETE /all-db                   --> rr/kotatsutgbot/routes.Handler_DeleteObjects_All (4 handlers)
+[GIN-debug] GET    /api/users/               --> rr/kotatsutgbot/routes.Handler_API_Users_GetList (4 handlers)
+[GIN-debug] PUT    /api/users/               --> rr/kotatsutgbot/routes.Handler_API_Users_UpdateObject (4 handlers)
+[GIN-debug] PUT    /api/users/club-member    --> rr/kotatsutgbot/routes.Handler_API_Users_UpdateObject_ClubMember (4 handlers)
+[GIN-debug] DELETE /api/users/               --> rr/kotatsutgbot/routes.Handler_API_Users_DeleteObject_ALL (4 handlers)
+[GIN-debug] POST   /api/activities/          --> rr/kotatsutgbot/routes.Handler_API_Activities_CreateObject (4 handlers)
+[GIN-debug] GET    /api/activities/          --> rr/kotatsutgbot/routes.Handler_API_Activities_GetList (4 handlers)
+[GIN-debug] PUT    /api/activities/          --> rr/kotatsutgbot/routes.Handler_API_Activities_UpdateObject (4 handlers)
+[GIN-debug] DELETE /api/activities/          --> rr/kotatsutgbot/routes.Handler_API_Activities_DeleteObject_ALL (4 handlers)
+[GIN-debug] GET    /api/requests/            --> rr/kotatsutgbot/routes.Handler_API_Requests_GetList (4 handlers)
+[GIN-debug] PUT    /api/requests/            --> rr/kotatsutgbot/routes.Handler_API_Requests_UpdateObject (4 handlers)
+[GIN-debug] PUT    /api/requests/choice      --> rr/kotatsutgbot/routes.Handler_API_Requests_UpdateObject_Choise (4 handlers)
+[GIN-debug] DELETE /api/requests/            --> rr/kotatsutgbot/routes.Handler_API_Requests_DeleteObject_ALL (4 handlers)
+[GIN-debug] GET    /api/roulettes/           --> rr/kotatsutgbot/routes.Handler_API_AnimeRoulettes_GetList (4 handlers)
+[GIN-debug] GET    /api/roulettes/active     --> rr/kotatsutgbot/routes.Handler_API_AnimeRoulettes_GetActive (4 handlers)
+[GIN-debug] POST   /api/roulettes/           --> rr/kotatsutgbot/routes.Handler_API_AnimeRoulettes_CreateObject (4 handlers)
+[GIN-debug] PUT    /api/roulettes/           --> rr/kotatsutgbot/routes.Handler_API_AnimeRoulettes_UpdateObject (4 handlers)
+[GIN-debug] DELETE /api/roulettes/           --> rr/kotatsutgbot/routes.Handler_API_AnimeRoulettes_DeleteObject_ALL (4 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8001

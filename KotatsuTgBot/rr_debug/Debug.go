@@ -46,8 +46,8 @@ func StripANSI(text string) string {
 
 // Глвный отладочный механизм
 func PrintLOG(file_name string, parent_function string, category string, error_type string, error_message string) {
-	if config.CONFIG_PRINT_LOG {
-		if config.CONFIG_PRINT_LOG_FILE {
+	if config.GetConfig().CONFIG_PRINT_LOG {
+		if config.GetConfig().CONFIG_PRINT_LOG_FILE {
 			logPrefix := fmt.Sprintf("[FILE: %s]:[PARENT FUNCTION: %s]:[%s]: ", file_name, parent_function, category)
 
 			var coloredErrorType string

@@ -80,7 +80,7 @@ func Handler_SendMessageUser(c *gin.Context) {
 
 	opts := []bot.Option{}
 
-	b, err := bot.New(config.CONFIG_BOT_TOKEN, opts...)
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
 	if err != nil {
 		rr_debug.PrintLOG("api_static.go", "Handler_SendMessageUser", "gotgbot.NewBot", "Ошибка инициализации бота", err.Error())
 	}
@@ -192,7 +192,7 @@ func Handler_SendMessageUserFromSupport(c *gin.Context) {
 
 	opts := []bot.Option{}
 
-	b, err := bot.New(config.CONFIG_BOT_TOKEN, opts...)
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
 	if err != nil {
 		rr_debug.PrintLOG("api_static.go", "Handler_SendMessageUser", "gotgbot.NewBot", "Ошибка инициализации бота", err.Error())
 	}

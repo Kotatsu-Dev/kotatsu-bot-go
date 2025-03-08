@@ -71,7 +71,7 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 				// Обработка случая, когда Chat или From равны nil
 				return
 			} else {
-				if update.Message.Chat.ID == config.CONFIG_ID_CHAT_SUPPORT {
+				if update.Message.Chat.ID == config.GetConfig().CONFIG_ID_CHAT_SUPPORT {
 					return
 				} else {
 					db_answer_code, user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
@@ -992,7 +992,7 @@ func proccessText_InDevelopment(ctx context.Context, b *bot.Bot, update *models.
 func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 
 	params_support := &bot.SendMessageParams{
-		ChatID:    config.CONFIG_ID_CHAT_SUPPORT,
+		ChatID:    config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		ParseMode: models.ParseModeHTML,
 		LinkPreviewOptions: &models.LinkPreviewOptions{
 			IsDisabled: func(b bool) *bool { return &b }(true),
@@ -1025,7 +1025,7 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	params_support.Text = "<b>Сообщение от пользователя</b>: " + user_name + "\n" +
 		"<b>Ссылка на профиль пользователя</b>: " + profileURL + "\n" +
 		"<b>Текст обращения</b>: " + update.Message.Text + "\n" +
-		"<b>Ссылка для отправки ответа</b>: " + config.CONFIG_URL_BASE + "support-response/?user_tg_id=" + user_tg_id_str + "&reference_number=" + reference_number_str
+		"<b>Ссылка для отправки ответа</b>: " + config.GetConfig().CONFIG_URL_BASE + "support-response/?user_tg_id=" + user_tg_id_str + "&reference_number=" + reference_number_str
 
 	_, err_msg := b.SendMessage(ctx, params_support)
 	if err_msg != nil {
@@ -1202,7 +1202,7 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 	}
 
 	params_support := &bot.SendMessageParams{
-		ChatID:    config.CONFIG_ID_CHAT_SUPPORT,
+		ChatID:    config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		ParseMode: models.ParseModeHTML,
 	}
 
@@ -1297,7 +1297,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 	}
 
 	params_support := &bot.SendMessageParams{
-		ChatID:    config.CONFIG_ID_CHAT_SUPPORT,
+		ChatID:    config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		ParseMode: models.ParseModeHTML,
 		LinkPreviewOptions: &models.LinkPreviewOptions{
 			IsDisabled: func(b bool) *bool { return &b }(true),

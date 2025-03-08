@@ -66,7 +66,7 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	//Проверка, JSON пришел или шляпа
 	if err != nil {
 		rr_debug.PrintLOG("api_anime_roulettes.go", "Handler_API_AnimeRoulettes_CreateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
-		if config.CONFIG_IS_DEBUG {
+		if config.GetConfig().CONFIG_IS_DEBUG {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
 		} else {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
@@ -128,7 +128,7 @@ func Handler_API_AnimeRoulettes_UpdateObject(c *gin.Context) {
 	err := c.ShouldBindJSON(&update_json)
 	if err != nil {
 		rr_debug.PrintLOG("api_anime_roulettes.go", "Handler_API_AnimeRoulettes_UpdateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
-		if config.CONFIG_IS_DEBUG {
+		if config.GetConfig().CONFIG_IS_DEBUG {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
 		} else {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)

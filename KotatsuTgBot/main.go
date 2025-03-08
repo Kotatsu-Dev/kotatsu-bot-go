@@ -29,7 +29,7 @@ func main() {
 		bot.WithDefaultHandler(BotHandler_Default),
 	}
 
-	b, err := bot.New(config.CONFIG_BOT_TOKEN, opts...)
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
 	if err != nil {
 		rr_debug.PrintLOG("main.go", "main()", "bot.New", "Ошибка инициализации бота", err.Error())
 	}

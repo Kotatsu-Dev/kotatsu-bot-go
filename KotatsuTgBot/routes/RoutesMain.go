@@ -40,7 +40,7 @@ import (
 func RunServer() {
 
 	// ЛОГ ФАЙЛ, если у нас не отладка
-	if !config.CONFIG_IS_DEBUG {
+	if !config.GetConfig().CONFIG_IS_DEBUG {
 		// Disable Console Color, you don't need console color when writing the logs to file.
 		gin.DisableConsoleColor()
 
@@ -53,7 +53,7 @@ func RunServer() {
 	r := gin.Default()
 
 	//Раздача статики для дебаг-версии
-	if config.CONFIG_IS_DEBUG_SERVERLESS {
+	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
 		r.Static("/assets", "./assets") //Для статики в режиме отладки
 		//Загружаем HTML
 		r.LoadHTMLGlob("assets/html/*")
@@ -125,12 +125,12 @@ func RunServer() {
 		}
 	}
 
-	if config.CONFIG_IS_DEBUG_SERVERLESS {
+	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
 		//Запуск сервера
-		r.Run(":" + config.CONFIG_DEBUG_SERVERLESS_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_DEBUG_SERVERLESS_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
 	} else {
 		//Запуск сервера
-		r.Run(":" + config.CONFIG_RELEASE_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_RELEASE_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
 	}
 }
 
@@ -148,7 +148,7 @@ func RunServer() {
 
 // Вывод отладочного сообщения В КОНСОЛЬ, если у нас отладка
 func LOG(message string) {
-	if config.CONFIG_IS_DEBUG {
+	if config.GetConfig().CONFIG_IS_DEBUG {
 		fmt.Println("[DEBUG]: " + message)
 	}
 }

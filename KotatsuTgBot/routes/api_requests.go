@@ -51,7 +51,7 @@ func Handler_API_Requests_UpdateObject(c *gin.Context) {
 	err := c.ShouldBindJSON(&update_json)
 	if err != nil {
 		rr_debug.PrintLOG("api_requests.go", "Handler_API_Requests_UpdateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
-		if config.CONFIG_IS_DEBUG {
+		if config.GetConfig().CONFIG_IS_DEBUG {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
 		} else {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
@@ -100,7 +100,7 @@ func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
 	err := c.ShouldBindJSON(&update_json)
 	if err != nil {
 		rr_debug.PrintLOG("api_requests.go", "Handler_API_Requests_UpdateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
-		if config.CONFIG_IS_DEBUG {
+		if config.GetConfig().CONFIG_IS_DEBUG {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
 		} else {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
@@ -130,7 +130,7 @@ func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
 
 		opts := []bot.Option{}
 
-		b, err := bot.New(config.CONFIG_BOT_TOKEN, opts...)
+		b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
 		if err != nil {
 			rr_debug.PrintLOG("api_requests.go", "Handler_API_Requests_UpdateObject_Choise", "gotgbot.NewBot", "Ошибка инициализации бота", err.Error())
 		}

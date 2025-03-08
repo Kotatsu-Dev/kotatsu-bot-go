@@ -295,7 +295,7 @@ func Answer_OK(c *gin.Context) {
 
 // Отдать файл
 func Answer_File(c *gin.Context, filepath string) {
-	if config.CONFIG_IS_DEBUG_SERVERLESS {
+	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
 		//Отдать через внутренний сервер
 		//Убираем / в начале
 		// relative_path := filepath[:1]
