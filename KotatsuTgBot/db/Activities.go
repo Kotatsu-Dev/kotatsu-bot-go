@@ -19,7 +19,7 @@ type Activity struct {
 	DateMeeting  time.Time `json:"date_meeting"`                                   // Дата проведения мероприятия
 	Description  string    `json:"description"`                                    // Описание мероприятия
 	Location     string    `json:"location"`                                       // Место проведения мероприятия
-	PathsImages  []string  `json:"paths_images"`                                   // Пути к картинкам мероприятия
+	PathsImages  []string  `json:"paths_images" gorm:"type:text[]"`                                   // Пути к картинкам мероприятия
 	Status       bool      `json:"status"`                                         // Статус мероприятия
 }
 
