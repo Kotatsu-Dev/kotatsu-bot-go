@@ -35,42 +35,30 @@ func DB_Init() {
 
 // Функция коннекта к базе данных
 func DB_Database() *gorm.DB {
+	var logLevel logger.LogLevel
+
+	if config.CONFIG_DB_IS_DEBUG {
+		logLevel = logger.Error
+	} else {
+		logLevel = logger.Silent
+	}
 
 	// Установка уровня логирования в GORM
-	noErrorLogger := logger.New(
+	errorLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
-			LogLevel: logger.Silent, // Уровень логирования: Silent, Error, Warn, Info
-		},
-	)
-
-	// Установка уровня логирования в GORM
-	yesErrorLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		logger.Config{
-			LogLevel: logger.Error, // Уровень логирования: Silent, Error, Warn, Info
+			LogLevel: logLevel,
 		},
 	)
 
 	db_credentials := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", config.CONFIG_DB_HOST, config.CONFIG_DB_PORT, config.CONFIG_DB_USER, config.CONFIG_DB_NAME, config.CONFIG_DB_PASSWORD)
 
-	if config.CONFIG_DB_IS_DEBUG {
-		db, err := gorm.Open(postgres.Open(db_credentials), &gorm.Config{
-			Logger: yesErrorLogger,
-		})
+	db, err := gorm.Open(postgres.Open(db_credentials), &gorm.Config{
+		Logger: errorLogger,
+	})
 
-		if err != nil {
-			rr_debug.PrintLOG("DB_Main.go", "DB_Database", "gorm.Open", "Ошибка соединения с БД", err.Error())
-		}
-		return db
-	} else {
-		db, err := gorm.Open(postgres.Open(db_credentials), &gorm.Config{
-			Logger: noErrorLogger,
-		})
-
-		if err != nil {
-			rr_debug.PrintLOG("DB_Main.go", "DB_Database", "gorm.Open", "Ошибка соединения с БД", err.Error())
-		}
-		return db
+	if err != nil {
+		rr_debug.PrintLOG("DB_Main.go", "DB_Database", "gorm.Open", "Ошибка соединения с БД", err.Error())
 	}
+	return db
 }
