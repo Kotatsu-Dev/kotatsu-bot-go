@@ -558,7 +558,7 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 	}
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = true
 
 	db.DB_UPDATE_User(update_user_data)
@@ -579,7 +579,7 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 	}
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = false
 	db.DB_UPDATE_User(update_user_data)
 
@@ -599,7 +599,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	}
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["step"] = config.STEP_MESSAGE_SUPPORT
 	db.DB_UPDATE_User(update_user_data)
 
@@ -646,7 +646,7 @@ func proccessText_LeaveClub(ctx context.Context, b *bot.Bot, update *models.Upda
 	}
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["step"] = config.STEP_USER_LEAVES_CLUB
 	db.DB_UPDATE_User(update_user_data)
 
@@ -1005,7 +1005,7 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	}
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["step"] = config.STEP_DEFAULT
 	db.DB_UPDATE_User(update_user_data)
 
@@ -1049,7 +1049,7 @@ func proccessStep_ITMO_EnterISU(ctx context.Context, b *bot.Bot, update *models.
 	if _, err := strconv.Atoi(update.Message.Text); err == nil {
 
 		update_user_data := make(map[string]interface{})
-		update_user_data["user_tg_id"] = current_user.ID
+		update_user_data["user_tg_id"] = current_user.UserTgID
 		update_user_data["isu"] = update.Message.Text
 
 		if action == "join_club" {
@@ -1125,7 +1125,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 		"Он необходим для оформления пропуска на территорию Университета ИТМО, в котором проходят мероприятия клуба"
 
 	update_user_data := make(map[string]interface{})
-	update_user_data["user_tg_id"] = current_user.ID
+	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["full_name"] = update.Message.Text
 
 	if action == "join_club" {

@@ -32,7 +32,7 @@ type User struct {
 	MyActivities          []*Activity `json:"my_activities" gorm:"many2many:user_activities;"` // Простой список моих мероприятий
 	LinkMyAnimeList       string      `json:"link_my_anime_list"`                              // Мой список аниме
 	MyRequest             Request     `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	AnimeRouletteID       *uint        `json:"anime_roulette_id"`
+	AnimeRouletteID       *uint       `json:"anime_roulette_id"`
 	EnigmaticTitle        string      `json:"enigmatic_title"` // Загаданная тема для аниме рулетки
 }
 
@@ -191,7 +191,7 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 	defer sqlDB.Close()
 
 	var user User
-	user_tg_id, ok := update_json["user_tg_id"].(uint)
+	user_tg_id, ok := update_json["user_tg_id"].(int64)
 	if ok {
 		db.Where("user_tg_id = ?", user_tg_id).First(&user)
 		if user.ID == 0 {
