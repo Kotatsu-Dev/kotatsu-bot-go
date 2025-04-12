@@ -17,6 +17,7 @@ package routes
 import (
 
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
@@ -108,19 +109,21 @@ func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
 		return
 	}
 
-	status, ok := update_json["status"].(int)
+	status_, ok := update_json["status"].(float64)
 	if !ok {
 		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
 		return
 	}
+	status := int(status_)
 
-	request_id, ok := update_json["request_id"].(uint)
+	request_id_, ok := update_json["request_id"].(float64)
 	if !ok {
 		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
 		return
 	}
+	request_id := uint(request_id_)
 
-	db_answer_code, user := db.DB_UPDATE_Choise_Request(update_json)
+	db_answer_code, user := db.DB_UPDATE_Choise_Request(map[string]interface{}{"status": status, "request_id": request_id})
 
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:

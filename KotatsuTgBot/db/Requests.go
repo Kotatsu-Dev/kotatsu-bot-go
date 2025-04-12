@@ -2,6 +2,7 @@ package db
 
 import (
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
@@ -165,7 +166,7 @@ func DB_UPDATE_Choise_Request(update_json map[string]interface{}) (int, *User) {
 	}
 
 	// Загрузка пользователя, связанного с заявкой
-	db.Model(&request).Association("User").Find(&user)
+	db.First(&user, request.UserID)
 
 	if status, ok := update_json["status"].(int); ok {
 		if status == 1 {
