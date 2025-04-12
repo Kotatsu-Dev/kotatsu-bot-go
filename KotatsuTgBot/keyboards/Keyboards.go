@@ -286,7 +286,7 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON) *models.I
 		row := []models.InlineKeyboardButton{
 			{
 				Text:         title,
-				CallbackData: fmt.Sprintf("ACTIVITIES::%s", activity.ID),
+				CallbackData: fmt.Sprintf("ACTIVITIES::%d", activity.ID),
 			},
 		}
 		inlineKeyboard = append(inlineKeyboard, row)
@@ -350,7 +350,7 @@ func CreateInlineKbd_MyActivitiesList(my_activities []*db.Activity) *models.Inli
 		row := []models.InlineKeyboardButton{
 			{
 				Text:         title,
-				CallbackData: fmt.Sprintf("MY_ACTIVITIES::%s", activity.ID),
+				CallbackData: fmt.Sprintf("MY_ACTIVITIES::%d", activity.ID),
 			},
 		}
 		inlineKeyboard = append(inlineKeyboard, row)
@@ -369,7 +369,7 @@ func CreateInlineKbd_SubscribeActivity(activity_id int) *models.InlineKeyboardMa
 	row := []models.InlineKeyboardButton{
 		{
 			Text:         "✅ Записаться на мероприятие",
-			CallbackData: fmt.Sprintf("ACTIVITY_SUBSCRIBE::%s", activity_id),
+			CallbackData: fmt.Sprintf("ACTIVITY_SUBSCRIBE::%d", activity_id),
 		},
 	}
 
@@ -388,7 +388,7 @@ func CreateInlineKbd_UnsubscribeActivity(activity_id int) *models.InlineKeyboard
 	row := []models.InlineKeyboardButton{
 		{
 			Text:         "❌ Отменить запись",
-			CallbackData: fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%s", activity_id),
+			CallbackData: fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", activity_id),
 		},
 	}
 
