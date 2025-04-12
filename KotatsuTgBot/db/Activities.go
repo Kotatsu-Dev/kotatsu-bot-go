@@ -3,6 +3,7 @@ package db
 import (
 
 	//Внутренние пакеты проекта
+	"fmt"
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
@@ -236,7 +237,7 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 
 	var activity Activity
 
-	db.First(&activity, activity_id)
+	db.Preload("Participants").First(&activity, activity_id)
 	if activity.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
@@ -246,6 +247,9 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 	if user.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
+
+	fmt.Println(user)
+	fmt.Println(activity)
 
 	// Находим индекс пользователя в массиве Participants
 	userIndex := -1
@@ -261,11 +265,7 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 		return DB_ANSWER_OBJECT_EXISTS
 	}
 
-	// Удаляем пользователя из массива Participants
-	activity.Participants = append(activity.Participants[:userIndex], activity.Participants[userIndex+1:]...)
-
-	// Сохраняем изменения в базе данных
-	db.Save(&activity)
+	db.Model(&activity).Association("Participants").Delete(user)
 
 	return DB_ANSWER_SUCCESS
 }
