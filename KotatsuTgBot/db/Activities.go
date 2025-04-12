@@ -10,17 +10,19 @@ import (
 
 	//Системные пакеты
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Activity struct {
 	gorm.Model
-	Title        string    `json:"title"`                                          // Название мероприятия
-	Participants []*User   `json:"participants" gorm:"many2many:user_activities;"` // Участники мероприятия
-	DateMeeting  time.Time `json:"date_meeting"`                                   // Дата проведения мероприятия
-	Description  string    `json:"description"`                                    // Описание мероприятия
-	Location     string    `json:"location"`                                       // Место проведения мероприятия
-	PathsImages  []string  `json:"paths_images" gorm:"type:text[]"`                                   // Пути к картинкам мероприятия
-	Status       bool      `json:"status"`                                         // Статус мероприятия
+	Title        string         `json:"title"`                                          // Название мероприятия
+	Participants []*User        `json:"participants" gorm:"many2many:user_activities;"` // Участники мероприятия
+	DateMeeting  time.Time      `json:"date_meeting"`                                   // Дата проведения мероприятия
+	Description  string         `json:"description"`                                    // Описание мероприятия
+	Location     string         `json:"location"`                                       // Место проведения мероприятия
+	PathsImages  pq.StringArray `json:"paths_images" gorm:"type:text[]"`                // Пути к картинкам мероприятия
+	Status       bool           `json:"status"`                                         // Статус мероприятия
 }
 
 type Activity_CreateJSON struct {
