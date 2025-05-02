@@ -2,11 +2,13 @@ package db
 
 import (
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	//Системные пакеты
 	"time"
@@ -31,7 +33,7 @@ type User struct {
 	TempActivityID        int         `json:"temp_activity_id"`                                // Временное хранение при записи на мероприятие
 	MyActivities          []*Activity `json:"my_activities" gorm:"many2many:user_activities;"` // Простой список моих мероприятий
 	LinkMyAnimeList       string      `json:"link_my_anime_list"`                              // Мой список аниме
-	MyRequest             Request     `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	MyRequest             *Request    `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	AnimeRouletteID       *uint       `json:"anime_roulette_id"`
 	EnigmaticTitle        string      `json:"enigmatic_title"` // Загаданная тема для аниме рулетки
 }
@@ -62,7 +64,7 @@ type User_ReadJSON struct {
 	TempActivityID        int         `json:"temp_activity_id"`
 	MyActivities          []*Activity `json:"my_activities"`
 	LinkMyAnimeList       string      `json:"link_my_anime_list"`
-	MyRequest             Request     `json:"my_request"`
+	MyRequest             *Request    `json:"my_request"`
 	EnigmaticTitle        string      `json:"enigmatic_title"`
 }
 
@@ -145,7 +147,7 @@ func DB_GET_Users() []User_ReadJSON {
 	var users []User
 
 	// Загружаем связанные сущности MyActivities
-	db.Preload("MyActivities").Find(&users)
+	db.Preload(clause.Associations).Find(&users)
 
 	users_list := make([]User_ReadJSON, 0)
 	if len(users) <= 0 {
@@ -173,6 +175,7 @@ func DB_GET_Users() []User_ReadJSON {
 			IsFilledData:          user.IsFilledData,
 			TempActivityID:        user.TempActivityID,
 			MyActivities:          user.MyActivities,
+			MyRequest:             user.MyRequest,
 			LinkMyAnimeList:       user.LinkMyAnimeList,
 			EnigmaticTitle:        user.EnigmaticTitle,
 		}
