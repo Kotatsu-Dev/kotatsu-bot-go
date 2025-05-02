@@ -1659,7 +1659,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 
 	// Список мероприятий
-	case strings.HasPrefix(update.CallbackQuery.Data, "ACTIVITIES"):
+	case strings.HasPrefix(update.CallbackQuery.Data, "ACTIVITIES"), strings.HasPrefix(update.CallbackQuery.Data, "MY_ACTIVITIES"):
 
 		b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 			CallbackQueryID: update.CallbackQuery.ID,
