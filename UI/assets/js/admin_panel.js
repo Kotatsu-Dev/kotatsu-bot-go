@@ -729,7 +729,7 @@ $(function () {
         let files = fileInput.files;
         
         for (let i = 0; i < files.length; i++) {
-          formData.append("send_images", files[i]);
+          formData.append("files[]", files[i]);
         }
 
         // Далее добавьте остальные данные в formData, как вы это сделали в вашем коде.
