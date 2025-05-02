@@ -1007,7 +1007,7 @@ function view_ActivitiesList(activities) {
         if (element.status) {
             status = "Активно"
             status_class = "status-active"
-            element_button_del = `<button class="status-button" onclick="inactiveStatusActivity('${element.id}','${element.title}')">Удалить</button>`
+            element_button_del = `<button class="status-button" onclick="inactiveStatusActivity(${element.id},'${element.title}')">Удалить</button>`
         } else {
             status = "Не активно"
             status_class = "status-inactive"
@@ -1149,7 +1149,7 @@ function inactiveStatusActivity(activity_id, activity_title) {
         
         let credentials = {
             "activity_id": activity_id,
-            "status": 1,
+            "status": false,
         };
 
         let userUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/activities", credentials, {});

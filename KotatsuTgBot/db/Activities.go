@@ -176,7 +176,8 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	defer sqlDB.Close()
 
 	var activity Activity
-	activity_id, ok := update_json["activity_id"].(uint)
+	activity_id_, ok := update_json["activity_id"].(float64)
+	activity_id := uint(activity_id_)
 	if ok {
 		db.Preload("Participants").First(&activity, activity_id)
 		if activity.ID == 0 {
