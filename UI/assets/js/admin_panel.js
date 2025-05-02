@@ -1,9 +1,8 @@
 $(function () {
 
     if(location.protocol !== "https:") {
-        location.protocol = "https:";
+        // location.protocol = "https:";
     }
-    
     // ===================================
     // 
     //                INIT
@@ -11,6 +10,54 @@ $(function () {
     // ===================================
     $("#box-error").hide();
     $("#div-requests-list").hide();
+
+    // По умолчанию отобразить первую вкладку
+    $(".tab-content").hide();
+    $("#tab1").show();
+
+    $(".tab-button").on("click", function () {
+        // Скрыть все вкладки
+        $(".tab-content").hide();
+
+        // Отобразить выбранную вкладку
+        var tabId = $(this).data("tab");
+        $("#" + tabId).show();
+
+        // Сделать активной выбранную кнопку и неактивными остальные
+        $(".tab-button").removeClass("active");
+        $(this).addClass("active");
+
+        if (tabId == "tab3") {
+            $("#image-calendar").attr("src", CONFIG_APP_URL_BASE+"get-calendar-file");
+        }
+
+        if (tabId == "tab20") {
+            let requestsGetAnimeRouletteActiveRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/roulettes/active", {}, {});
+            handler_getRequest("get_active_anime_roulette", requestsGetAnimeRouletteActiveRequest);
+
+            let anime_roulette_action = sessionStorage.getItem("action_anime_roulette");
+            if (anime_roulette_action == "create") {
+                $("#stage1-end-date-update").hide();
+                $("#stage2-end-date-update").hide();
+                $("#stage3-end-date-update").hide();
+                $("#stage4-end-date-update").hide();
+                $("#button-delete-amine-roulette").hide();
+                $("#button-get-statistic-amine-roulette").hide();
+                $('div[name="box-action-update-amine-roulette"]').hide();
+                $("#button-create-amine-roulette").show();
+            } else {
+                $("#button-create-amine-roulette").hide();
+                $("#stage1-end-date-update").show();
+                $("#stage2-end-date-update").show();
+                $("#stage3-end-date-update").show();
+                $("#stage4-end-date-update").show();
+                $("#button-get-statistic-amine-roulette").show();
+                $("#button-delete-amine-roulette").show();
+                $('div[name="box-action-update-amine-roulette"]').show();
+            }
+        }
+
+    });
 
     $(document).on('click', '#box-message-close', function () {
         $("#box-error").hide();
@@ -24,11 +71,10 @@ $(function () {
         return false;
     });
 
-    // Кнопка - Выйти из сессии
-    $("#button-log-out").on("click", function () {
-        let outSessionRequest = ajax_GET(CONFIG_APP_URL_BASE+"logout",{},{});
-        handler_getRequest("out_session", outSessionRequest);
-        return false;
+    // Создание превью файла для импута календаря
+    $('#file-calendar').on('change', function() {
+        let file = $(this)[0].files[0];
+        previewImageCalendar(file);
     });
 
     // Создание превью файлов для импута картинок в рассылке
@@ -117,13 +163,47 @@ $(function () {
 
     let is_click_input_activity_date_meeting = false;
 
+    let is_click_input_anime_roulettes_date_stage1 = false;
+    let is_click_input_anime_roulettes_date_stage2 = false;
+    let is_click_input_anime_roulettes_date_stage3 = false;
+    let is_click_input_anime_roulettes_date_stage4 = false;
+
     // Ставим сегодняшнюю дату в input
-    $("#datetime-picker").val(formatTodayDateTime());
+    $("#datetime-picker").val(formatTodayDateTime(""));
     
+    $("#datetime-picker2").val(formatTodayDateTime(""));
+    $("#datetime-picker3").val(formatTodayDateTime(""));
+    $("#datetime-picker4").val(formatTodayDateTime(""));
+    $("#datetime-picker5").val(formatTodayDateTime(""));
+
     // Регистрируем нажатие на выбор даты проведения мероприятия
     $("#datetime-picker").on("change", function () {
         // Этот код будет выполнен, когда пользователь выберет новую дату и время
         is_click_input_activity_date_meeting = true;
+    });
+
+    // Регистрируем нажатие на выбор даты 1 этапа рулетки
+    $("#datetime-picker2").on("change", function () {
+        // Этот код будет выполнен, когда пользователь выберет новую дату и время
+        is_click_input_anime_roulettes_date_stage1 = true;
+    });
+
+    // Регистрируем нажатие на выбор даты 2 этапа рулетки
+    $("#datetime-picker3").on("change", function () {
+        // Этот код будет выполнен, когда пользователь выберет новую дату и время
+        is_click_input_anime_roulettes_date_stage2 = true;
+    });
+
+    // Регистрируем нажатие на выбор даты 3 этапа рулетки
+    $("#datetime-picker4").on("change", function () {
+        // Этот код будет выполнен, когда пользователь выберет новую дату и время
+        is_click_input_anime_roulettes_date_stage3 = true;
+    });
+
+    // Регистрируем нажатие на выбор даты 4 этапа рулетки
+    $("#datetime-picker5").on("change", function () {
+        // Этот код будет выполнен, когда пользователь выберет новую дату и время
+        is_click_input_anime_roulettes_date_stage4 = true;
     });
 
     // Добавляем обработчик события "input" (когда что-то вводится в поле)
@@ -138,7 +218,7 @@ $(function () {
         $(this).val(numericValue);
     });
 
-    flatpickr("#datetime-picker", {
+    flatpickr("#datetime-picker, #datetime-picker2, #datetime-picker3, #datetime-picker4, #datetime-picker5", {
         enableTime: true,
         dateFormat: "Y-m-d H:i",
         defaultDate: "2023-09-09 12:00",
@@ -170,6 +250,13 @@ $(function () {
     $("#button-get-json-requests").on("click", function () {
         let requestsGetListRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/requests", {}, {});
         handler_getRequest("get_requests_list_json", requestsGetListRequest);
+        return false;
+    });
+
+    // Кнопка - Получить JSON рулетки
+    $("#button-get-json-anime-roulettes").on("click", function () {
+        let requestsGetListRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/roulettes", {}, {});
+        handler_getRequest("get_requests_anime_roulettes_json", requestsGetListRequest);
         return false;
     });
 
@@ -255,6 +342,8 @@ $(function () {
                                         <a href="${participant.TgURL}">${participant.TgURL}</a>
                                      </div>`;
                 }
+
+                
             });
         
             $("#modal-title").text("Подписчики мероприятия: " + activity_title);
@@ -338,14 +427,15 @@ $(function () {
     });
 
     // Кнопка - Отправить файл
-    $("#button-send-file").on("click", function () {
+    $("#button-send-calendar-file").on("click", function () {
         
         // Получить выбранный файл
-        let fileInput = $("#fileInput")[0];
+        let fileInput = $("#file-calendar")[0];
         let file = fileInput.files[0];
 
         // Проверка, что файл выбран и это изображение
         if (file && file.type.startsWith("image/")) {
+
             // Создать объект FormData и добавить файл в него
             let formData = new FormData();
             formData.append("image", file);
@@ -398,6 +488,233 @@ $(function () {
         return false;
     });
 
+    // Кнопка - Объявить аниме рулетку
+    $("#button-create-amine-roulette").on("click", function () {
+        
+        if (is_click_input_anime_roulettes_date_stage1 == false) {
+            printMessage("error", "Вы не указали конечную дату первого этапа рулетки");
+            return false;
+        }
+
+        if (is_click_input_anime_roulettes_date_stage2 == false) {
+            printMessage("error", "Вы не указали конечную дату второго этапа рулетки");
+            return false;
+        }
+
+        if (is_click_input_anime_roulettes_date_stage3 == false) {
+            printMessage("error", "Вы не указали конечную дату третьего этапа рулетки");
+            return false;
+        }
+
+        if (is_click_input_anime_roulettes_date_stage4 == false) {
+            printMessage("error", "Вы не указали конечную дату четвёртого этапа рулетки");
+            return false;
+        }
+
+        let end_date_stage1 = $("#datetime-picker2").val();
+        let end_date_stage2 = $("#datetime-picker3").val();
+        let end_date_stage3 = $("#datetime-picker4").val();
+        let end_date_stage4 = $("#datetime-picker5").val();
+
+        let credentials = {
+            "stages":
+            [
+                {
+                    "stage": 0,
+                    "end_date": end_date_stage1,
+                },
+                {
+                    "stage": 1,
+                    "end_date": end_date_stage2,
+                },
+                {
+                    "stage": 2,
+                    "end_date": end_date_stage3,
+                },
+                {
+                    "stage": 3,
+                    "end_date": end_date_stage4,
+                },
+            ]
+        }
+
+        let createAnimeRouletteRequest = ajax_JSON(CONFIG_APP_URL_BASE+"api/roulettes/", "POST", credentials, {});
+        handler_postRequest("create_anime_roulette", createAnimeRouletteRequest);
+
+        is_click_input_anime_roulettes_date_stage1 = false;
+        is_click_input_anime_roulettes_date_stage2 = false;
+        is_click_input_anime_roulettes_date_stage3 = false;
+        is_click_input_anime_roulettes_date_stage4 = false;
+        return false;
+    });
+
+    // Кнопка - Обновить дату для 1 этапа
+    $("#stage1-end-date-update").on("click", function () {
+        if (is_click_input_anime_roulettes_date_stage1 == false) {
+            printMessage("error", "Вы не указали конечную дату первого этапа рулетки");
+            return false;
+        }
+
+        let end_date_stage1 = $("#datetime-picker2").val();
+
+        let credentials = {
+            "stage_new_date": 1,
+            "stage_date":
+                {
+                    "stage": 0,
+                    "end_date": end_date_stage1,
+                }
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_stage_date1", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Обновить дату для 2 этапа
+    $("#stage2-end-date-update").on("click", function () {
+        if (is_click_input_anime_roulettes_date_stage2 == false) {
+            printMessage("error", "Вы не указали конечную дату второго этапа рулетки");
+            return false;
+        }
+
+        let end_date_stage2 = $("#datetime-picker3").val();
+
+        let credentials = {
+            "stage_new_date": 2,
+            "stage_date":
+                {
+                    "stage": 1,
+                    "end_date": end_date_stage2,
+                }
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_stage_date2", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Обновить дату для 3 этапа
+    $("#stage3-end-date-update").on("click", function () {
+        if (is_click_input_anime_roulettes_date_stage3 == false) {
+            printMessage("error", "Вы не указали конечную дату третьего этапа рулетки");
+            return false;
+        }
+
+        let end_date_stage3 = $("#datetime-picker4").val();
+
+        let credentials = {
+            "stage_new_date": 3,
+            "stage_date":
+                {
+                    "stage": 2,
+                    "end_date": end_date_stage3,
+                }
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_stage_date3", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Обновить дату для 4 этапа
+    $("#stage4-end-date-update").on("click", function () {
+        if (is_click_input_anime_roulettes_date_stage4 == false) {
+            printMessage("error", "Вы не указали конечную дату четвёртого этапа рулетки");
+            return false;
+        }
+
+        let end_date_stage4 = $("#datetime-picker5").val();
+
+        let credentials = {
+            "stage_new_date": 4,
+            "stage_date":
+                {
+                    "stage": 3,
+                    "end_date": end_date_stage4,
+                }
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_stage_date4", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Объявить тему
+    $("#button-amine-roulette-set-theme").on("click", function () {
+        let roulette_theme = $("#input-amine-roulette-theme").val();
+        if (roulette_theme == "") {
+            printMessage("error", "Вы не указали тему для рулетки");
+            return false;
+        }
+
+        let credentials = {
+            "theme": roulette_theme,
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_stage_theme", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Указать этап
+    $("#button-amine-roulette-set-stage").on("click", function () {
+        let current_stage = $("#amine-roulette-current-stage").val();
+        let current_stage_num = 0;
+
+        switch (current_stage) {
+            case "stage_1":
+                current_stage_num = 1;
+                break;
+
+            case "stage_2":
+                current_stage_num = 2;
+                break;
+
+            case "stage_3":
+                current_stage_num = 3;
+                break;
+
+            case "stage_4":
+                current_stage_num = 4;
+                break;
+        
+            default:
+                current_stage_num = 0;
+                break;
+        }
+
+        let credentials = {
+            "current_stage": current_stage_num,
+        };
+
+        let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+        handler_updateRequest("update_roulettes_current_stage", rouletteUpdateRequest);
+        return false;
+    });
+
+    // Кнопка - Отменить аниме рулетку
+    $("#button-delete-amine-roulette").on("click", function () {
+        let answer = confirm('Вы уверены что хотите отменить проведение текущей аниме рулетки?');
+        if(answer) {
+            let credentials = {
+                "status": 1,
+            };
+            let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
+            handler_updateRequest("update_roulettes_delete", rouletteUpdateRequest);
+        } else {
+            return false;
+        }
+        return false;
+    });
+
+    // Кнопка - Выгрузить статистику аниме рулетки
+    $("#button-get-statistic-amine-roulette").on("click", function () {
+        let requestsGetListRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/roulettes/active", {}, {});
+        handler_getRequest("get_requests_anime_roulettes", requestsGetListRequest);
+        return false;
+    });
+    
     // Кнопка - Отправить сообщение
     $("#button-send-message").on("click", function () {
         let message = $("#textarea-message").val();
@@ -433,7 +750,7 @@ $(function () {
             $("#button-get-requests-list").text("Получить список заявок");
             sessionStorage.setItem("list_requests", "hide");
         } else {
-            let requestsGetListRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/requests", {}, {});
+            let requestsGetListRequest = ajax_GET(CONFIG_APP_URL_BASE+"api/users", {}, {});
             handler_getRequest("get_requests_list", requestsGetListRequest);
         }
         return false;
@@ -451,7 +768,7 @@ $(function () {
             }
 
             let credentials = {
-                "request_id": request_id,
+                "request_id": parseInt(request_id),
                 "status": 1,
             };
     
@@ -523,22 +840,54 @@ $(function () {
         return false;
     });
 
+    // Кнопка Удалить рулетки
+    $("#button-anime-roulettes-delete").on("click", function () {
+        let answer = confirm('Вы уверены что хотите удалить все рулетки?');
+        if(answer) {
+            let deleteAnimeRoulettesRequest = ajax_DELETE(CONFIG_APP_URL_BASE+`api/roulettes`, {}, {});
+            handler_deleteRequest("del_anime_roulettes", deleteAnimeRoulettesRequest);
+        } else {
+            return false;
+        }
+        return false;
+    });
+
 });
 
 // -----------------------------------
 //        Misc(прочие функции)
 // -----------------------------------
-function formatTodayDateTime() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Месяц начинается с 0
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
+function formatTodayDateTime(spec_date) {
+
+    let now;
+    let year;
+    let month;
+    let day;
+    let hours;
+    let minutes;
+
+    if (spec_date != "") {
+        now = new Date(spec_date);
+        year = now.getUTCFullYear();
+        month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Месяц начинается с 0
+        day = String(now.getUTCDate()).padStart(2, '0');
+        hours = String(now.getUTCHours()).padStart(2, '0');
+        minutes = String(now.getUTCMinutes()).padStart(2, '0');
+    } else {
+        now = new Date();
+        year = now.getFullYear();
+        month = String(now.getMonth() + 1).padStart(2, '0'); // Месяц начинается с 0
+        day = String(now.getDate()).padStart(2, '0');
+        hours = String(now.getHours()).padStart(2, '0');
+        minutes = String(now.getMinutes()).padStart(2, '0');
+    }
     
-    const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
+    
+    
+    let formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
     return formattedDateTime;
 }
+
 // Форматированная сегодняшняя дата для input - date
 function formatTodayDateTimeOld() {
     // Получаем текущую дату и время
@@ -554,6 +903,16 @@ function formatTodayDateTimeOld() {
     return formattedDateTime
 }
 
+// Функция для предварительного просмотра изображения
+function previewImageCalendar(file) {
+    let reader = new FileReader();
+    reader.onload = function(event) {
+        // Устанавливаем прочитанные данные как источник для изображения
+        $("#image-calendar").attr("src", event.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
 // -----------------------------------
 //      Views(представление данных)
 // -----------------------------------
@@ -563,7 +922,7 @@ function view_ClubSubscribers(users) {
     let list_club_subscribers = "";
 
     users.forEach(function(element) {
-        if (element.IsClubMember) {
+        if (element.is_club_member) {
             club_subscribers.push(element);
         }
     });
@@ -573,9 +932,9 @@ function view_ClubSubscribers(users) {
         club_subscribers.forEach(function(club_subscriber) {
             list_club_subscribers += `<div class="row_data">
                                         <p class="title-name">Имя:</p>
-                                        <p>${club_subscriber.UserName}</p>
+                                        <p>${club_subscriber.user_name}</p>
                                         <p class="title-tg-id">Телеграмм ID:</p>
-                                        <p>${club_subscriber.UserTgID}</p>
+                                        <p>${club_subscriber.user_tg_id}</p>
                                      </div>`;
         });
 
@@ -594,7 +953,7 @@ function view_SubscribersNewsLetter(users) {
     let list_subscribers_news_letter = "";
 
     users.forEach(function(element) {
-        if (element.IsSubscribeNewsletter) {
+        if (element.is_subscribe_newsletter) {
             subscribers_news_letter.push(element);
         }
     });
@@ -604,9 +963,9 @@ function view_SubscribersNewsLetter(users) {
         subscribers_news_letter.forEach(function(club_subscriber) {
             list_subscribers_news_letter += `<div class="row_data">
                                         <p class="title-name">Имя:</p>
-                                        <p>${club_subscriber.UserName}</p>
+                                        <p>${club_subscriber.user_name}</p>
                                         <p class="title-tg-id">Телеграмм ID:</p>
-                                        <p>${club_subscriber.UserTgID}</p>
+                                        <p>${club_subscriber.user_tg_id}</p>
                                      </div>`;
         });
 
@@ -637,18 +996,18 @@ function view_ActivitiesList(activities) {
 
     activities.forEach(function(element) {
 
-        activity_date_meeting = moment(element.DateMeeting);
+        activity_date_meeting = moment(element.date_meeting);
         formatted_activity_date_meeting = activity_date_meeting.zone('+0000').format("DD.MM HH:mm");
 
         list_participants = {
-            "activity_title" : element.Title,
-            "participants" : element.Participants,
+            "activity_title" : element.title,
+            "participants" : element.participants,
         };
 
-        if (element.Status) {
+        if (element.status) {
             status = "Активно"
             status_class = "status-active"
-            element_button_del = `<button class="status-button" onclick="inactiveStatusActivity('${element.ID}','${element.Title}')">Удалить</button>`
+            element_button_del = `<button class="status-button" onclick="inactiveStatusActivity('${element.id}','${element.title}')">Удалить</button>`
         } else {
             status = "Не активно"
             status_class = "status-inactive"
@@ -659,19 +1018,19 @@ function view_ActivitiesList(activities) {
 
         list_activities += `<div class="col_data">
                                     <p class="title">Название</p>
-                                    <p>${element.Title}</p>
+                                    <p>${element.title}</p>
                                     
                                     <p class="title">Статус</p>
                                     <p class="${status_class}">${status}</p>
 
                                     <p class="title">Описание</p>
-                                    <p>${element.Description}</p>
+                                    <p>${element.description}</p>
                                     
                                     <p class="title">Дата проведения</p>
                                     <p>${formatted_activity_date_meeting}</p>
 
                                     <p class="title">Место проведения</p>
-                                    <p>${element.Location}</p>
+                                    <p>${element.location}</p>
 
                                     <p class="title-participants" onclick="getExcelTableParticipants(${x})">Подписчики</p>
                                     ${element_button_del}
@@ -712,19 +1071,19 @@ function getExcelTableParticipants(index) {
 
         participants.forEach(participant => {
             
-            if (participant.ISU == "") {
+            if (participant.isu == "") {
                 isu_str = "подписчик не из ИТМО";
             } else {
-                isu_str = participant.ISU;
+                isu_str = participant.isu;
             }
 
-            if (participant.PhoneNumber == "") {
+            if (participant.phone_number == "") {
                 phone_number = "-";
             } else {
-                phone_number = participant.PhoneNumber;
+                phone_number = participant.phone_number;
             }
 
-            full_name = participant.FullName;
+            full_name = participant.full_name;
             // first_name = full_name[1]; // Имя
             // last_name = full_name[0]; // Фамилия
 
@@ -751,6 +1110,35 @@ function getExcelTableParticipants(index) {
         });
 
         csv_ParticipantsList(list_participants, participants_array[index].activity_title);
+    }
+}
+
+// Получение
+function getExcelTableParticipantsAnimeRoulettes(data) {
+    let participants_array = data.participants;
+    if (participants_array.length == 0) {
+        printMessage("error","Никто не является участником аниме рулетки");
+    } else {
+        let list_participants = [];
+        let current_participant;
+        let x = 1;
+
+        participants_array.forEach(participant => {
+           
+            current_participant = {
+                "number": x,
+                "full_name": participant.full_name,
+                "tg_url": participant.tg_url, // WTF
+                "enigmatic_title": participant.enigmatic_title,
+                "link_my_anime_list": participant.link_my_anime_list,
+            }
+
+            list_participants.push(current_participant);
+
+            x = x + 1;
+        });
+
+        csv_ParticipantsAnimeRoulettesList(list_participants);
     }
 }
 
@@ -798,7 +1186,7 @@ function formatClubSubscribers(users) {
     let club_subscribers = [];
 
     users.forEach(element => {
-        if (element.IsClubMember) {
+        if (element.is_club_member) {
             club_subscribers.push(element);
             is_club_subscribers = true;
         }
@@ -814,15 +1202,8 @@ function formatClubSubscribers(users) {
 // Формирование списка подписчиков клуба
 function formatNoClubSubscribers(users) {
     
-    let is_no_club_subscribers = false;
-    let no_club_subscribers = [];
-
-    users.forEach(element => {
-        if (!element.IsClubMember) {
-            no_club_subscribers.push(element);
-            is_no_club_subscribers = true;
-        }
-    });
+    let no_club_subscribers = users.filter(element => !element.is_club_member);
+    let is_no_club_subscribers = no_club_subscribers.length > 0;
 
     if (is_no_club_subscribers) {
         getJSONList(no_club_subscribers);
@@ -832,8 +1213,11 @@ function formatNoClubSubscribers(users) {
 }
 
 // Формирование списка заявок
-function formatRequests(list_requests) {
-    
+function formatRequests(list_users) {
+    let list_requests = list_users
+        .filter(user => user.my_request.status === 0)
+        .map(user => ({ ...user.my_request, user_info: user }))
+
     sessionStorage.setItem("list_requests", "show");
     let request_type = $("#request-type").val();
     let list_element = "";
@@ -868,16 +1252,16 @@ function formatRequests(list_requests) {
         created_at_date = Date.parse(element.CreatedAt);
         created_at_form = CONFIG_DATE_TIME_FORMAT.format(created_at_date);
 
-        if (element.UserInfo.IsITMO) {
+        if (element.user_info.is_itmo) {
             is_itmo = "Да";
         } else {
             is_itmo = "Нет";
         }
 
-        if (element.UserInfo.SecretCode == "0") {
+        if (element.user_info.secret_code == "0") {
             secret_code = "Не имеется";
         } else {
-            secret_code = element.UserInfo.SecretCode;
+            secret_code = element.user_info.secret_code;
         }
 
         switch (request_type) {
@@ -885,44 +1269,44 @@ function formatRequests(list_requests) {
                 list_element += `<tr>
                                     <td>${element.ID}</td>
                                     <td>${created_at_form}</td>
-                                    <td>${element.UserInfo.UserTgID}</td>
+                                    <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
-                                    <td>${element.UserInfo.ISU}</td>
-                                    <td>${element.UserInfo.FullName}</td>
+                                    <td>${element.user_info.isu}</td>
+                                    <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
-                                    <td>${element.UserInfo.PhoneNumber}</td>
-                                    <td class="tg_url">${element.UserInfo.TgURL}</td>
+                                    <td>${element.user_info.phone_number}</td>
+                                    <td class="tg_url">${element.user_info.tg_url}</td>
                                 </tr>`
                 break;
         
             case "itmo_users":
-                if (element.UserInfo.IsITMO) {
+                if (element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.ID}</td>
+                                    <td>${element.id}</td>
                                     <td>${created_at_form}</td>
-                                    <td>${element.UserInfo.UserTgID}</td>
+                                    <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
-                                    <td>${element.UserInfo.ISU}</td>
-                                    <td>${element.UserInfo.FullName}</td>
+                                    <td>${element.user_info.isu}</td>
+                                    <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
-                                    <td>${element.UserInfo.PhoneNumber}</td>
-                                    <td>${element.UserInfo.TgURL}</td>
+                                    <td>${element.user_info.phone_number}</td>
+                                    <td>${element.user_info.tg_url}</td>
                                 </tr>`
                 }
                 break;
 
             case "no_itmo_users":
-                if (!element.UserInfo.IsITMO) {
+                if (!element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.ID}</td>
+                                    <td>${element.id}</td>
                                     <td>${created_at_form}</td>
-                                    <td>${element.UserInfo.UserTgID}</td>
+                                    <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
-                                    <td>${element.UserInfo.ISU}</td>
-                                    <td>${element.UserInfo.FullName}</td>
+                                    <td>${element.user_info.isu}</td>
+                                    <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
-                                    <td>${element.UserInfo.PhoneNumber}</td>
-                                    <td>${element.UserInfo.TgURL}</td>
+                                    <td>${element.user_info.phone_number}</td>
+                                    <td>${element.user_info.tg_url}</td>
                                 </tr>`
                 }
                 break;
@@ -1005,26 +1389,26 @@ function csv_ParticipantsList(object_array, activity_title){
         const numberCell = ws.getCell(index + 2, ws.getColumnKey('number').number);
         const tgUrlCell = ws.getCell(index + 2, ws.getColumnKey('tg_url').number);
         tgUrlCell.font = {
-            color: {argb: '0000FF'},    // Синий цвет
-            underline: true             // Подчеркивание
+            color: { argb: '0000FF' }, // Синий цвет
+            underline: true // Подчеркивание
         };
 
         tgUrlCell.alignment = {
-            vertical: 'middle',         // Вертикальное центрирование
-            horizontal: 'center'        // Горизонтальное центрирование
+            vertical: 'middle', // Вертикальное центрирование
+            horizontal: 'center' // Горизонтальное центрирование
         };
 
         numberCell.alignment = {
-            vertical: 'middle',         // Вертикальное центрирование
-            horizontal: 'center'        // Горизонтальное центрирование
+            vertical: 'middle', // Вертикальное центрирование
+            horizontal: 'center' // Горизонтальное центрирование
         };
     });
 
     //Делаем полужирный шрифт первой строки
     ws.getRow(1).font = { bold: true };
     ws.getRow(1).alignment = {
-        vertical: 'middle',             // Вертикальное центрирование
-        horizontal: 'center'            // Горизонтальное центрирование}
+        vertical: 'middle', // Вертикальное центрирование
+        horizontal: 'center' // Горизонтальное центрирование}
     }
     
     // Записываем в файл
@@ -1035,6 +1419,112 @@ function csv_ParticipantsList(object_array, activity_title){
             workbookName
         );
     });
+}
+
+// Создание Excel таблицы для участников аниме рулетки
+function csv_ParticipantsAnimeRoulettesList(object_array) {
+    //Массив данных для таблицы, который мы передали только что
+    let data = object_array;
+    
+    //Создаем таблицу Exel
+	let wb = new ExcelJS.Workbook();
+	
+    // Пишем тут Название таблицы
+    let workbookName = "Участники рулетки" + ".xlsx";
+
+    //Название вкладки
+    let worksheetName = "Участники рулетки";
+
+    let ws = wb.addWorksheet(worksheetName, 
+        {
+        properties: {
+            tabColor: {argb:'FFFF0000'}
+        }
+        }
+    );
+
+    ws.columns = [
+        { 
+            key: "number",
+            header: "№",
+            width: 10
+        },
+        { 
+            key: "full_name", 
+            header: "ФИО", 
+            width: 40
+        },
+        {
+            key: "tg_url", 
+            header: "Ссылка на ТГ", 
+            width: 30
+        },
+        { 
+            key: "enigmatic_title", 
+            header: "Загаданное аниме", 
+            width: 40 
+        },
+        {
+            key: "link_my_anime_list", 
+            header: "Ссылка на список аниме", 
+            width: 40
+        },
+    ];
+
+    data.forEach((participant, index) => {
+        
+        ws.addRow({
+            number: participant.number,
+            full_name: participant.full_name,
+            tg_url: { text: 'Телеграм', hyperlink: participant.tg_url},
+            enigmatic_title: participant.enigmatic_title,
+            link_my_anime_list: { text: 'Список аниме', hyperlink: participant.link_my_anime_list},
+        });
+        const numberCell = ws.getCell(index + 2, ws.getColumnKey('number').number);
+        const tgUrlCell = ws.getCell(index + 2, ws.getColumnKey('tg_url').number);
+        const linkMyAnimeListCell = ws.getCell(index + 2, ws.getColumnKey('link_my_anime_list').number);
+        tgUrlCell.font = {
+            color: { argb: '0000FF' }, // Синий цвет
+            underline: true // Подчеркивание
+        };
+
+        tgUrlCell.alignment = {
+            vertical: 'middle', // Вертикальное центрирование
+            horizontal: 'center' // Горизонтальное центрирование
+        };
+
+        linkMyAnimeListCell.font = {
+            color: { argb: '0000FF' }, // Синий цвет
+            underline: true // Подчеркивание
+        };
+
+        linkMyAnimeListCell.alignment = {
+            vertical: 'middle', // Вертикальное центрирование
+            horizontal: 'center' // Горизонтальное центрирование
+        };
+
+        numberCell.alignment = {
+            vertical: 'middle', // Вертикальное центрирование
+            horizontal: 'center' // Горизонтальное центрирование
+        };
+    });
+
+    //Делаем полужирный шрифт первой строки
+    ws.getRow(1).font = { bold: true };
+    ws.getRow(1).alignment = {
+        vertical: 'middle', // Вертикальное центрирование
+        horizontal: 'center' // Горизонтальное центрирование}
+    }
+    
+    // Записываем в файл
+    wb.xlsx.writeBuffer()
+        .then(function(buffer) {
+        saveAs(
+            new Blob([buffer], { type: "application/octet-stream" }),
+            workbookName
+        );
+    });
+    
 }
 
 // -----------------------------------
@@ -1064,12 +1554,24 @@ function handler_getRequest(request_type, request) {
                         }
                         break;
 
+                    case "get_requests_anime_roulettes_json":
+                        if (request.responseJSON.data.list_anime_roulettes == null) {
+                            printMessage("error","Ни одна рулетка не была обьявлена");
+                        } else {
+                            getJSONList(request.responseJSON.data.list_anime_roulettes);
+                        }
+                        break;
+
                     case "get_requests_list":
-                        if (request.responseJSON.data.list_requests == null) {
+                        if (request.responseJSON.data.list_users == null) {
                             printMessage("error","Ни одна заявка не была отправлена");
                         } else {
-                            formatRequests(request.responseJSON.data.list_requests);
+                            formatRequests(request.responseJSON.data.list_users);
                         }
+                        break;
+
+                    case "get_requests_anime_roulettes":
+                        getExcelTableParticipantsAnimeRoulettes(request.responseJSON.data);
                         break;
 
                     case "get_users_club_subscribers_list_json":
@@ -1119,9 +1621,29 @@ function handler_getRequest(request_type, request) {
                             view_ActivitiesList(request.responseJSON.data.list_activities);
                         }
                         break;
+                
+                    case "get_active_anime_roulette":
+                        sessionStorage.setItem("action_anime_roulette", "change");
 
-                    case "out_session":
-                        window.location.replace("/login");
+                        let data = request.responseJSON.data;
+                        $("#datetime-picker2").val(formatTodayDateTime(data.Stages[0].EndDate));
+                        $("#datetime-picker3").val(formatTodayDateTime(data.Stages[1].EndDate));
+                        $("#datetime-picker4").val(formatTodayDateTime(data.Stages[2].EndDate));
+                        $("#datetime-picker5").val(formatTodayDateTime(data.Stages[3].EndDate));
+                        
+                        break;
+                }
+                break;
+
+            case 404:
+                switch (request_type) {
+                    case "get_active_anime_roulette":
+                        sessionStorage.setItem("action_anime_roulette", "create");
+                        $("#button-create-amine-roulette").show();
+                        break;
+
+                    case "get_requests_anime_roulettes":
+                        printMessage("error","В данный момент рулетка не проводится!");
                         break;
                 }
                 break;
@@ -1152,7 +1674,12 @@ function handler_postRequest(request_type, request){
                         break;
 
                     case "send_file":
+                        $("#image-calendar").attr("src", CONFIG_APP_URL_BASE+"get-calendar-file");
                         printMessage("success","Изображение для списка мероприятий было успешно загружено!");
+                        break;
+
+                    case "create_anime_roulette":
+                        printMessage("success","Аниме рулетка успешно объявлена!");
                         break;
                 }     
                 break;
@@ -1234,6 +1761,34 @@ function handler_updateRequest(request_type, request){
                         printMessage("success","Мероприятие успешно удалено.");
                         break;
 
+                    case "update_roulettes_stage_date1":
+                        printMessage("success","Дата первого этапа рулетки успешно обновлена.");
+                        break;
+
+                    case "update_roulettes_stage_date2":
+                        printMessage("success","Дата второго этапа рулетки успешно обновлена.");
+                        break;
+
+                    case "update_roulettes_stage_date3":
+                        printMessage("success","Дата третьего этапа рулетки успешно обновлена.");
+                        break;
+
+                    case "update_roulettes_stage_date4":
+                        printMessage("success","Дата четвёртого этапа рулетки успешно обновлена.");
+                        break;
+
+                    case "update_roulettes_stage_theme":
+                        printMessage("success","Тема аниме рулетки успешно обновлена.");
+                        break;
+
+                    case "update_roulettes_current_stage":
+                        printMessage("success","Текущий этап аниме рулетки успешно обновлён.");
+                        break;
+
+                    case "update_roulettes_delete":
+                        printMessage("success","Проведение данной Аниме рулетки успешно закрыто.");
+                        break;
+
                 }     
                 break;
 
@@ -1293,6 +1848,10 @@ function handler_deleteRequest(request_type, request){
 
                     case "del_activities":
                         printMessage("success","Все мероприятия успешно удалены");
+                        break;
+
+                    case "del_anime_roulettes":
+                        printMessage("success","Все рулетки успешно удалены");
                         break;
 
                     case "del_all":

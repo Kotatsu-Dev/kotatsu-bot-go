@@ -4,7 +4,7 @@
 //  core.js - Базоваые функции и конфигурация проекта
 //
 
-const CONFIG_APP_URL_BASE = "https://bot.kotatsu.spb.ru/";
+const CONFIG_APP_URL_BASE = "/";
 
 
 const CONFIG_DATE_TIME_FORMAT = new Intl.DateTimeFormat('ru', {

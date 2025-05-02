@@ -8,7 +8,7 @@
     
     <!-- Подключаем стилевую таблицу -->
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
-    <link rel="icon" type="image/x-icon" href="/assets/image/favicon.ico" />
+
     
     <!-- Подключаем Jquery -->
     <script type="text/javascript" src="/assets/js/jquery-3.7.0.min.js"></script>
@@ -31,147 +31,234 @@
     <script type="text/javascript" src="/assets/js/admin_panel.js"></script>
 </head>
 <body>
-    <!-- Главный и основной контейнер -->
-    <div class="main-container">
+       <!-- Главный и основной контейнер -->
+       <div class="main-container">
 
-        <header>
-            <h1 style="margin-top: 20px; margin-bottom: 20px;">Kotatsu Admin Panel</h1>
-            <button class="logout" id="button-log-out">Выйти из сессии</button>
-        </header>
-            
-        <!-- Главный контент -->
-        <div class="main-content">
-
-            <div id="box-error" class="error__admin">
-                <p></p>
-                <button id="box-message-close">Закрыть</button>
-            </div>
-
-            <!-- Модальное окно -->
-            <div id="myModal" class="modal">
-                <div class="modal-content">
-                    <!-- Контент модального окна -->
-                    <span class="close" id="closeModalBtn">&times;</span>
-                    <h2 id="modal-title"></h2>
-                    <div class="modal-content-data-style" id="modal-content-data"></div>
-                </div>
-            </div>
-
-            <div class="box__main">
+            <header>
+                <h1>Kotatsu Admin Panel</h1>
+            </header>
                 
-                <div class="spec_admin_content__box">
-                    <h2>Получение данных</h2>
-                    <button id="button-get-club-subscribers">Показать участников клуба</button>
-                    <button id="button-get-subscribers-news-letter">Показать подписчиков рассылки</button>
-                    <button id="button-get-activities-list">Показать список мероприятий</button>
+            <!-- Главный контент -->
+            <div class="main-content">
+
+                <div id="box-error" class="error__admin">
+                    <p></p>
+                    <button id="box-message-close">Закрыть</button>
                 </div>
 
-                <hr>
-
-                <div class="spec_admin_content__box">
-                    <h2>Регистрация мероприятия</h2>
-                    <p style="font-size: 1.2em; margin-bottom: 10px; font-family: 'UbuntuRBold';">Название мероприятия</p>
-                    <input type="text" style="margin-top: 0px !important;" id="input-activity-title" placeholder="Введите название мероприятия">
-                    
-                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Дата проведения мероприятия</p>
-                    <input style="margin-top: 0px !important;" type="text" id="datetime-picker">
-                    
-                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Место проведения мероприятия</p>
-                    <input style="margin-top: 0px !important;" type="text" id="input-activity-location" placeholder="Введите место проведения">
-                    
-                    <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Описание мероприятия</p>
-                    <textarea id="input-activity-description" placeholder="Описание мероприятия"></textarea>
-                    
-                    <p style="margin-top: 20px; font-size: 1.2em; font-family: 'UbuntuRBold';">Картинки для мероприятия</p>
-                    <form id="myForm-images" enctype="multipart/form-data">
-                        <input style="width: 400px;" type="file" accept="image/*" id="files-activity" multiple>
-                    </form>
-                    <div id="image-preview-activity-container">
-                        
-                    </div>
-                    <button id="button-activity-create">Зарегистрировать мероприятие</button>
-                </div>
-
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Отправка изображения для списка мероприятий</h2>
-                    <form id="myForm" enctype="multipart/form-data">
-                        <input style="width: 350px;" type="file" id="fileInput" accept="image/*"/>
-                    </form>
-                    <button id="button-send-file">Отправить файл</button>
-                </div>
-
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Модификация данных</h2>
-                    <input type="text" id="input-user-tg-id" placeholder="ID телеграмм пользователя">
-                    <button id="button-user-exclude-club">Исключить пользователя из клуба</button>
-                    <button id="button-user-add-to-club">Добавить пользователя в клуб</button>
-                </div>
-
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Отправка сообщения на рассылку</h2>
-                    <textarea id="textarea-message"></textarea>
-                    <form id="myForm-message-images" enctype="multipart/form-data">
-                        <input style="width: 400px;" type="file" accept="image/*" id="files-message" multiple>
-                    </form>
-                    <div id="image-preview-message-container">
-                        
-                    </div>
-                    <button id="button-send-message">Отправить сообщение</button>
-                </div>
-
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Просмотр заявок на вступление в клуб</h2>
-
-                    <div class="dropdown">
-                        <select id="request-type" class="dropdown-select">
-                            <option value="all_users">Все пользователи</option>
-                            <option value="itmo_users">Пользователи из ИТМО</option>
-                            <option value="no_itmo_users">Пользователи не из ИТМО</option>
-                        </select>
-                    </div>
-
-                    <button id="button-get-requests-list">Посмотреть входящие заявки</button>
-                    <div id="div-requests-list">
-                        
+                <!-- Модальное окно -->
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <!-- Контент модального окна -->
+                        <span class="close" id="closeModalBtn">&times;</span>
+                        <h2 id="modal-title"></h2>
+                        <div class="modal-content-data-style" id="modal-content-data"></div>
                     </div>
                 </div>
 
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Форма обработки заявки</h2>
-                    <input id="input-del-request-id" type="text" placeholder="Введите ID заявки">
-                    <button class="green" id="button-request-approve">Одобрить</button>
-                    <button class="red" id="button-request-deny">Отклонить</button>
+                <div class="tab-container">
+                    <button class="tab-button active" data-tab="tab1">Получение данных</button>
+                    <button class="tab-button" data-tab="tab2">Регистрация мероприятия</button>
+                    <button class="tab-button" data-tab="tab3">Отправка календаря мероприятий</button>
+                    <button class="tab-button" data-tab="tab4">Управление пользователем</button>
+                    <button class="tab-button" data-tab="tab20">Управление аниме рулеткой</button>
+                    <button class="tab-button" data-tab="tab5">Отправка сообщения</button>
+                    <button class="tab-button" data-tab="tab6">Заявки на вступление</button>
+                    <button class="tab-button" data-tab="tab7">Получение данных в JSON</button>
+                    <button class="tab-button" data-tab="tab8">Удаление данных</button>
                 </div>
 
-                <hr style="height: 2px; background-color: #000;">
-                <div class="spec_admin_content__box">
-                    <h1>Сервисные функции</h1>
-                </div>
-                
-                <div class="spec_admin_content__box">
-                    <h2>Получение данных в JSON</h2>
-                    <button id="button-get-json-users">Получить JSON всех пользователей</button>
-                    <button id="button-get-json-activities">Получить JSON всех мероприятий</button>
-                    <button id="button-get-json-requests">Получить JSON всех заявок</button>
-                    <button style="width: 550px;" id="button-get-json-users-club-subscribers">Получить JSON всех участников клуба</button>
-                    <button style="width: 550px;" id="button-get-json-users-no-club-subscribers">Получить JSON всех, кто не подписан на клуб</button>
-                </div>
+                <div class="box__main">
+                    <div id="tab1" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Получение данных</h2>
+                            <button id="button-get-club-subscribers">Показать участников клуба</button>
+                            <button id="button-get-subscribers-news-letter">Показать подписчиков рассылки</button>
+                            <button id="button-get-activities-list">Показать список мероприятий</button>
+                        </div>
+                    </div>
+                    
 
-                <hr>
-                <div class="spec_admin_content__box">
-                    <h2>Удаление данных</h2>
-                    <button class="delete" id="button-all-delete">ОЧИСТИТЬ БД</button>
-                    <button class="delete" id="button-user-delete">Удалить пользователей</button>
-                    <button class="delete" id="button-activity-delete">Удалить мероприятия</button>
+                    <div id="tab2" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Регистрация мероприятия</h2>
+                            <p style="font-size: 1.2em; margin-bottom: 10px; font-family: 'UbuntuRBold';">Название мероприятия</p>
+                            <input type="text" style="margin-top: 0px !important;" id="input-activity-title" placeholder="Введите название мероприятия">
+                            
+                            <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Дата проведения мероприятия</p>
+                            <input style="margin-top: 0px !important;" type="text" id="datetime-picker">
+                            <!-- <input style="margin-top: 0px;" type="datetime-local" id="input-activity-date-meeting" name="datetime" value="2023-09-09T12:00"> -->
+                            
+                            <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Место проведения мероприятия</p>
+                            <input style="margin-top: 0px !important;" type="text" id="input-activity-location" placeholder="Введите место проведения">
+                            
+                            <p style="margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; font-family: 'UbuntuRBold';">Описание мероприятия</p>
+                            <textarea id="input-activity-description" placeholder="Описание мероприятия"></textarea>
+                            
+                            <p style="margin-top: 20px; font-size: 1.2em; font-family: 'UbuntuRBold';">Картинки для мероприятия</p>
+                            <form id="myForm-images" enctype="multipart/form-data">
+                                <input style="width: 400px;" type="file" accept="image/*" id="files-activity" multiple>
+                            </form>
+                            <div id="image-preview-activity-container">
+                                
+                            </div>
+                            <button id="button-activity-create">Зарегистрировать мероприятие</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab3" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Отправка изображения для календаря мероприятий</h2>
+                            
+                            <div class="image-container-calendar">
+                                <img id="image-calendar" src="" alt="Изображение">
+                            </div>
+                            <form id="myForm" enctype="multipart/form-data">
+                                <input style="width: 350px;" type="file" id="file-calendar" accept="image/*"/>
+                            </form>
+                            <button id="button-send-calendar-file">Отправить файл</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab4" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Управление пользователем</h2>
+                            <input type="text" id="input-user-tg-id" placeholder="ID телеграмм пользователя">
+                            <button id="button-user-exclude-club">Исключить пользователя из клуба</button>
+                            <button id="button-user-add-to-club">Добавить пользователя в клуб</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab5" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Отправка сообщения на рассылку</h2>
+                            <textarea id="textarea-message"></textarea>
+                            <form id="myForm-message-images" enctype="multipart/form-data">
+                                <input style="width: 400px;" type="file" accept="image/*" id="files-message" multiple>
+                            </form>
+                            <div id="image-preview-message-container">
+                                
+                            </div>
+                            <button id="button-send-message">Отправить сообщение</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab6" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Просмотр заявок на вступление в клуб</h2>
+    
+                            <div class="dropdown">
+                                <select id="request-type" class="dropdown-select">
+                                    <option value="all_users">Все пользователи</option>
+                                    <option value="itmo_users">Пользователи из ИТМО</option>
+                                    <option value="no_itmo_users">Пользователи не из ИТМО</option>
+                                </select>
+                            </div>
+    
+                            <button id="button-get-requests-list">Посмотреть входящие заявки</button>
+                            <div id="div-requests-list">
+                                
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="spec_admin_content__box">
+                            <h2>Форма обработки заявки</h2>
+                            <input id="input-del-request-id" type="text" placeholder="Введите ID заявки">
+                            <button class="green" id="button-request-approve">Одобрить</button>
+                            <button class="red" id="button-request-deny">Отклонить</button>
+                        </div>
+                    </div>
+
+                    <div id="tab7" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Получение данных в JSON</h2>
+                            <button id="button-get-json-users">Получить JSON всех пользователей</button>
+                            <button id="button-get-json-activities">Получить JSON всех мероприятий</button>
+                            <button id="button-get-json-anime-roulettes">Получить JSON рулетки</button>
+                            <button id="button-get-json-requests">Получить JSON всех заявок</button>
+                            <button style="width: 550px;" id="button-get-json-users-club-subscribers">Получить JSON всех участников клуба</button>
+                            <button style="width: 550px;" id="button-get-json-users-no-club-subscribers">Получить JSON всех, кто не подписан на клуб</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab8" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Удаление данных</h2>
+                            <button class="delete" id="button-all-delete">ОЧИСТИТЬ БД</button>
+                            <button class="delete" id="button-user-delete">Удалить всех пользователей</button>
+                            <button class="delete" id="button-activity-delete">Удалить все мероприятия</button>
+                            <button class="delete" id="button-anime-roulettes-delete">Удалить все рулетки</button>
+                        </div>
+                    </div>
+
+                    <div id="tab20" class="tab-content">
+                        <div class="spec_admin_content__box">
+                            <h2>Управление рулеткой</h2>
+                            <button id="button-create-amine-roulette" class="green">Объявить аниме рулетку</button>
+                            <button id="button-delete-amine-roulette" class="red">Отменить аниме рулетку</button>
+                            <button id="button-get-statistic-amine-roulette">Выгрузить статистику аниме рулетки</button>
+                            <div id="box-amine-roulette-main-settings" class="spec_admin_content__box">
+                                <h3>Задать время окончания этапов</h3>
+                                <div class="block__row">
+                                    <div class="amine-roulette-stages-settings">
+                                        <p>Этап 1 - Регистрация участников рулетки</p>
+                                        <input style="margin-top: 0px !important;" name="amine-roulette-stage1-end-date" type="text" id="datetime-picker2">
+                                        <button id="stage1-end-date-update">Обновить</button>
+                                    </div>
+                                    <div class="amine-roulette-stages-settings">
+                                        <p>Этап 2 - Публикация темы, приём названий аниме</p>
+                                        <input style="margin-top: 0px !important;" name="amine-roulette-stage2-end-date" type="text" id="datetime-picker3">
+                                        <button id="stage2-end-date-update">Обновить</button>
+                                    </div>
+                                    <div class="amine-roulette-stages-settings">
+                                        <p>Этап 3 - Обработка данных и распределение</p>
+                                        <input style="margin-top: 0px !important;" name="amine-roulette-stage3-end-date" type="text" id="datetime-picker4">
+                                        <button id="stage3-end-date-update">Обновить</button>
+                                    </div>
+                                    <div class="amine-roulette-stages-settings">
+                                        <p>Этап 4 - Завершение аниме рулетки</p>
+                                        <input style="margin-top: 0px !important;" name="amine-roulette-stage4-end-date" type="text" id="datetime-picker5">
+                                        <button id="stage4-end-date-update">Обновить</button>
+                                    </div>
+                                </div>
+                                <div class="spec_admin_content__box" name="box-action-update-amine-roulette">
+                                    <hr style="margin-top: 30px; border-width: 2px;">
+
+                                    <h3 style="margin-top: 20px;">Задать тему рулетки</h3>
+                                    <textarea id="input-amine-roulette-theme" placeholder="Напишите тему"></textarea>
+                                    <button id="button-amine-roulette-set-theme">Объявить тему</button>
+    
+                                    <hr style="margin-top: 30px; border-width: 2px;">
+                                    <h3 style="margin-top: 20px;">Указать текущий этап рулетки вручную</h3>
+                                    <div class="dropdown">
+                                        <select id="amine-roulette-current-stage" class="dropdown-select">
+                                            <option value="stage_1">Этап 1 - Регистрация</option>
+                                            <option value="stage_2">Этап 2 - Приём названий аниме</option>
+                                            <option value="stage_3">Этап 3 - Обработка данных от участников</option>
+                                            <option value="stage_4">Этап 4 - Завершение рулетки</option>
+                                        </select>
+                                    </div>
+                                    <button id="button-amine-roulette-set-stage">Указать этап</button>
+                                </div>
+                            </div>
+
+                            <div class="spec_admin_content__box" name="box-action-update-amine-roulette">
+                                <hr style="margin-top: 30px; border-width: 2px;">
+                                <h3 style="margin-top: 20px;">Разослать сообщение участникам рулетки</h3>
+                                <textarea id="textarea-amine-roulette-message"></textarea>
+                                <button id="button-amine-roulette-send-message">Отправить сообщение</button>
+    
+                                <hr style="margin-top: 30px; border-width: 2px;">
+                                <h3 style="margin-top: 20px;">Получение данных от пользователей</h3>
+                                <button style="margin-bottom: 100px;" id="button-amine-roulette-get-participants-data">Получить таблицу загаданных аниме</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-        
             </div>
         </div>
-    </div>
 </body>
 </html>

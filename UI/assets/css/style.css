@@ -1,5 +1,5 @@
 /*
-	RzhevskyRobotics 2024
+	RzhevskyRobotics 2023
 	CyberneticCore Team
 	style.css
 	Author: Burdin E.A.
@@ -35,14 +35,25 @@ body {
     font-family: "UbuntuRbold";
     src: url('/assets/fonts/Ubuntu-R.ttf');
 }
+
 /* ==== Подгружаем шрифты ==== */
 
+
+/* ========================================================= */
+/* HEADER - START                                            */
+/* ========================================================= */
+
+
+/* ==== Контейнер страницы ==== */
 
 @media only screen and (max-device-width: 480px) {
     .main-content .box-result .box-result-content p{
       display: none;
     }
+
 }
+
+/* ==== Контейнер страницы ==== */
 
 hr {
     width: 80%;
@@ -59,12 +70,16 @@ hr {
     position: relative;
 }
 
+
+/* ==== Текст сверху ==== */
 .main-container header h1 {
     color: black;
     font-size: 1.8em;
     font-weight: 800;
     font-family: 'UbuntuThin';
 }
+
+/* ==== Текст сверху ==== */
 
 .main-content {
     flex: 1;
@@ -74,6 +89,9 @@ hr {
     align-items: center;
     font-family: 'UbuntuThin';
 }
+
+
+
 
 .box__main {
     display: flex;
@@ -108,6 +126,7 @@ hr {
 .input__block p {
     font-size: 1.1em;
 }
+
 
 input {
     background-color: #ffffff36;
@@ -502,6 +521,29 @@ textarea {
     align-items: flex-start;
 }
 
+.amine-roulette-stages-settings {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.amine-roulette-stages-settings p {
+    font-family: 'UbuntuRBold';
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.amine-roulette-stages-settings button {
+    width: 200px;
+}
+
+.amine-roulette-stages-settings input {
+    width: 250px;
+}
+
 #block-loading-array textarea {
     margin-top: 30px;
     width: 500px;
@@ -649,14 +691,38 @@ textarea {
     margin: 5px; /* Отступ между превью */
 }
 
-.logout {
-    background-color: #c8c8c8c0;
+/* Стили для вкладок */
+.tab-container {
+    display: flex;
+    justify-content: center;
+    width: 90%;
 }
 
-.logout:hover {
-    background-color: #d2d2d2c0;
+.tab-button {
+    background: #fffde3;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    /* transition: background 0.3s; */
 }
 
-.logout:active {
-    background-color: #a3a2a2c0;
+.tab-button.active {
+    background: #fff97d;
+}
+
+.tab-button:hover {
+    background: #fffa9f;
+}
+
+.tab-button:active {
+    background: #fcf22c;
+}
+
+.tab-content {
+    display: none;
+}
+
+.image-container-calendar img {
+    width: 400px;
+    height: 400px;
 }
