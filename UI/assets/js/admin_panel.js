@@ -1215,7 +1215,7 @@ function formatNoClubSubscribers(users) {
 // Формирование списка заявок
 function formatRequests(list_users) {
     let list_requests = list_users
-        .filter(user => user.my_request.status === 0)
+        .filter(user => user.my_request?.status === 0)
         .map(user => ({ ...user.my_request, user_info: user }))
 
     sessionStorage.setItem("list_requests", "show");
