@@ -259,7 +259,7 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 
 		case "is_sent_request":
 			if v, ok := value.(bool); ok && v != user.IsSentRequest {
-				user.IsITMO = v
+				user.IsSentRequest = v
 			}
 
 		case "is_filled_data":

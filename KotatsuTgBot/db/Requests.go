@@ -40,7 +40,7 @@ func DB_CREATE_Request(user_id uint) int {
 	defer sqlDB.Close()
 
 	var request Request
-	db.Where("user_id = ?", request.UserID).First(&request)
+	db.Where("user_id = ?", user_id).First(&request)
 	if request.ID != 0 {
 		return DB_ANSWER_OBJECT_EXISTS
 	}
