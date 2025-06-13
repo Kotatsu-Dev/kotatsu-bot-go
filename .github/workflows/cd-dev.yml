@@ -19,20 +19,14 @@ jobs:
       - name: Build app
         run: cd KotatsuTgBot && go build -o kotatsutgbot
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Copy app to server
+        uses: appleboy/scp-action@master
         with:
-          name: kotatsutgbot
-          path: KotatsuTgBot/kotatsutgbot
-
-      # - name: Copy app to server
-      #   uses: appleboy/scp-action@master
-      #   with:
-      #     host: ${{ secrets.host }}
-      #     username: ${{ secrets.user }}
-      #     password: ${{ secrets.password }}
-      #     source: "KotatsuTgBot/kotatsutgbot"
-      #     target: "dist"
+          host: ${{ secrets.host }}
+          username: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+          source: "KotatsuTgBot/kotatsutgbot"
+          target: "/home/kotatsu-admin/dist"
 
       # - name: Deploy and rebuild on server
       #   uses: appleboy/ssh-action@master
