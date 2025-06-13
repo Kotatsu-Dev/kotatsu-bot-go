@@ -20,13 +20,8 @@ jobs:
         run: cd KotatsuTgBot && go build -o kotatsutgbot
 
       - name: Copy app to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.host }}
-          username: ${{ secrets.user }}
-          password: ${{ secrets.password }}
-          source: "KotatsuTgBot/kotatsutgbot"
-          target: "/home/kotatsu-admin/dist"
+        run: |
+          sshpass -p "${{ secrets.password }}" scp KotatsuTgBot/kotatsutgbot "${{ secrets.user }}@${{ secrets.host }}:/home/kotatsu-admin/dist"
 
       # - name: Deploy and rebuild on server
       #   uses: appleboy/ssh-action@master
