@@ -51,9 +51,6 @@ func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboa
 			{
 				{Text: news_letter_text},
 			},
-			{
-				{Text: "📟 Связаться с клубом"},
-			},
 		},
 		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
 		OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
@@ -80,7 +77,6 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 			},
 			{
 				{Text: "🚪 Покинуть клуб"},
-				{Text: "📟 Связаться с клубом"},
 			},
 		},
 		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -91,9 +87,6 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 
 var CommunicationManager = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "☎️ Связь с руководителем клуба"},
-		},
 		{
 			{Text: "⬅ Вернуться в главное меню"},
 		},
