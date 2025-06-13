@@ -19,9 +19,15 @@ jobs:
       - name: Build app
         run: cd KotatsuTgBot && go build -o kotatsutgbot
 
-      - name: Copy app to server
-        run: |
-          sshpass -p "${{ secrets.password }}" scp KotatsuTgBot/kotatsutgbot "${{ secrets.username }}@${{ secrets.host }}:/home/kotatsu-admin/dist"
+      - name: Test
+        run: 
+          echo "${{ secrets.host }}" | base64
+          echo "${{ secrets.user }}" | base64
+          echo "${{ secrets.password }}" | base64
+
+      # - name: Copy app to server
+      #   run: |
+      #     sshpass -p "${{ secrets.password }}"" scp KotatsuTgBot/kotatsutgbot ${{ secrets.user }}@${{ secrets.host }}:/home/kotatsu-admin/dist
 
       # - name: Deploy and rebuild on server
       #   uses: appleboy/ssh-action@master
