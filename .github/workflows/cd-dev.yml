@@ -29,7 +29,7 @@ jobs:
           source: "KotatsuTgBot/kotatsutgbot"
           target: "dist"
 
-      - name: Deploy and rebuild on server
+      - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.host }}
@@ -37,5 +37,5 @@ jobs:
           password: ${{ secrets.password }}
           port: ${{ secrets.port }}
           script: 
-            systemctl restart test_kotatsu_bot  &&
+            sudo systemctl restart test_kotatsu_bot  &&
             systemctl status test_kotatsu_bot
