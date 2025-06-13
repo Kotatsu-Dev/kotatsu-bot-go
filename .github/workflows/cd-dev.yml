@@ -37,6 +37,7 @@ jobs:
           password: ${{ secrets.password }}
           port: ${{ secrets.port }}
           script: 
+            sudo systemctl stop test_kotatsu_bot &&
             cp dist/KotatsuTgBot/kotatsutgbot kotatsu_bot_test/kotatsutgbot &&
-            sudo systemctl restart test_kotatsu_bot &&
+            sudo systemctl start test_kotatsu_bot &&
             systemctl status test_kotatsu_bot
