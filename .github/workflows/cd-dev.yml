@@ -21,7 +21,7 @@ jobs:
 
       - name: Copy app to server
         run: |
-          sshpass -p "${{ secrets.password }}" scp KotatsuTgBot/kotatsutgbot "${{ secrets.user }}@${{ secrets.host }}:/home/kotatsu-admin/dist"
+          sshpass -p "${{ secrets.password }}" scp KotatsuTgBot/kotatsutgbot "${{ secrets.username }}@${{ secrets.host }}:/home/kotatsu-admin/dist"
 
       # - name: Deploy and rebuild on server
       #   uses: appleboy/ssh-action@master
