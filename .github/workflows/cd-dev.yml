@@ -25,7 +25,6 @@ jobs:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
           password: ${{ secrets.password }}
-          port:
           source: "KotatsuTgBot/kotatsutgbot"
           target: "dist"
 
@@ -35,7 +34,6 @@ jobs:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
           password: ${{ secrets.password }}
-          port: ${{ secrets.port }}
           script: 
             systemctl restart test_kotatsu_bot  &&
             systemctl status test_kotatsu_bot
