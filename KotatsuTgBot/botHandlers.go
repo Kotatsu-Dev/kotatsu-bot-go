@@ -691,8 +691,8 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 				}
 			}
 
-			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
 		}
+		params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
 		params.Text = "На данный момент аниме рулетка не проводится"

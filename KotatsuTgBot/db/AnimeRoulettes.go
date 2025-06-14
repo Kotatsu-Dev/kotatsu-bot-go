@@ -6,6 +6,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/rr_debug"
 
@@ -193,8 +194,11 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 			}
 
 		case "current_stage":
-			if v, ok := value.(int); ok && v != anime_roulette.CurrentStage {
-				anime_roulette.CurrentStage = v
+			if _v, ok := value.(float64); ok {
+				v := int(_v)
+				if v != anime_roulette.CurrentStage {
+					anime_roulette.CurrentStage = v
+				}
 			}
 
 		case "theme":
@@ -230,6 +234,7 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 	}
 
 	db.Save(&anime_roulette)
+	fmt.Println(db.Error)
 	return DB_ANSWER_SUCCESS
 }
 
@@ -241,7 +246,7 @@ func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
 
-	var anime_roulette AnimeRoulette_ReadJSON
+	var anime_roulette AnimeRoulette
 
 	db.First(&anime_roulette)
 	if anime_roulette.ID == 0 {
@@ -268,7 +273,7 @@ func DB_UPDATE_AnimeRoulette_REMOVE_Participants(user_id uint) int {
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
 
-	var anime_roulette AnimeRoulette_ReadJSON
+	var anime_roulette AnimeRoulette
 
 	db.First(&anime_roulette)
 	if anime_roulette.ID == 0 {
