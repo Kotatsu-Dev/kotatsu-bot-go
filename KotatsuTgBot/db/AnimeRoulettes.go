@@ -2,6 +2,10 @@ package db
 
 import (
 	//Внутренние пакеты проекта
+
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/rr_debug"
 
@@ -14,31 +18,45 @@ import (
 
 type AnimeRoulette struct {
 	gorm.Model
-	Status       bool             `json:"status"`                   // Прошла или не прошла в целом
-	Stages       []RouletteStages `gorm:"type:jsonb" json:"stages"` // Этапы рулетки
-	CurrentStage int              `json:"current_stage"`            // Текущий этап рулетки
-	Theme        string           `json:"theme"`                    // Тема рулетки
-	Participants []User           `json:"participants"`             // Участники рулетки
+	Status       bool           `json:"status"`                   // Прошла или не прошла в целом
+	Stages       RouletteStages `gorm:"type:jsonb" json:"stages"` // Этапы рулетки
+	CurrentStage int            `json:"current_stage"`            // Текущий этап рулетки
+	Theme        string         `json:"theme"`                    // Тема рулетки
+	Participants []User         `json:"participants"`             // Участники рулетки
 }
 
-type RouletteStages struct {
+type RouletteStages []RouletteStage
+
+func (a RouletteStages) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
+func (a *RouletteStages) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &a)
+}
+
+type RouletteStage struct {
 	Stage     int       `json:"stage"`      // Этап
 	StartDate time.Time `json:"start_date"` // Дата начала этапа рулетки
 	EndDate   time.Time `json:"end_date"`   // Дата окончания этапа рулетки
 }
 
 type AnimeRoulette_CreateJSON struct {
-	Stages []RouletteStages `json:"stages"`
+	Stages []RouletteStage `json:"stages"`
 }
 
 type AnimeRoulette_ReadJSON struct {
-	ID           uint             `json:"id"`
-	CreatedAt    time.Time        `json:"created_at"`
-	Status       bool             `json:"status"`
-	Stages       []RouletteStages `json:"stages"`
-	CurrentStage int              `json:"current_stage"`
-	Theme        string           `json:"theme"`
-	Participants []User           `json:"participants"`
+	ID           uint            `json:"id"`
+	CreatedAt    time.Time       `json:"created_at"`
+	Status       bool            `json:"status"`
+	Stages       []RouletteStage `json:"stages"`
+	CurrentStage int             `json:"current_stage"`
+	Theme        string          `json:"theme"`
+	Participants []User          `json:"participants"`
 }
 
 // Добавить аниме рулетку

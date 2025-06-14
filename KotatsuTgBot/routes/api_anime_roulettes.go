@@ -83,7 +83,7 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	// Формат строки даты и времени
 	layout := "2006-01-02 15:04"
 
-	var anime_roulette_stages []db.RouletteStages
+	var anime_roulette_stages []db.RouletteStage
 
 	for index, stage := range json_data.Stages {
 		// Парсим строку в time.Time
@@ -93,7 +93,7 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 			return
 		}
 
-		current_stage := db.RouletteStages{
+		current_stage := db.RouletteStage{
 			Stage:   index,
 			EndDate: end_date_stage,
 		}
