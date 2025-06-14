@@ -1626,10 +1626,10 @@ function handler_getRequest(request_type, request) {
                         sessionStorage.setItem("action_anime_roulette", "change");
 
                         let data = request.responseJSON.data;
-                        $("#datetime-picker2").val(formatTodayDateTime(data.Stages[0].EndDate));
-                        $("#datetime-picker3").val(formatTodayDateTime(data.Stages[1].EndDate));
-                        $("#datetime-picker4").val(formatTodayDateTime(data.Stages[2].EndDate));
-                        $("#datetime-picker5").val(formatTodayDateTime(data.Stages[3].EndDate));
+                        $("#datetime-picker2").val(formatTodayDateTime(data.stages[0].end_date));
+                        $("#datetime-picker3").val(formatTodayDateTime(data.stages[1].end_date));
+                        $("#datetime-picker4").val(formatTodayDateTime(data.stages[2].end_date));
+                        $("#datetime-picker5").val(formatTodayDateTime(data.stages[3].end_date));
                         
                         break;
                 }

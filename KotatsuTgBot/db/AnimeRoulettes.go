@@ -129,6 +129,7 @@ func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) 
 		Theme:        anime_roulette.Theme,
 		Status:       anime_roulette.Status,
 		CurrentStage: anime_roulette.CurrentStage,
+		Stages:       anime_roulette.Stages,
 		Participants: anime_roulette.Participants,
 	}
 
