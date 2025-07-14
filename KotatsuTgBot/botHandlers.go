@@ -20,6 +20,7 @@ import (
 	"rr/kotatsutgbot/gen_certs"
 	"rr/kotatsutgbot/keyboards"
 	"rr/kotatsutgbot/rr_debug"
+	"time"
 
 	//Сторонние библиотеки
 	"github.com/go-telegram/bot"
@@ -674,24 +675,13 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 	case db.DB_ANSWER_SUCCESS:
 		params.Text = "Меню рулетки"
 
-		switch current_anime_roulette.CurrentStage {
-		case config.ANIME_RUOLETTE_STAGE_START_REGISTRATION:
-			for _, participant := range current_anime_roulette.Participants {
-				if current_user.UserTgID == participant.UserTgID {
-					is_participant = true
-					break
-				}
+		for _, participant := range current_anime_roulette.Participants {
+			if current_user.UserTgID == participant.UserTgID {
+				is_participant = true
+				break
 			}
-
-		default:
-			for _, participant := range current_anime_roulette.Participants {
-				if current_user.UserTgID == participant.UserTgID {
-					is_participant = true
-					break
-				}
-			}
-
 		}
+
 		params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
@@ -716,8 +706,8 @@ func processText_AnimeRoulette_Participate(ctx context.Context, b *bot.Bot, upda
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		switch current_anime_roulette.CurrentStage {
-		case config.ANIME_RUOLETTE_STAGE_START_REGISTRATION:
+		now := time.Now()
+		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
 					is_participant = true
@@ -734,8 +724,7 @@ func processText_AnimeRoulette_Participate(ctx context.Context, b *bot.Bot, upda
 			}
 
 			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
-
-		default:
+		} else {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
 					is_participant = true
@@ -815,12 +804,10 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		switch current_anime_roulette.CurrentStage {
-		case config.ANIME_RUOLETTE_STAGE_START_REGISTRATION:
+		now := time.Now()
+		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
 			params.Text = "Тема пока не выдана. Ждите."
-
-		case config.ANIME_RUOLETTE_STAGE_ANIME_GATHERING:
-
+		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
 					is_participant = true
@@ -839,10 +826,8 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 			} else {
 				params.Text = "Вы не являетесь участником рулетки."
 			}
-
-		case config.ANIME_RUOLETTE_STAGE_DATA_PROCESSING:
+		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
 			params.Text = "Сбор названий аниме закончен."
-
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
@@ -941,21 +926,18 @@ func proccessText_AnimeRoulette_MainTheme(ctx context.Context, b *bot.Bot, updat
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		switch current_anime_roulette.CurrentStage {
-		case config.ANIME_RUOLETTE_STAGE_START_REGISTRATION:
+		now := time.Now()
+		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
 			params.Text = "Тема пока не выдана. Ждите."
-
-		case config.ANIME_RUOLETTE_STAGE_ANIME_GATHERING:
+		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			if current_anime_roulette.Theme == "" {
 				params.Text = "Тему вот вот объявят"
 			} else {
 				params.Text = current_anime_roulette.Theme
 			}
-
-		case config.ANIME_RUOLETTE_STAGE_DATA_PROCESSING:
+		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
 			params.Text = "Сбор названий аниме закончен."
-
-		default:
+		} else {
 			params.Text = "Аниме рулетка была проведена. Ждите следующий раз"
 		}
 
@@ -1382,11 +1364,10 @@ func proccessStep_AnimeRoulette_EnterEnigmaticTitle(ctx context.Context, b *bot.
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		switch current_anime_roulette.CurrentStage {
-		case config.ANIME_RUOLETTE_STAGE_START_REGISTRATION:
+		now := time.Now()
+		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
 			params.Text = "Тема пока не выдана. Ждите."
-
-		case config.ANIME_RUOLETTE_STAGE_ANIME_GATHERING:
+		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
 					is_participant = true
@@ -1402,10 +1383,8 @@ func proccessStep_AnimeRoulette_EnterEnigmaticTitle(ctx context.Context, b *bot.
 			} else {
 				params.Text = "Вы не являетесь участником рулетки."
 			}
-
-		case config.ANIME_RUOLETTE_STAGE_DATA_PROCESSING:
+		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
 			params.Text = "Сбор названий аниме закончен."
-
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
