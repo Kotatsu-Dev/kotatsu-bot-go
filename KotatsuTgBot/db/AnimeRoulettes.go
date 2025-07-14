@@ -79,10 +79,10 @@ func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) in
 	}
 
 	anime_roulette = AnimeRoulette{
-		StartDate:        anime_roulette.StartDate,
-		AnnounceDate:     anime_roulette.AnnounceDate,
-		DistributionDate: anime_roulette.DistributionDate,
-		EndDate:          anime_roulette.EndDate,
+		StartDate:        anime_roulette_to_add.StartDate,
+		AnnounceDate:     anime_roulette_to_add.AnnounceDate,
+		DistributionDate: anime_roulette_to_add.DistributionDate,
+		EndDate:          anime_roulette_to_add.EndDate,
 	}
 
 	db.Save(&anime_roulette)
