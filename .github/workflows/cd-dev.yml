@@ -26,7 +26,7 @@ jobs:
           username: ${{ secrets.user }}
           password: ${{ secrets.password }}
           port: ${{ secrets.port }}
-          source: "KotatsuTgBot/kotatsutgbot"
+          source: KotatsuTgBot/kotatsutgbot,UI/
           target: "dist"
 
       - name: Deploy on server
