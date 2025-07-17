@@ -39,5 +39,6 @@ jobs:
           script: 
             sudo systemctl stop test_kotatsu_bot &&
             cp dist/KotatsuTgBot/kotatsutgbot kotatsu_bot_test/kotatsutgbot &&
+            cp -r dist/UI/assets/* kotatsu_bot_test/assets/ &&
             sudo systemctl start test_kotatsu_bot &&
             systemctl status test_kotatsu_bot
