@@ -26,13 +26,30 @@ func check_roulette(b *bot.Bot) {
 
 	db_answer_code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 
-	if db_answer_code != db.DB_ANSWER_SUCCESS {
-		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
-		return
-	}
-
 	now := time.Now()
 	a_hour_ago := now.Add(-1 * time.Hour)
+
+	if db_answer_code != db.DB_ANSWER_SUCCESS {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
+		db_answer_code, roulette = db.DB_GET_AnimeRoulette_BY_Status(false)
+		if db_answer_code != db.DB_ANSWER_SUCCESS {
+			rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Точно нет", "")
+			return
+		}
+		if roulette.EndDate.After(a_hour_ago) && roulette.EndDate.Before(now) {
+			rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рулетка закончилась", "")
+			for _, member := range roulette.Participants {
+				params := &bot.SendMessageParams{
+					ChatID: member.UserTgID,
+					Text: "[РУЛЕТКА]" + "\n" +
+						"Рулетка завершилась!",
+				}
+
+				b.SendMessage(context.TODO(), params)
+			}
+		}
+		return
+	}
 
 	if roulette.AnnounceDate.After(a_hour_ago) && roulette.AnnounceDate.Before(now) {
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Регистрация закончилась", "")
@@ -76,16 +93,5 @@ func check_roulette(b *bot.Bot) {
 			b.SendMessage(context.TODO(), params)
 		}
 
-	} else if roulette.EndDate.After(a_hour_ago) && roulette.EndDate.Before(now) {
-		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рулетка закончилась", "")
-		for _, member := range roulette.Participants {
-			params := &bot.SendMessageParams{
-				ChatID: member.UserTgID,
-				Text: "[РУЛЕТКА]" + "\n" +
-					"Рулетка завершилась!",
-			}
-
-			b.SendMessage(context.TODO(), params)
-		}
 	}
 }
