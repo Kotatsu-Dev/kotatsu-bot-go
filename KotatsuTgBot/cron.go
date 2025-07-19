@@ -22,9 +22,12 @@ func StartCron(b *bot.Bot) {
 }
 
 func check_roulette(b *bot.Bot) {
+	rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Начинаем проверку рулеток", "")
+
 	db_answer_code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 
 	if db_answer_code != db.DB_ANSWER_SUCCESS {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
 		return
 	}
 
@@ -32,6 +35,7 @@ func check_roulette(b *bot.Bot) {
 	a_hour_ago := now.Add(-1 * time.Hour)
 
 	if roulette.AnnounceDate.After(a_hour_ago) && roulette.AnnounceDate.Before(now) {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Регистрация закончилась", "")
 		for _, member := range roulette.Participants {
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
@@ -43,12 +47,14 @@ func check_roulette(b *bot.Bot) {
 			b.SendMessage(context.TODO(), params)
 		}
 	} else if roulette.DistributionDate.After(a_hour_ago) && roulette.DistributionDate.Before(now) {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Сбор названий закончился", "")
 		par := roulette.Participants
 		for i := range par {
 			j := rand.Intn(i + 1)
 			par[i], par[j] = par[j], par[i]
 		}
 
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Перемудрили участников", "")
 		roulette.Participants = par
 		res := db.DB_Database().Save(roulette)
 
@@ -57,6 +63,7 @@ func check_roulette(b *bot.Bot) {
 			return
 		}
 
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рассылаем приглашения", "")
 		for i, member := range roulette.Participants {
 			next := roulette.Participants[(i+1)%len(roulette.Participants)]
 			params := &bot.SendMessageParams{
@@ -68,7 +75,9 @@ func check_roulette(b *bot.Bot) {
 
 			b.SendMessage(context.TODO(), params)
 		}
+
 	} else if roulette.EndDate.After(a_hour_ago) && roulette.EndDate.Before(now) {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рулетка закончилась", "")
 		for _, member := range roulette.Participants {
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
