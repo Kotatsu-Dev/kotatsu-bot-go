@@ -10,6 +10,7 @@ import (
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	//Системные пакеты
@@ -18,12 +19,13 @@ import (
 
 type AnimeRoulette struct {
 	gorm.Model
-	StartDate        time.Time `json:"start_date"`        // Дата начала рулетки
-	AnnounceDate     time.Time `json:"announce_date"`     // Дата объявления темы
-	DistributionDate time.Time `json:"distribution_date"` // Дата распределения тайтлов
-	EndDate          time.Time `json:"end_date"`          // Дата окончания
-	Theme            string    `json:"theme"`             // Тема рулетки
-	Participants     []User    `json:"participants"`      // Участники рулетки
+	StartDate        time.Time      `json:"start_date"`                         // Дата начала рулетки
+	AnnounceDate     time.Time      `json:"announce_date"`                      // Дата объявления темы
+	DistributionDate time.Time      `json:"distribution_date"`                  // Дата распределения тайтлов
+	EndDate          time.Time      `json:"end_date"`                           // Дата окончания
+	Theme            string         `json:"theme"`                              // Тема рулетки
+	Participants     []User         `json:"participants"`                       // Участники рулетки
+	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"` // Распределение участников
 }
 
 type RouletteStages []RouletteStage
@@ -54,14 +56,15 @@ type AnimeRoulette_CreateJSON struct {
 }
 
 type AnimeRoulette_ReadJSON struct {
-	ID               uint      `json:"id"`
-	CreatedAt        time.Time `json:"created_at"`
-	StartDate        time.Time `json:"start_date"`
-	AnnounceDate     time.Time `json:"announce_date"`
-	DistributionDate time.Time `json:"distribution_date"`
-	EndDate          time.Time `json:"end_date"`
-	Theme            string    `json:"theme"`
-	Participants     []User    `json:"participants"`
+	ID               uint           `json:"id"`
+	CreatedAt        time.Time      `json:"created_at"`
+	StartDate        time.Time      `json:"start_date"`
+	AnnounceDate     time.Time      `json:"announce_date"`
+	DistributionDate time.Time      `json:"distribution_date"`
+	EndDate          time.Time      `json:"end_date"`
+	Theme            string         `json:"theme"`
+	Participants     []User         `json:"participants"`
+	Distribution     *pq.Int32Array `json:"distribution"`
 }
 
 // Добавить аниме рулетку

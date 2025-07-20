@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-telegram/bot"
+	"github.com/lib/pq"
 )
 
 func StartCron(b *bot.Bot) {
@@ -65,14 +66,14 @@ func check_roulette(b *bot.Bot) {
 		}
 	} else if roulette.DistributionDate.After(a_hour_ago) && roulette.DistributionDate.Before(now) {
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Сбор названий закончился", "")
-		par := roulette.Participants
-		for i := range par {
-			j := rand.Intn(i + 1)
-			par[i], par[j] = par[j], par[i]
+		distr := rand.Perm(len(roulette.Participants))
+		distr32 := make([]int32, len(distr))
+		for i := range distr {
+			distr32[i] = int32(distr[i])
 		}
 
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Перемудрили участников", "")
-		roulette.Participants = par
+		roulette.Distribution = (*pq.Int32Array)(&distr32)
 		res := db.DB_Database().Save(roulette)
 
 		if res.Error != nil {
@@ -81,8 +82,9 @@ func check_roulette(b *bot.Bot) {
 		}
 
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рассылаем приглашения", "")
-		for i, member := range roulette.Participants {
-			next := roulette.Participants[(i+1)%len(roulette.Participants)]
+		for _, j := range distr {
+			member := roulette.Participants[j]
+			next := roulette.Participants[distr[(j+1)%len(*roulette.Distribution)]]
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
 				Text: "[РУЛЕТКА]" + "\n" +
