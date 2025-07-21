@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
 	"time"
 
 	"github.com/go-telegram/bot"
-	"github.com/lib/pq"
 )
 
 func StartCron(b *bot.Bot) {
@@ -73,11 +73,10 @@ func check_roulette(b *bot.Bot) {
 		}
 
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Перемудрили участников", "")
-		roulette.Distribution = (*pq.Int32Array)(&distr32)
-		res := db.DB_Database().Save(roulette)
+		res := db.DB_UPDATE_AnimeRoulette_SET_Distribution(distr32)
 
-		if res.Error != nil {
-			rr_debug.PrintLOG("cron.go", "check_roulette", "ERROR", "Ошибка сохранения рулетки", res.Error.Error())
+		if res != db.DB_ANSWER_SUCCESS {
+			rr_debug.PrintLOG("cron.go", "check_roulette", "ERROR", "Ошибка сохранения рулетки", fmt.Sprint(res))
 			return
 		}
 

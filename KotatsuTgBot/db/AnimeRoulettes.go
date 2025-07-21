@@ -281,6 +281,25 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 	return DB_ANSWER_SUCCESS
 }
 
+func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var anime_roulette AnimeRoulette
+
+	db.First(&anime_roulette)
+	if anime_roulette.ID == 0 {
+		return DB_ANSWER_OBJECT_NOT_FOUND
+	}
+
+	anime_roulette.Distribution = (*pq.Int32Array)(&distr)
+
+	db.Save(&anime_roulette)
+	return DB_ANSWER_SUCCESS
+}
+
 // Добавляем пользователей в аниме рулетку
 func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
 
