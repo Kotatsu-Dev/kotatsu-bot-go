@@ -558,12 +558,7 @@ $(function () {
         let end_date_stage1 = $("#datetime-picker2").val();
 
         let credentials = {
-            "stage_new_date": 1,
-            "stage_date":
-                {
-                    "stage": 0,
-                    "end_date": end_date_stage1,
-                }
+            "start_date": end_date_stage1
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -581,12 +576,7 @@ $(function () {
         let end_date_stage2 = $("#datetime-picker3").val();
 
         let credentials = {
-            "stage_new_date": 2,
-            "stage_date":
-                {
-                    "stage": 1,
-                    "end_date": end_date_stage2,
-                }
+            "announce_date": end_date_stage2,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -604,12 +594,7 @@ $(function () {
         let end_date_stage3 = $("#datetime-picker4").val();
 
         let credentials = {
-            "stage_new_date": 3,
-            "stage_date":
-                {
-                    "stage": 2,
-                    "end_date": end_date_stage3,
-                }
+            "distribution_date": end_date_stage3,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -627,12 +612,7 @@ $(function () {
         let end_date_stage4 = $("#datetime-picker5").val();
 
         let credentials = {
-            "stage_new_date": 4,
-            "stage_date":
-                {
-                    "stage": 3,
-                    "end_date": end_date_stage4,
-                }
+            "end_date": end_date_stage4,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
