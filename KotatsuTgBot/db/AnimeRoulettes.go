@@ -19,13 +19,13 @@ import (
 
 type AnimeRoulette struct {
 	gorm.Model
-	StartDate        time.Time      `json:"start_date"`                         // Дата начала рулетки
-	AnnounceDate     time.Time      `json:"announce_date"`                      // Дата объявления темы
-	DistributionDate time.Time      `json:"distribution_date"`                  // Дата распределения тайтлов
-	EndDate          time.Time      `json:"end_date"`                           // Дата окончания
-	Theme            string         `json:"theme"`                              // Тема рулетки
-	Participants     []User         `json:"participants"`                       // Участники рулетки
-	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"` // Распределение участников
+	StartDate        time.Time      `json:"start_date"`                                                                   // Дата начала рулетки
+	AnnounceDate     time.Time      `json:"announce_date"`                                                                // Дата объявления темы
+	DistributionDate time.Time      `json:"distribution_date"`                                                            // Дата распределения тайтлов
+	EndDate          time.Time      `json:"end_date"`                                                                     // Дата окончания
+	Theme            string         `json:"theme"`                                                                        // Тема рулетки
+	Participants     []User         `json:"participants" gorm:"foreignKey:AnimeRouletteID;constraint:OnDelete:SET NULL;"` // Участники рулетки
+	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"`                                           // Распределение участников
 }
 
 type RouletteStages []RouletteStage
