@@ -562,10 +562,14 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = true
 
-	db.DB_UPDATE_User(update_user_data)
+	_, user := db.DB_UPDATE_User(update_user_data)
 
 	params.Text = "Ты успешно был(а) подписан(а) на нашу рассылку!"
-	params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(true)
+	if user != nil && user.IsClubMember {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(true)
+	} else {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(true)
+	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_SubscribeNewsletter", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
@@ -582,10 +586,14 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = false
-	db.DB_UPDATE_User(update_user_data)
+	_, user := db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Ты успешно был(а) подписан(а) на нашу рассылку!"
-	params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+	params.Text = "Ты успешно был(а) отписан(а) на нашу рассылку!"
+	if user != nil && user.IsClubMember {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(false)
+	} else {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_UnsubscribeNewsletter", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
