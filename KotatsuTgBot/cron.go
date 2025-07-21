@@ -83,7 +83,7 @@ func check_roulette(b *bot.Bot) {
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рассылаем приглашения", "")
 		for _, j := range distr {
 			member := roulette.Participants[j]
-			next := roulette.Participants[distr[(j+1)%len(*roulette.Distribution)]]
+			next := roulette.Participants[distr[(j+1)%len(distr)]]
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
 				Text: "[РУЛЕТКА]" + "\n" +
