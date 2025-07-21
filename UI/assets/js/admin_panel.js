@@ -1207,6 +1207,7 @@ function formatRequests(list_users) {
 
     let is_itmo = "";
     let secret_code = "";
+    let tg_url = "";
 
     let header_table = `<table class="request-table">
                     <thead>
@@ -1244,6 +1245,10 @@ function formatRequests(list_users) {
             secret_code = element.user_info.secret_code;
         }
 
+        if (element.user_info.user_name) {
+            tg_url = `https://t.me/${element.user_info.user_name}`
+        }
+
         switch (request_type) {
             case "all_users":
                 list_element += `<tr>
@@ -1255,14 +1260,14 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td class="tg_url">${element.user_info.tg_url}</td>
+                                    <td class="tg_url">${tg_url}</td>
                                 </tr>`
                 break;
         
             case "itmo_users":
                 if (element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.id}</td>
+                                    <td>${element.ID}</td>
                                     <td>${created_at_form}</td>
                                     <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
@@ -1270,7 +1275,7 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td>${element.user_info.tg_url}</td>
+                                    <td>${tg_url}</td>
                                 </tr>`
                 }
                 break;
@@ -1278,7 +1283,7 @@ function formatRequests(list_users) {
             case "no_itmo_users":
                 if (!element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.id}</td>
+                                    <td>${element.ID}</td>
                                     <td>${created_at_form}</td>
                                     <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
@@ -1286,7 +1291,7 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td>${element.user_info.tg_url}</td>
+                                    <td>${tg_url}</td>
                                 </tr>`
                 }
                 break;
