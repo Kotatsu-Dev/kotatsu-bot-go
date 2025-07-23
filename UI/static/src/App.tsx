@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Tabs } from "@chakra-ui/react";
+import "./App.css";
+import { Provider } from "./components/ui/provider";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Provider>
+      <Tabs.Root>
+        <Tabs.List maxW={"100%"} overflowX={"scroll"} scrollbarWidth={"none"}>
+          <Tabs.Trigger value="data" flexShrink={0}>
+            Data
+          </Tabs.Trigger>
+          <Tabs.Trigger value="events" flexShrink={0}>
+            Events
+          </Tabs.Trigger>
+          <Tabs.Trigger value="calendar" flexShrink={0}>
+            Calendar
+          </Tabs.Trigger>
+          <Tabs.Trigger value="users" flexShrink={0}>
+            Users
+          </Tabs.Trigger>
+          <Tabs.Trigger value="roulettes" flexShrink={0}>
+            Roulettes
+          </Tabs.Trigger>
+          <Tabs.Trigger value="messages" flexShrink={0}>
+            Messages
+          </Tabs.Trigger>
+          <Tabs.Trigger value="requests" flexShrink={0}>
+            Requests
+          </Tabs.Trigger>
+          <Tabs.Trigger value="export" flexShrink={0}>
+            Export
+          </Tabs.Trigger>
+          <Tabs.Trigger value="deletion" flexShrink={0}>
+            Deletion
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="data">Data</Tabs.Content>
+        <Tabs.Content value="events">Data</Tabs.Content>
+        <Tabs.Content value="calendar">Data</Tabs.Content>
+        <Tabs.Content value="users">Data</Tabs.Content>
+        <Tabs.Content value="roulettes">Data</Tabs.Content>
+        <Tabs.Content value="messages">Data</Tabs.Content>
+        <Tabs.Content value="requests">Data</Tabs.Content>
+        <Tabs.Content value="export">Data</Tabs.Content>
+        <Tabs.Content value="deletion">Data</Tabs.Content>
+      </Tabs.Root>
+    </Provider>
+  );
 }
 
-export default App
+export default App;
