@@ -1,14 +1,16 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { createUsersApi } from "./users";
 import axios from "axios";
+import { createUsersApi } from "./users";
+import { createActivitiesApi } from "./activities";
 
 const createApi = (_ctx: null) => {
   const $ = axios.create({
     baseURL: `https://test.bot.kotatsu.spb.ru/api/`,
   });
-  
+
   return {
     users: createUsersApi($),
+    activities: createActivitiesApi($)
   };
 };
 

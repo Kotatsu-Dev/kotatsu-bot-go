@@ -1,9 +1,12 @@
 import { useAPI } from "../api/api";
 import {
+  Badge,
   Button,
+  Card,
   Center,
   CloseButton,
   Container,
+  DataList,
   Dialog,
   Heading,
   Link,
@@ -14,6 +17,7 @@ import {
 import { toaster } from "./ui/toaster";
 import { useState } from "react";
 import type { User } from "@/api/users";
+import type { Activity } from "@/api/activities";
 
 export const DataTab = () => {
   const api = useAPI();
@@ -23,6 +27,7 @@ export const DataTab = () => {
     "members"
   );
   const [openEvents, setOpenEvents] = useState(false);
+  const [events, setEvents] = useState<Activity[]>([]);
 
   const loadClubMembers = async () => {
     const users = await api.users.getAll();
@@ -42,7 +47,7 @@ export const DataTab = () => {
     const subscribers = users.filter((user) => user.is_subscribe_newsletter);
     if (subscribers.length <= 0) {
       toaster.error({
-        description: "No members in club",
+        description: "No subscribers on newsletter",
       });
     }
     setUsers(subscribers);
@@ -51,14 +56,13 @@ export const DataTab = () => {
   };
 
   const loadEvents = async () => {
-    // const users = await api.users.getAll();
-    // const subscribers = users.filter((user) => user.is_subscribe_newsletter);
-    // if (subscribers.length <= 0) {
-    //   toaster.error({
-    //     description: "No members in club",
-    //   });
-    // }
-    // setUsers(subscribers);
+    const events = await api.activities.getAll();
+    if (events.length <= 0) {
+      toaster.error({
+        description: "No events",
+      });
+    }
+    setEvents(events);
     setOpenEvents(true);
   };
 
@@ -131,7 +135,55 @@ export const DataTab = () => {
               <Dialog.Header>
                 <Dialog.Title>Events list</Dialog.Title>
               </Dialog.Header>
-              <Dialog.Body>EVENTS</Dialog.Body>
+              <Dialog.Body>
+                {events.map((event) => (
+                  <Card.Root key={event.id}>
+                    <Card.Header>
+                      <Heading>{event.title}</Heading>
+                    </Card.Header>
+                    <Card.Body>
+                      <DataList.Root orientation={"horizontal"}>
+                        <DataList.Item>
+                          <DataList.ItemLabel>Status</DataList.ItemLabel>
+                          <DataList.ItemValue>
+                            {event.status ? (
+                              <Badge colorPalette={"green"}>Active</Badge>
+                            ) : (
+                              <Badge colorPalette={"red"}>Inactive</Badge>
+                            )}
+                          </DataList.ItemValue>
+                        </DataList.Item>
+                        <DataList.Item>
+                          <DataList.ItemLabel>Description</DataList.ItemLabel>
+                          <DataList.ItemValue>
+                            {event.description}
+                          </DataList.ItemValue>
+                        </DataList.Item>
+                        <DataList.Item>
+                          <DataList.ItemLabel>Date</DataList.ItemLabel>
+                          <DataList.ItemValue>
+                            {event.date_meeting}
+                          </DataList.ItemValue>
+                        </DataList.Item>
+                        <DataList.Item>
+                          <DataList.ItemLabel>Location</DataList.ItemLabel>
+                          <DataList.ItemValue>
+                            {event.location}
+                          </DataList.ItemValue>
+                        </DataList.Item>
+                      </DataList.Root>
+                    </Card.Body>
+                    <Card.Footer>
+                      <Button disabled variant={"outline"}>
+                        Download signed up
+                      </Button>
+                      <Button disabled colorPalette={"red"}>
+                        Delete
+                      </Button>
+                    </Card.Footer>
+                  </Card.Root>
+                ))}
+              </Dialog.Body>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>
