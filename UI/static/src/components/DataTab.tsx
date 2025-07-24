@@ -17,11 +17,12 @@ import type { User } from "@/api/users";
 
 export const DataTab = () => {
   const api = useAPI();
-  const [open, setOpen] = useState(false);
+  const [openUsers, setOpenUsers] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [usersType, setUsersType] = useState<"members" | "subscribers">(
     "members"
   );
+  const [openEvents, setOpenEvents] = useState(false);
 
   const loadClubMembers = async () => {
     const users = await api.users.getAll();
@@ -33,7 +34,7 @@ export const DataTab = () => {
     }
     setUsers(clubMembers);
     setUsersType("members");
-    setOpen(true);
+    setOpenUsers(true);
   };
 
   const loadNewsletterSubscribers = async () => {
@@ -46,7 +47,19 @@ export const DataTab = () => {
     }
     setUsers(subscribers);
     setUsersType("subscribers");
-    setOpen(true);
+    setOpenUsers(true);
+  };
+
+  const loadEvents = async () => {
+    // const users = await api.users.getAll();
+    // const subscribers = users.filter((user) => user.is_subscribe_newsletter);
+    // if (subscribers.length <= 0) {
+    //   toaster.error({
+    //     description: "No members in club",
+    //   });
+    // }
+    // setUsers(subscribers);
+    setOpenEvents(true);
   };
 
   return (
@@ -60,10 +73,10 @@ export const DataTab = () => {
           <Button onClick={loadNewsletterSubscribers}>
             Show newsletter subscribers
           </Button>
-          <Button>Show events list</Button>
+          <Button onClick={loadEvents}>Show events list</Button>
         </Stack>
       </Center>
-      <Dialog.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+      <Dialog.Root open={openUsers} onOpenChange={(e) => setOpenUsers(e.open)}>
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
@@ -100,6 +113,25 @@ export const DataTab = () => {
                   </Table.Body>
                 </Table.Root>
               </Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+      <Dialog.Root
+        open={openEvents}
+        onOpenChange={(e) => setOpenEvents(e.open)}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+              <Dialog.Header>
+                <Dialog.Title>Events list</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>EVENTS</Dialog.Body>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>
