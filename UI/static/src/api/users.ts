@@ -24,6 +24,7 @@ const User = z.object({
   my_request: z.any(), // TODO
   enigmatic_title: z.string(),
 });
+export type User = z.infer<typeof User>;
 
 export const createUsersApi = ($: AxiosInstance) => {
   return {

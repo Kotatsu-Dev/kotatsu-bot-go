@@ -3,6 +3,7 @@ import "./App.css";
 import { Provider } from "./components/ui/provider";
 import { APIProvider } from "./api/api";
 import { DataTab } from "./components/DataTab";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Tabs.Content value="export">Data</Tabs.Content>
           <Tabs.Content value="deletion">Data</Tabs.Content>
         </Tabs.Root>
+        <Toaster />
       </APIProvider>
     </Provider>
   );
