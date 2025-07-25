@@ -3,7 +3,7 @@ import z from "zod";
 
 const User = z.object({
   id: z.int(),
-  created_at: z.iso.datetime(),
+  created_at: z.iso.datetime({ offset: true }),
   step: z.int(),
   user_tg_id: z.int(), // Not particularly safe, but...
   last_message_id: z.int(),

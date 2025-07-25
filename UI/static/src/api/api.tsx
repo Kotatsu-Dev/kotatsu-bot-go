@@ -5,7 +5,7 @@ import { createActivitiesApi } from "./activities";
 
 const createApi = (_ctx: null) => {
   const $ = axios.create({
-    baseURL: `https://test.bot.kotatsu.spb.ru/api/`,
+    baseURL: `http://localhost:8006/api/`,
   });
 
   return {
