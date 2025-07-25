@@ -66,6 +66,11 @@ export const DataTab = () => {
     setOpenEvents(true);
   };
 
+  const deleteEvent = async (event: Activity) => {
+    await api.activities.setStatus({ id: event.id, status: false });
+    await loadEvents();
+  };
+
   return (
     <Container>
       <Heading textAlign={"center"} pb={3}>
@@ -136,53 +141,59 @@ export const DataTab = () => {
                 <Dialog.Title>Events list</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                {events.map((event) => (
-                  <Card.Root key={event.id}>
-                    <Card.Header>
-                      <Heading>{event.title}</Heading>
-                    </Card.Header>
-                    <Card.Body>
-                      <DataList.Root orientation={"horizontal"}>
-                        <DataList.Item>
-                          <DataList.ItemLabel>Status</DataList.ItemLabel>
-                          <DataList.ItemValue>
-                            {event.status ? (
-                              <Badge colorPalette={"green"}>Active</Badge>
-                            ) : (
-                              <Badge colorPalette={"red"}>Inactive</Badge>
-                            )}
-                          </DataList.ItemValue>
-                        </DataList.Item>
-                        <DataList.Item>
-                          <DataList.ItemLabel>Description</DataList.ItemLabel>
-                          <DataList.ItemValue>
-                            {event.description}
-                          </DataList.ItemValue>
-                        </DataList.Item>
-                        <DataList.Item>
-                          <DataList.ItemLabel>Date</DataList.ItemLabel>
-                          <DataList.ItemValue>
-                            {event.date_meeting}
-                          </DataList.ItemValue>
-                        </DataList.Item>
-                        <DataList.Item>
-                          <DataList.ItemLabel>Location</DataList.ItemLabel>
-                          <DataList.ItemValue>
-                            {event.location}
-                          </DataList.ItemValue>
-                        </DataList.Item>
-                      </DataList.Root>
-                    </Card.Body>
-                    <Card.Footer>
-                      <Button disabled variant={"outline"}>
-                        Download signed up
-                      </Button>
-                      <Button disabled colorPalette={"red"}>
-                        Delete
-                      </Button>
-                    </Card.Footer>
-                  </Card.Root>
-                ))}
+                <Stack>
+                  {events.map((event) => (
+                    <Card.Root key={event.id}>
+                      <Card.Header>
+                        <Heading>{event.title}</Heading>
+                      </Card.Header>
+                      <Card.Body>
+                        <DataList.Root orientation={"horizontal"}>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Status</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {event.status ? (
+                                <Badge colorPalette={"green"}>Active</Badge>
+                              ) : (
+                                <Badge colorPalette={"red"}>Inactive</Badge>
+                              )}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Description</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {event.description}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Date</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {event.date_meeting}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Location</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {event.location}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                        </DataList.Root>
+                      </Card.Body>
+                      <Card.Footer>
+                        <Button disabled variant={"outline"}>
+                          Download signed up
+                        </Button>
+                        <Button
+                          disabled={!event.status}
+                          colorPalette={"red"}
+                          onClick={() => deleteEvent(event)}
+                        >
+                          Delete
+                        </Button>
+                      </Card.Footer>
+                    </Card.Root>
+                  ))}
+                </Stack>
               </Dialog.Body>
             </Dialog.Content>
           </Dialog.Positioner>
