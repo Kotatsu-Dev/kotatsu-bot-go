@@ -1,6 +1,14 @@
 import { useState, type FormEventHandler } from "react";
 import { useAPI } from "../api/api";
-import { Button, Container, FileUpload, Image, Stack } from "@chakra-ui/react";
+import {
+  Button,
+  Container,
+  FileUpload,
+  Heading,
+  Image,
+  Stack,
+} from "@chakra-ui/react";
+import { toaster } from "./ui/toaster";
 
 export const CalendarTab = () => {
   const api = useAPI();
@@ -19,11 +27,27 @@ export const CalendarTab = () => {
     }
   };
 
+  const uploadCalendar = async () => {
+    if (file) {
+      await api.calendar.upload({ image: file });
+      toaster.success({
+        description: "Calendar image succesfully loaded!",
+      });
+    } else {
+      toaster.error({
+        description: "No calendar image provided",
+      });
+    }
+  };
+
   return (
     <Container maxW="lg">
       <Stack>
+        <Heading textAlign={"center"}>
+          Load image for calendar of events
+        </Heading>
         <Image
-          src={url ? url : `${api.getRoot()}/get-calendar-file`}
+          src={url ? url : api.calendar.imageUrl()}
           aspectRatio={1 / 1}
           fit={"contain"}
         />
@@ -35,7 +59,9 @@ export const CalendarTab = () => {
             </Button>
           </FileUpload.Trigger>
         </FileUpload.Root>
-        <Button>Upload calendar</Button>
+        <Button disabled={!file} onClick={uploadCalendar}>
+          Upload calendar
+        </Button>
       </Stack>
     </Container>
   );

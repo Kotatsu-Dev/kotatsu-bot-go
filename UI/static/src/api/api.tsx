@@ -2,9 +2,10 @@ import { createContext, useContext, type ReactNode } from "react";
 import axios from "axios";
 import { createUsersApi } from "./users";
 import { createActivitiesApi } from "./activities";
+import { createCalendarApi } from "./calendar";
 
 const createApi = (_ctx: null) => {
-  const base = `http://localhost:8006`
+  const base = `https://test.bot.kotatsu.spb.ru`
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });
@@ -12,9 +13,7 @@ const createApi = (_ctx: null) => {
   return {
     users: createUsersApi($),
     activities: createActivitiesApi($),
-    getRoot() {
-      return base;
-    }
+    calendar: createCalendarApi($, base)
   };
 };
 
