@@ -4,13 +4,17 @@ import { createUsersApi } from "./users";
 import { createActivitiesApi } from "./activities";
 
 const createApi = (_ctx: null) => {
+  const base = `http://localhost:8006`
   const $ = axios.create({
-    baseURL: `http://localhost:8006/api/`,
+    baseURL: `${base}/api/`,
   });
 
   return {
     users: createUsersApi($),
-    activities: createActivitiesApi($)
+    activities: createActivitiesApi($),
+    getRoot() {
+      return base;
+    }
   };
 };
 

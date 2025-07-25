@@ -5,6 +5,7 @@ import { APIProvider } from "./api/api";
 import { DataTab } from "./components/DataTab";
 import { Toaster } from "./components/ui/toaster";
 import { EventsTab } from "./components/EventsTab";
+import { CalendarTab } from "./components/CalendarTab";
 
 function App() {
   return (
@@ -46,7 +47,9 @@ function App() {
           <Tabs.Content value="events">
             <EventsTab />
           </Tabs.Content>
-          <Tabs.Content value="calendar">Data</Tabs.Content>
+          <Tabs.Content value="calendar">
+            <CalendarTab />
+          </Tabs.Content>
           <Tabs.Content value="users">Data</Tabs.Content>
           <Tabs.Content value="roulettes">Data</Tabs.Content>
           <Tabs.Content value="messages">Data</Tabs.Content>
