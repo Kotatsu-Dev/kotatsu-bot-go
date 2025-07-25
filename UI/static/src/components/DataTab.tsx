@@ -82,19 +82,17 @@ export const DataTab = () => {
   };
 
   return (
-    <Container>
+    <Container maxW={"lg"}>
       <Heading textAlign={"center"} pb={3}>
         Dashboard
       </Heading>
-      <Center>
-        <Stack w="lg">
-          <Button onClick={loadClubMembers}>Show club members</Button>
-          <Button onClick={loadNewsletterSubscribers}>
-            Show newsletter subscribers
-          </Button>
-          <Button onClick={loadEvents}>Show events list</Button>
-        </Stack>
-      </Center>
+      <Stack>
+        <Button onClick={loadClubMembers}>Show club members</Button>
+        <Button onClick={loadNewsletterSubscribers}>
+          Show newsletter subscribers
+        </Button>
+        <Button onClick={loadEvents}>Show events list</Button>
+      </Stack>
       <Dialog.Root open={openUsers} onOpenChange={(e) => setOpenUsers(e.open)}>
         <Portal>
           <Dialog.Backdrop />

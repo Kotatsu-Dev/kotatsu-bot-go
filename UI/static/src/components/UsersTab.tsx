@@ -2,7 +2,7 @@ import { Button, Container, Heading, Input, Stack } from "@chakra-ui/react";
 
 export const UsersTab = () => {
   return (
-    <Container>
+    <Container maxW={"lg"}>
       <Stack>
         <Heading textAlign={"center"}>User management</Heading>
         <Input placeholder="Enter user's Telegram ID" />
