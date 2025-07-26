@@ -7,6 +7,7 @@ import { Toaster } from "./components/ui/toaster";
 import { EventsTab } from "./components/EventsTab";
 import { CalendarTab } from "./components/CalendarTab";
 import { UsersTab } from "./components/UsersTab";
+import { MessagesTab } from "./components/MessagesTab";
 
 function App() {
   return (
@@ -55,7 +56,9 @@ function App() {
             <UsersTab />
           </Tabs.Content>
           <Tabs.Content value="roulettes">Data</Tabs.Content>
-          <Tabs.Content value="messages">Data</Tabs.Content>
+          <Tabs.Content value="messages">
+            <MessagesTab />
+          </Tabs.Content>
           <Tabs.Content value="requests">Data</Tabs.Content>
           <Tabs.Content value="export">Data</Tabs.Content>
           <Tabs.Content value="deletion">Data</Tabs.Content>
