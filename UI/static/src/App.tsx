@@ -8,6 +8,7 @@ import { EventsTab } from "./components/EventsTab";
 import { CalendarTab } from "./components/CalendarTab";
 import { UsersTab } from "./components/UsersTab";
 import { MessagesTab } from "./components/MessagesTab";
+import { RequestTab } from "./components/RequestTab";
 
 function App() {
   return (
@@ -59,7 +60,9 @@ function App() {
           <Tabs.Content value="messages">
             <MessagesTab />
           </Tabs.Content>
-          <Tabs.Content value="requests">Data</Tabs.Content>
+          <Tabs.Content value="requests">
+            <RequestTab />
+          </Tabs.Content>
           <Tabs.Content value="export">Data</Tabs.Content>
           <Tabs.Content value="deletion">Data</Tabs.Content>
         </Tabs.Root>
