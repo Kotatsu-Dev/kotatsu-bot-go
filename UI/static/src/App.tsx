@@ -10,6 +10,7 @@ import { UsersTab } from "./components/UsersTab";
 import { MessagesTab } from "./components/MessagesTab";
 import { RequestTab } from "./components/RequestTab";
 import { ExportTab } from "./components/ExportTab";
+import { DeletionTab } from "./components/DeletionTab";
 
 function App() {
   return (
@@ -67,7 +68,9 @@ function App() {
           <Tabs.Content value="export">
             <ExportTab />
           </Tabs.Content>
-          <Tabs.Content value="deletion">Data</Tabs.Content>
+          <Tabs.Content value="deletion">
+            <DeletionTab />
+          </Tabs.Content>
         </Tabs.Root>
         <Toaster />
       </APIProvider>
