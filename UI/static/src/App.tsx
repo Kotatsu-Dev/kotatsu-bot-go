@@ -11,6 +11,7 @@ import { MessagesTab } from "./components/MessagesTab";
 import { RequestTab } from "./components/RequestTab";
 import { ExportTab } from "./components/ExportTab";
 import { DeletionTab } from "./components/DeletionTab";
+import { RouletteTab } from "./components/RouletteTab";
 
 function App() {
   return (
@@ -58,7 +59,9 @@ function App() {
           <Tabs.Content value="users">
             <UsersTab />
           </Tabs.Content>
-          <Tabs.Content value="roulettes">Data</Tabs.Content>
+          <Tabs.Content value="roulettes">
+            <RouletteTab />
+          </Tabs.Content>
           <Tabs.Content value="messages">
             <MessagesTab />
           </Tabs.Content>
