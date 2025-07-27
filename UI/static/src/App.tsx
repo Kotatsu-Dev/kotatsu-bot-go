@@ -17,7 +17,7 @@ function App() {
   return (
     <Provider>
       <APIProvider>
-        <Tabs.Root defaultValue={"data"}>
+        <Tabs.Root defaultValue={"data"} colorPalette={"orange"}>
           <Tabs.List maxW={"100%"} overflowX={"scroll"} scrollbarWidth={"none"}>
             <Tabs.Trigger value="data" flexShrink={0}>
               Data
