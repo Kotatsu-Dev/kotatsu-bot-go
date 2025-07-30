@@ -5,7 +5,7 @@ import { createActivitiesApi } from "./activities";
 import { createCalendarApi } from "./calendar";
 
 const createApi = (_ctx: null) => {
-  const base = `https://test.bot.kotatsu.spb.ru`
+  const base = `http://localhost:8006`
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });

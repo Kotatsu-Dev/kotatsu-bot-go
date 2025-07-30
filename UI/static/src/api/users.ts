@@ -1,5 +1,5 @@
 import type { AxiosInstance } from "axios";
-import z from "zod";
+import z, { number } from "zod";
 
 const User = z.object({
   id: z.int(),
@@ -31,6 +31,15 @@ export const createUsersApi = ($: AxiosInstance) => {
     async getAll() {
       const res = await $.get("/users/");
       return User.array().parse(res.data.data.list_users);
+    },
+    async setMemberStatus(props: {
+      user_tg_id: number;
+      is_club_member: boolean;
+    }) {
+      await $.put("/users/club-member", {
+        user_tg_id: props.user_tg_id.toString(),
+        is_club_member: Number(props.is_club_member),
+      });
     },
   };
 };
