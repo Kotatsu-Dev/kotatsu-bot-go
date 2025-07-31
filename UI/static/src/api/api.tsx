@@ -3,9 +3,10 @@ import axios from "axios";
 import { createUsersApi } from "./users";
 import { createActivitiesApi } from "./activities";
 import { createCalendarApi } from "./calendar";
+import { createBroadcastApi } from "./broadcast";
 
 const createApi = (_ctx: null) => {
-  const base = `http://localhost:8006`
+  const base = `http://localhost:8006`;
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });
@@ -13,7 +14,8 @@ const createApi = (_ctx: null) => {
   return {
     users: createUsersApi($),
     activities: createActivitiesApi($),
-    calendar: createCalendarApi($, base)
+    calendar: createCalendarApi($, base),
+    broadcast: createBroadcastApi($, base),
   };
 };
 
