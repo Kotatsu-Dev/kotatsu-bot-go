@@ -1,5 +1,14 @@
 import type { AxiosInstance } from "axios";
-import z, { number } from "zod";
+import z from "zod";
+
+const Request = z.object({
+  id: z.int().nonnegative(),
+  created_at: z.iso.datetime({ offset: true }),
+  type: z.int(),
+  status: z.int(),
+  user_id: z.int().nonnegative(),
+});
+export type Request = z.infer<typeof Request>;
 
 const User = z.object({
   id: z.int(),
@@ -21,7 +30,7 @@ const User = z.object({
   temp_activity_id: z.int(),
   my_activities: z.any().array(), // TODO
   link_my_anime_list: z.string(),
-  my_request: z.any(), // TODO
+  my_request: Request.optional(),
   enigmatic_title: z.string(),
 });
 export type User = z.infer<typeof User>;

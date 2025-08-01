@@ -1,27 +1,71 @@
+import { useAPI } from "../api/api";
+import { type User } from "../api/users";
 import {
+  Badge,
   Button,
+  Card,
+  CloseButton,
   Container,
+  DataList,
+  Dialog,
   Heading,
   Input,
+  Link,
   NativeSelect,
+  Portal,
   Separator,
   Stack,
 } from "@chakra-ui/react";
+import { useState } from "react";
+import { toaster } from "./ui/toaster";
 
 export const RequestTab = () => {
+  const api = useAPI();
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState<"all" | "itmo" | "not_itmo">("all");
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUsers = async () => {
+    const fetchedUsers = await api.users.getAll();
+    const requestUsers = fetchedUsers.filter((user) => !!user.my_request);
+    let filteredUsers;
+    switch (category) {
+      case "all":
+        filteredUsers = requestUsers;
+        break;
+      case "itmo":
+        filteredUsers = requestUsers.filter((user) => user.is_itmo);
+        break;
+      case "not_itmo":
+        filteredUsers = requestUsers.filter((user) => !user.is_itmo);
+        break;
+    }
+    setUsers(filteredUsers);
+    if (filteredUsers.length > 0) {
+      setOpen(true);
+    } else {
+      toaster.error({
+        description: "No requests in this category",
+      });
+    }
+  };
+
   return (
     <Container maxW={"lg"}>
       <Stack>
         <Heading textAlign={"center"}>View club requests</Heading>
         <NativeSelect.Root>
-          <NativeSelect.Field placeholder="Select category">
-            <option>All users</option>
-            <option>Users from ITMO</option>
-            <option>Users not from ITMO</option>
+          <NativeSelect.Field
+            value={category}
+            onChange={(e) => setCategory(e.currentTarget.value as any)}
+          >
+            <option value={"all"}>All users</option>
+            <option value={"itmo"}>Users from ITMO</option>
+            <option value={"not_itmo"}>Users not from ITMO</option>
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>
-        <Button>Fetch requests</Button>
+        <Button onClick={fetchUsers}>Fetch requests</Button>
         <Separator />
         <Heading textAlign={"center"}>Request approval form</Heading>
         <Input placeholder="Enter request ID" />
@@ -34,6 +78,90 @@ export const RequestTab = () => {
           </Button>
         </Stack>
       </Stack>
+      <Dialog.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>User requests</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Stack>
+                  {users.map((user) => (
+                    <Card.Root key={user.id}>
+                      <Card.Header>
+                        <Heading>Request {user.my_request?.id}</Heading>
+                      </Card.Header>
+                      <Card.Body>
+                        <DataList.Root orientation={"horizontal"}>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Request ID</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.my_request?.id}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>
+                              Request date
+                            </DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.my_request?.created_at}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Telegram ID</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.user_tg_id}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Username</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              <Link href={`https://t.me/${user.user_name}`}>
+                                @{user.user_name}
+                              </Link>
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>From ITMO</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.is_itmo ? (
+                                <Badge colorPalette={"green"}>Yes</Badge>
+                              ) : (
+                                <Badge colorPalette={"red"}>No</Badge>
+                              )}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>ISU</DataList.ItemLabel>
+                            <DataList.ItemValue>{user.isu}</DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Full name</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.full_name}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                          <DataList.Item>
+                            <DataList.ItemLabel>Phone</DataList.ItemLabel>
+                            <DataList.ItemValue>
+                              {user.phone_number}
+                            </DataList.ItemValue>
+                          </DataList.Item>
+                        </DataList.Root>
+                      </Card.Body>
+                    </Card.Root>
+                  ))}
+                </Stack>
+              </Dialog.Body>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Container>
   );
 };

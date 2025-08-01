@@ -17,7 +17,6 @@ import { toaster } from "./ui/toaster";
 import { useState } from "react";
 import type { User } from "@/api/users";
 import type { Activity } from "@/api/activities";
-import z, { ZodError } from "zod";
 
 export const DataTab = () => {
   const api = useAPI();
@@ -58,21 +57,15 @@ export const DataTab = () => {
   };
 
   const loadEvents = async () => {
-    try {
-      const events = await api.activities.getAll();
-      if (events.length <= 0) {
-        toaster.error({
-          description: "No events",
-        });
-        return;
-      }
-      setEvents(events);
-      setOpenEvents(true);
-    } catch (e) {
-      if (e instanceof ZodError) {
-        console.log(z.prettifyError(e));
-      }
+    const events = await api.activities.getAll();
+    if (events.length <= 0) {
+      toaster.error({
+        description: "No events",
+      });
+      return;
     }
+    setEvents(events);
+    setOpenEvents(true);
   };
 
   const deleteEvent = async (event: Activity) => {
