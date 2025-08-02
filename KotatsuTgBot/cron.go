@@ -12,7 +12,7 @@ import (
 )
 
 func StartCron(b *bot.Bot) {
-	ticker := time.NewTicker(1 * time.Hour)
+	ticker := time.NewTicker(1 * time.Minute)
 
 	go func() {
 		for {
@@ -28,7 +28,7 @@ func check_roulette(b *bot.Bot) {
 	db_answer_code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 
 	now := time.Now()
-	a_hour_ago := now.Add(-1 * time.Hour)
+	a_hour_ago := now.Add(-1 * time.Minute)
 
 	if db_answer_code != db.DB_ANSWER_SUCCESS {
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
