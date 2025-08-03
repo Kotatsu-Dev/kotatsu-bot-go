@@ -41,5 +41,9 @@ export const createActivitiesApi = ($: AxiosInstance) => {
         date_meeting: format(props.date_meeting, "yyyy-MM-dd HH:mm"),
       });
     },
+
+    async wipe() {
+      await $.delete("/activities/");
+    },
   };
 };

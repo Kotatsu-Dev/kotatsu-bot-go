@@ -42,5 +42,8 @@ export const createUsersApi = ($: AxiosInstance) => {
         is_club_member: Number(props.is_club_member),
       });
     },
+    async wipe() {
+      await $.delete('/users/')
+    }
   };
 };
