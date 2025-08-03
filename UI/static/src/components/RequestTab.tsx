@@ -24,6 +24,7 @@ export const RequestTab = () => {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<"all" | "itmo" | "not_itmo">("all");
   const [users, setUsers] = useState<User[]>([]);
+  const [requestId, setRequestId] = useState(0);
 
   const fetchUsers = async () => {
     const fetchedUsers = await api.users.getAll();
@@ -50,6 +51,20 @@ export const RequestTab = () => {
     }
   };
 
+  const acceptRequest = async () => {
+    await api.requests.accept({ id: requestId });
+    toaster.success({
+      description: "Succesfully accepted request",
+    });
+  };
+
+  const rejectRequest = async () => {
+    await api.requests.reject({ id: requestId });
+    toaster.success({
+      description: "Succesfully accepted request",
+    });
+  };
+
   return (
     <Container maxW={"lg"}>
       <Stack>
@@ -68,12 +83,22 @@ export const RequestTab = () => {
         <Button onClick={fetchUsers}>Fetch requests</Button>
         <Separator />
         <Heading textAlign={"center"}>Request approval form</Heading>
-        <Input placeholder="Enter request ID" />
+        <Input
+          placeholder="Enter request ID"
+          type="number"
+          value={requestId}
+          onChange={(e) => setRequestId(e.currentTarget.valueAsNumber)}
+        />
         <Stack direction={"row"}>
-          <Button flexGrow={1} colorPalette={"red"} variant={"outline"}>
+          <Button
+            flexGrow={1}
+            colorPalette={"red"}
+            variant={"outline"}
+            onClick={rejectRequest}
+          >
             Reject
           </Button>
-          <Button flexGrow={1} colorPalette={"green"}>
+          <Button flexGrow={1} colorPalette={"green"} onClick={acceptRequest}>
             Accept
           </Button>
         </Stack>
