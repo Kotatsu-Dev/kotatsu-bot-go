@@ -1,14 +1,6 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
-
-const Request = z.object({
-  id: z.int().nonnegative(),
-  created_at: z.iso.datetime({ offset: true }),
-  type: z.int(),
-  status: z.int(),
-  user_id: z.int().nonnegative(),
-});
-export type Request = z.infer<typeof Request>;
+import { Request } from "./requests";
 
 const User = z.object({
   id: z.int(),
