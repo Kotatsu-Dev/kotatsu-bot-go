@@ -2,7 +2,7 @@ import type { AxiosInstance } from "axios";
 import z from "zod";
 import { Request } from "./requests";
 
-const User = z.object({
+export const User = z.object({
   id: z.int(),
   created_at: z.iso.datetime({ offset: true }),
   step: z.int(),

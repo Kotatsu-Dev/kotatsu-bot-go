@@ -6,6 +6,7 @@ import { createCalendarApi } from "./calendar";
 import { createBroadcastApi } from "./broadcast";
 import { createRequestsApi } from "./requests";
 import { createDbApi } from "./db";
+import { createRoulettesApi } from "./roulettes";
 
 const createApi = (_ctx: null) => {
   const base = `http://localhost:8006`;
@@ -19,6 +20,7 @@ const createApi = (_ctx: null) => {
     calendar: createCalendarApi($, base),
     broadcast: createBroadcastApi($, base),
     requests: createRequestsApi($),
+    roulettes: createRoulettesApi($),
     db: createDbApi($, base),
   };
 };
