@@ -125,7 +125,6 @@ func Handler_API_Activities_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Обновить данные мероприятия

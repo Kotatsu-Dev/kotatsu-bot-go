@@ -41,8 +41,6 @@ func Handler_API_Users_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
-
 }
 
 // Обновить данные пользователя

@@ -68,8 +68,6 @@ func Handler_GetCalendarActivities_Image_File(c *gin.Context) {
 		// Файл не найден, возвращаем ошибку 404
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 	}
-
-	return
 }
 
 // SendMessageUser
@@ -173,7 +171,6 @@ func Handler_SendMessageUser(c *gin.Context) {
 	} else {
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 	}
-	return
 }
 
 // SendMessageUserFromSupport
@@ -221,7 +218,6 @@ func Handler_SendMessageUserFromSupport(c *gin.Context) {
 	} else {
 		Answer_OK(c)
 	}
-	return
 }
 
 // Загрузка файла для календаря мероприятий
@@ -253,7 +249,6 @@ func Handler_UploadFile_CalendarActivities(c *gin.Context) {
 	}
 
 	Answer_OK(c)
-	return
 }
 
 // Удалить всё в БД
@@ -270,5 +265,4 @@ func Handler_DeleteObjects_All(c *gin.Context) {
 	}
 
 	Answer_OK(c)
-	return
 }

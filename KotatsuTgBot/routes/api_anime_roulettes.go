@@ -34,7 +34,6 @@ func Handler_API_AnimeRoulettes_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Получить активную рулетку

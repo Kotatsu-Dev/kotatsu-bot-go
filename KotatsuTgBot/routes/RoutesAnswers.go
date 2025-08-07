@@ -383,7 +383,7 @@ func Answer_InternalServerError(c *gin.Context, error_code int, error_message st
 	})
 }
 
-func get_uint_fromString(str string) (uint, bool) {
+func Get_uint_fromString(str string) (uint, bool) {
 	//Вот такая вот странная передача данных
 	id_uint64, err := strconv.ParseUint(str, 10, 0)
 
