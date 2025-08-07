@@ -77,10 +77,6 @@ func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) in
 	defer sqlDB.Close()
 
 	var anime_roulette AnimeRoulette
-	db.First(&anime_roulette)
-	if anime_roulette.ID != 0 {
-		return DB_ANSWER_OBJECT_EXISTS
-	}
 
 	var theme string
 
