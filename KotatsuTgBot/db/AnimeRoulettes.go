@@ -198,7 +198,12 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 
 	var anime_roulette AnimeRoulette
 
-	db.First(&anime_roulette)
+	roulette_id, ok := update_json["id"].(int64)
+	if ok {
+		db.First(&anime_roulette, roulette_id)
+	} else {
+		db.First(&anime_roulette)
+	}
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}

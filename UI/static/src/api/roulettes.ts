@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
 import { User } from "./users";
+import { format } from "date-fns";
 
 const Roulette = z.object({
   id: z.int().nonnegative(),
@@ -20,6 +21,24 @@ export const createRoulettesApi = ($: AxiosInstance) => {
     async getAll() {
       const result = await $.get("/roulettes/");
       return Roulette.array().parse(result.data.data.list_anime_roulettes);
+    },
+
+    async update(props: {
+      id: number;
+      start_date: Date;
+      announce_date: Date;
+      distribution_date: Date;
+      end_date: Date;
+      theme: string;
+    }) {
+      await $.put("/roulettes/", {
+        id: props.id,
+        start_date: format(props.start_date, `yyyy-MM-dd HH:mm`),
+        announce_date: format(props.announce_date, `yyyy-MM-dd HH:mm`),
+        distribution_date: format(props.distribution_date, `yyyy-MM-dd HH:mm`),
+        end_date: format(props.end_date, `yyyy-MM-dd HH:mm`),
+        theme: props.theme,
+      });
     },
   };
 };

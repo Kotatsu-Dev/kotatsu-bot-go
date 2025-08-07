@@ -15,13 +15,19 @@ import {
 import { useEffect, useState } from "react";
 import { format, isFuture, isPast, parse } from "date-fns";
 import z from "zod";
+import { toaster } from "./ui/toaster";
 
 const RouletteComponent = (props: { defaultValue: Roulette }) => {
   const api = useAPI();
   const [roulette, setRoulette] = useState(props.defaultValue);
   const toValue = (d: Date) => format(d, "yyyy-MM-dd HH:mm");
 
-  const save = async () => {}
+  const save = async () => {
+    await api.roulettes.update(roulette);
+    toaster.success({
+      description: "Roulette succesfully updated",
+    });
+  };
 
   return (
     <Card.Root key={roulette.id}>
