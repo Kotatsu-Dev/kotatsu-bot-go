@@ -53,6 +53,7 @@ type AnimeRoulette_CreateJSON struct {
 	AnnounceDate     time.Time `json:"announce_date"`
 	DistributionDate time.Time `json:"distribution_date"`
 	EndDate          time.Time `json:"end_date"`
+	Theme            *string   `json:"theme"`
 }
 
 type AnimeRoulette_ReadJSON struct {
