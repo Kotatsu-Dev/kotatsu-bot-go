@@ -20,6 +20,11 @@ export const ExportTab = () => {
     exportJSON(requests);
   };
 
+  const allRoulettes = async () => {
+    const roulettes = await api.roulettes.getAll();
+    exportJSON(roulettes);
+  };
+
   const allClubMembers = async () => {
     const users = await api.users.getAll();
     const clubMembers = users.filter((user) => user.is_club_member);
@@ -38,8 +43,7 @@ export const ExportTab = () => {
         <Heading textAlign={"center"}>Export data in JSON</Heading>
         <Button onClick={allUsers}>Get all users JSON</Button>
         <Button onClick={allEvents}>Get all events JSON</Button>
-        {/* TODO */}
-        <Button disabled>Get all roulettes JSON</Button>
+        <Button onClick={allRoulettes}>Get all roulettes JSON</Button>
         <Button onClick={allRequests}>Get all requests JSON</Button>
         <Button onClick={allClubMembers}>Get all club members JSON</Button>
         <Button onClick={allNonClubMembers}>
