@@ -82,11 +82,18 @@ func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) in
 		return DB_ANSWER_OBJECT_EXISTS
 	}
 
+	var theme string
+
+	if anime_roulette_to_add.Theme != nil {
+		theme = *anime_roulette_to_add.Theme
+	}
+
 	anime_roulette = AnimeRoulette{
 		StartDate:        anime_roulette_to_add.StartDate,
 		AnnounceDate:     anime_roulette_to_add.AnnounceDate,
 		DistributionDate: anime_roulette_to_add.DistributionDate,
 		EndDate:          anime_roulette_to_add.EndDate,
+		Theme:            theme,
 	}
 
 	db.Save(&anime_roulette)

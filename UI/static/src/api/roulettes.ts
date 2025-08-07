@@ -23,6 +23,36 @@ export const createRoulettesApi = ($: AxiosInstance) => {
       return Roulette.array().parse(result.data.data.list_anime_roulettes);
     },
 
+    async create(props: {
+      start_date: Date;
+      announce_date: Date;
+      distribution_date: Date;
+      end_date: Date;
+      theme: string;
+    }) {
+      await $.post("/roulettes/", {
+        stages: [
+          {
+            stage: 0,
+            end_date: format(props.start_date, `yyyy-MM-dd HH:mm`),
+          },
+          {
+            stage: 1,
+            end_date: format(props.announce_date, `yyyy-MM-dd HH:mm`),
+          },
+          {
+            stage: 2,
+            end_date: format(props.distribution_date, `yyyy-MM-dd HH:mm`),
+          },
+          {
+            stage: 3,
+            end_date: format(props.end_date, `yyyy-MM-dd HH:mm`),
+          },
+        ],
+        theme: props.theme,
+      });
+    },
+
     async update(props: {
       id: number;
       start_date: Date;
@@ -39,6 +69,10 @@ export const createRoulettesApi = ($: AxiosInstance) => {
         end_date: format(props.end_date, `yyyy-MM-dd HH:mm`),
         theme: props.theme,
       });
+    },
+
+    async wipe() {
+      await $.delete("/roulettes/");
     },
   };
 };

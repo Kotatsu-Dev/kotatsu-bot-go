@@ -26,6 +26,13 @@ export const DeletionTab = () => {
     });
   };
 
+  const wipeRoulettes = async () => {
+    await api.roulettes.wipe();
+    toaster.success({
+      description: "All roulettes succefully deleted",
+    });
+  };
+
   return (
     <Container maxW={"lg"}>
       <Stack>
@@ -39,7 +46,7 @@ export const DeletionTab = () => {
         <Button colorPalette={"red"} onClick={wipeEvents}>
           Delete all events
         </Button>
-        <Button colorPalette={"red"} disabled>
+        <Button colorPalette={"red"} onClick={wipeRoulettes}>
           Delete all roulettes
         </Button>
       </Stack>
