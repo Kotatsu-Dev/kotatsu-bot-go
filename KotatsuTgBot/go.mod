@@ -12,7 +12,7 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-require github.com/gin-contrib/static v1.1.5 // indirect
+require github.com/gin-contrib/static v1.1.5
 
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect
