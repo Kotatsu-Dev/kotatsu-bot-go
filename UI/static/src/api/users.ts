@@ -22,7 +22,7 @@ export const User = z.object({
   temp_activity_id: z.int(),
   my_activities: z.any().array(), // TODO
   link_my_anime_list: z.string(),
-  my_request: Request.optional(),
+  my_request: Request.or(z.null()),
   enigmatic_title: z.string(),
 });
 export type User = z.infer<typeof User>;
