@@ -53,6 +53,12 @@ func Handler_AdminPanel(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_panel.html", gin.H{})
 }
 
+func Handler_NewAdminPanel(c *gin.Context) {
+	c.Header("Content-Type", "text/html")
+	c.File("./static/dist/index.html")
+	c.Status(http.StatusOK)
+}
+
 // /Выдача фронта для ответа от техподдержки
 func Handler_SupportResponse(c *gin.Context) {
 	c.HTML(http.StatusOK, "support_response.html", gin.H{})
