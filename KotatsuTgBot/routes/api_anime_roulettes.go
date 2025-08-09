@@ -34,7 +34,6 @@ func Handler_API_AnimeRoulettes_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Получить активную рулетку
@@ -110,6 +109,7 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	current_anime_roulette.AnnounceDate = announce_date
 	current_anime_roulette.DistributionDate = distribution_date
 	current_anime_roulette.EndDate = end_date
+	current_anime_roulette.Theme = json_data.Theme
 
 	db_error_code := db.DB_CREATE_AnimeRoulette(current_anime_roulette)
 

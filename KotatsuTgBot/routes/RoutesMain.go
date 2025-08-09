@@ -29,6 +29,7 @@ import (
 	//Системные пакеты
 	"fmt"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -54,9 +55,11 @@ func RunServer() {
 
 	//Раздача статики для дебаг-версии
 	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
+		r.NoRoute(static.ServeRoot("/", "./static/dist/"))
 		r.Static("/assets", "./assets") //Для статики в режиме отладки
 		//Загружаем HTML
 		r.LoadHTMLGlob("assets/html/*")
+		// r.LoadHTMLFiles("static/dist/index.html")
 	} else {
 		//Загружаем HTML
 		r.LoadHTMLGlob("static/assets/html/*")
@@ -76,6 +79,7 @@ func RunServer() {
 
 	r.GET("/", Handler_Index)
 	r.GET("/admin-panel", Handler_AdminPanel)
+	r.GET("/new-admin-panel", Handler_NewAdminPanel)
 	r.GET("/get-calendar-file", Handler_GetCalendarActivities_Image_File)
 	r.GET("/support-response", Handler_SupportResponse)
 

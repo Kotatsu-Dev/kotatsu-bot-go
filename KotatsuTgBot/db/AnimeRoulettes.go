@@ -53,6 +53,7 @@ type AnimeRoulette_CreateJSON struct {
 	AnnounceDate     time.Time `json:"announce_date"`
 	DistributionDate time.Time `json:"distribution_date"`
 	EndDate          time.Time `json:"end_date"`
+	Theme            *string   `json:"theme"`
 }
 
 type AnimeRoulette_ReadJSON struct {
@@ -76,9 +77,11 @@ func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) in
 	defer sqlDB.Close()
 
 	var anime_roulette AnimeRoulette
-	db.First(&anime_roulette)
-	if anime_roulette.ID != 0 {
-		return DB_ANSWER_OBJECT_EXISTS
+
+	var theme string
+
+	if anime_roulette_to_add.Theme != nil {
+		theme = *anime_roulette_to_add.Theme
 	}
 
 	anime_roulette = AnimeRoulette{
@@ -86,6 +89,7 @@ func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) in
 		AnnounceDate:     anime_roulette_to_add.AnnounceDate,
 		DistributionDate: anime_roulette_to_add.DistributionDate,
 		EndDate:          anime_roulette_to_add.EndDate,
+		Theme:            theme,
 	}
 
 	db.Save(&anime_roulette)
@@ -198,7 +202,12 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 
 	var anime_roulette AnimeRoulette
 
-	db.First(&anime_roulette)
+	roulette_id, ok := update_json["id"].(int64)
+	if ok {
+		db.First(&anime_roulette, roulette_id)
+	} else {
+		db.First(&anime_roulette)
+	}
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}

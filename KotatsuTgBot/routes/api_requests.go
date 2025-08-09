@@ -41,7 +41,6 @@ func Handler_API_Requests_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Обновить данные в заявке
