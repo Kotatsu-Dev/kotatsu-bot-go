@@ -1,5 +1,5 @@
 import type { Roulette } from "@/api/roulettes";
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Button,
   Card,
@@ -41,22 +41,26 @@ const RouletteComponent = (props: {
   const toValue = (d: Date) => format(d, "yyyy-MM-dd HH:mm");
 
   const save = async () => {
-    if (roulette.id) {
-      const id = roulette.id;
-      await api.roulettes.update({
-        ...roulette,
-        id,
-      });
-      toaster.success({
-        description: "Roulette succesfully updated",
-      });
-    } else {
-      await api.roulettes.create(roulette);
-      toaster.success({
-        description: "Roulette succesfully created",
-      });
+    try {
+      if (roulette.id) {
+        const id = roulette.id;
+        await api.roulettes.update({
+          ...roulette,
+          id,
+        });
+        toaster.success({
+          description: "Roulette succesfully updated",
+        });
+      } else {
+        await api.roulettes.create(roulette);
+        toaster.success({
+          description: "Roulette succesfully created",
+        });
+      }
+      props.onSave?.();
+    } catch (e) {
+      handleError(e);
     }
-    props.onSave?.();
   };
 
   return (
@@ -172,7 +176,13 @@ export const RouletteTab = () => {
   const past = roulettes.filter((r) => isPast(r.end_date));
   const upcoming = roulettes.filter((r) => isFuture(r.start_date));
 
-  const loadRoulettes = () => api.roulettes.getAll().then(setRoulettes);
+  const loadRoulettes = async () => {
+    try {
+      setRoulettes(await api.roulettes.getAll());
+    } catch(e) {
+      handleError(e);
+    }
+  }
 
   useEffect(() => {
     loadRoulettes();
@@ -224,7 +234,7 @@ export const RouletteTab = () => {
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content colorPalette={'orange'}>
+            <Dialog.Content colorPalette={"orange"}>
               <Dialog.Header>
                 <Dialog.Title>Create new roulette</Dialog.Title>
               </Dialog.Header>

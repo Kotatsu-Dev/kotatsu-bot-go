@@ -1,5 +1,5 @@
 import { useState, type FormEventHandler } from "react";
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Button,
   Container,
@@ -28,15 +28,19 @@ export const CalendarTab = () => {
   };
 
   const uploadCalendar = async () => {
-    if (file) {
-      await api.calendar.upload({ image: file });
-      toaster.success({
-        description: "Calendar image succesfully loaded!",
-      });
-    } else {
-      toaster.error({
-        description: "No calendar image provided",
-      });
+    try {
+      if (file) {
+        await api.calendar.upload({ image: file });
+        toaster.success({
+          description: "Calendar image succesfully loaded!",
+        });
+      } else {
+        toaster.error({
+          description: "No calendar image provided",
+        });
+      }
+    } catch (e) {
+      handleError(e);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import { Button, Container, Heading, Stack } from "@chakra-ui/react";
 import { toaster } from "./ui/toaster";
 
@@ -6,31 +6,47 @@ export const DeletionTab = () => {
   const api = useAPI();
 
   const wipeDb = async () => {
-    await api.db.wipe();
-    toaster.success({
-      description: "DB succefully deleted",
-    });
+    try {
+      await api.db.wipe();
+      toaster.success({
+        description: "DB succefully deleted",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const wipeUsers = async () => {
-    await api.users.wipe();
-    toaster.success({
-      description: "All users succefully deleted",
-    });
+    try {
+      await api.users.wipe();
+      toaster.success({
+        description: "All users succefully deleted",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const wipeEvents = async () => {
-    await api.activities.wipe();
-    toaster.success({
-      description: "All events succefully deleted",
-    });
+    try {
+      await api.activities.wipe();
+      toaster.success({
+        description: "All events succefully deleted",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const wipeRoulettes = async () => {
-    await api.roulettes.wipe();
-    toaster.success({
-      description: "All roulettes succefully deleted",
-    });
+    try {
+      await api.roulettes.wipe();
+      toaster.success({
+        description: "All roulettes succefully deleted",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   return (

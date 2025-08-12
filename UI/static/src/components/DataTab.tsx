@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Badge,
   Button,
@@ -29,48 +29,64 @@ export const DataTab = () => {
   const [events, setEvents] = useState<Activity[]>([]);
 
   const loadClubMembers = async () => {
-    const users = await api.users.getAll();
-    const clubMembers = users.filter((user) => user.is_club_member);
-    if (clubMembers.length <= 0) {
-      toaster.error({
-        description: "No members in club",
-      });
-      return;
+    try {
+      const users = await api.users.getAll();
+      const clubMembers = users.filter((user) => user.is_club_member);
+      if (clubMembers.length <= 0) {
+        toaster.error({
+          description: "No members in club",
+        });
+        return;
+      }
+      setUsers(clubMembers);
+      setUsersType("members");
+      setOpenUsers(true);
+    } catch (e) {
+      handleError(e);
     }
-    setUsers(clubMembers);
-    setUsersType("members");
-    setOpenUsers(true);
   };
 
   const loadNewsletterSubscribers = async () => {
-    const users = await api.users.getAll();
-    const subscribers = users.filter((user) => user.is_subscribe_newsletter);
-    if (subscribers.length <= 0) {
-      toaster.error({
-        description: "No subscribers on newsletter",
-      });
-      return;
+    try {
+      const users = await api.users.getAll();
+      const subscribers = users.filter((user) => user.is_subscribe_newsletter);
+      if (subscribers.length <= 0) {
+        toaster.error({
+          description: "No subscribers on newsletter",
+        });
+        return;
+      }
+      setUsers(subscribers);
+      setUsersType("subscribers");
+      setOpenUsers(true);
+    } catch (e) {
+      handleError(e);
     }
-    setUsers(subscribers);
-    setUsersType("subscribers");
-    setOpenUsers(true);
   };
 
   const loadEvents = async () => {
-    const events = await api.activities.getAll();
-    if (events.length <= 0) {
-      toaster.error({
-        description: "No events",
-      });
-      return;
+    try {
+      const events = await api.activities.getAll();
+      if (events.length <= 0) {
+        toaster.error({
+          description: "No events",
+        });
+        return;
+      }
+      setEvents(events);
+      setOpenEvents(true);
+    } catch (e) {
+      handleError(e);
     }
-    setEvents(events);
-    setOpenEvents(true);
   };
 
   const deleteEvent = async (event: Activity) => {
-    await api.activities.setStatus({ id: event.id, status: false });
-    await loadEvents();
+    try {
+      await api.activities.setStatus({ id: event.id, status: false });
+      await loadEvents();
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   return (

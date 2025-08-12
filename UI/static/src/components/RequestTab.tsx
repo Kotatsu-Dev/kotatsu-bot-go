@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import { type User } from "../api/users";
 import {
   Badge,
@@ -27,42 +27,54 @@ export const RequestTab = () => {
   const [requestId, setRequestId] = useState(0);
 
   const fetchUsers = async () => {
-    const fetchedUsers = await api.users.getAll();
-    const requestUsers = fetchedUsers.filter((user) => !!user.my_request);
-    let filteredUsers;
-    switch (category) {
-      case "all":
-        filteredUsers = requestUsers;
-        break;
-      case "itmo":
-        filteredUsers = requestUsers.filter((user) => user.is_itmo);
-        break;
-      case "not_itmo":
-        filteredUsers = requestUsers.filter((user) => !user.is_itmo);
-        break;
-    }
-    setUsers(filteredUsers);
-    if (filteredUsers.length > 0) {
-      setOpen(true);
-    } else {
-      toaster.error({
-        description: "No requests in this category",
-      });
+    try {
+      const fetchedUsers = await api.users.getAll();
+      const requestUsers = fetchedUsers.filter((user) => !!user.my_request);
+      let filteredUsers;
+      switch (category) {
+        case "all":
+          filteredUsers = requestUsers;
+          break;
+        case "itmo":
+          filteredUsers = requestUsers.filter((user) => user.is_itmo);
+          break;
+        case "not_itmo":
+          filteredUsers = requestUsers.filter((user) => !user.is_itmo);
+          break;
+      }
+      setUsers(filteredUsers);
+      if (filteredUsers.length > 0) {
+        setOpen(true);
+      } else {
+        toaster.error({
+          description: "No requests in this category",
+        });
+      }
+    } catch (e) {
+      handleError(e);
     }
   };
 
   const acceptRequest = async () => {
-    await api.requests.accept({ id: requestId });
-    toaster.success({
-      description: "Succesfully accepted request",
-    });
+    try {
+      await api.requests.accept({ id: requestId });
+      toaster.success({
+        description: "Succesfully accepted request",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const rejectRequest = async () => {
-    await api.requests.reject({ id: requestId });
-    toaster.success({
-      description: "Succesfully accepted request",
-    });
+    try {
+      await api.requests.reject({ id: requestId });
+      toaster.success({
+        description: "Succesfully accepted request",
+      });
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   return (
