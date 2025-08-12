@@ -56,7 +56,6 @@ func Handler_AdminPanel(c *gin.Context) {
 func Handler_NewAdminPanel(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
 	c.File("./static/dist/index.html")
-	c.Status(http.StatusOK)
 }
 
 // /Выдача фронта для ответа от техподдержки
