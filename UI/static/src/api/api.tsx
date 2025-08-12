@@ -9,7 +9,7 @@ import { createDbApi } from "./db";
 import { createRoulettesApi } from "./roulettes";
 
 const createApi = (_ctx: null) => {
-  const base = ``;
+  const base = `http://localhost:8006`;
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });
