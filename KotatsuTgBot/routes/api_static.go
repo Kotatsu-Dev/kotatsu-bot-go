@@ -69,6 +69,8 @@ func Handler_GetCalendarActivities_Image_File(c *gin.Context) {
 	if _, err := os.Stat("./img/calendar_activities/calendar_activities.png"); err == nil {
 		// Answer_OK(c)
 		Answer_File(c, "/img/calendar_activities/calendar_activities.png")
+	} else if _, err := os.Stat("./img/calendar_activities/calendar_activities.jpg"); err == nil {
+		Answer_File(c, "/img/calendar_activities/calendar_activities.jpg")
 	} else {
 		// Файл не найден, возвращаем ошибку 404
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)

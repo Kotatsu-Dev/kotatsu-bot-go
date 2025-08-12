@@ -11,7 +11,7 @@ import { toaster } from "../components/ui/toaster";
 import z, { ZodError } from "zod";
 
 const createApi = (_ctx: null) => {
-  const base = `http://localhost:8006`;
+  const base = ``;
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });
