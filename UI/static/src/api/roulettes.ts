@@ -2,7 +2,6 @@ import type { AxiosInstance } from "axios";
 import z from "zod";
 import { User } from "./users";
 import { format } from "date-fns";
-import { handleZodError } from "./api";
 
 const Roulette = z.object({
   id: z.int().nonnegative(),
@@ -21,9 +20,7 @@ export const createRoulettesApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const result = await $.get("/roulettes/");
-      return handleZodError(() =>
-        Roulette.array().parse(result.data.data.list_anime_roulettes)
-      );
+      return Roulette.array().parse(result.data.data.list_anime_roulettes);
     },
 
     async create(props: {

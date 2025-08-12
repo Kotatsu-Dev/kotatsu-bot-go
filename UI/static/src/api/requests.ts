@@ -1,6 +1,5 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
-import { handleZodError } from "./api";
 
 export const Request = z.object({
   id: z.int().nonnegative(),
@@ -15,9 +14,7 @@ export const createRequestsApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const res = await $.get("/requests/");
-      return handleZodError(() =>
-        Request.array().parse(res.data.data.list_requests)
-      );
+      return Request.array().parse(res.data.data.list_requests);
     },
     async accept(props: { id: number }) {
       await $.put("/requests/choice", {

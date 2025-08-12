@@ -1,7 +1,6 @@
 import type { AxiosInstance } from "axios";
 import { format } from "date-fns";
 import z from "zod";
-import { handleZodError } from "./api";
 
 const Activity = z.object({
   id: z.int(),
@@ -20,7 +19,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const res = await $.get("/activities/");
-      return handleZodError(() => Activity.array().parse(res.data.data.list_activities));
+      return  Activity.array().parse(res.data.data.list_activities);
     },
 
     async setStatus({ id, status }: { id: number; status: boolean }) {
