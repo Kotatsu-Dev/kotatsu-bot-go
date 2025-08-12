@@ -20,7 +20,7 @@ export const User = z.object({
   is_sent_request: z.boolean(),
   is_filled_data: z.boolean(),
   temp_activity_id: z.int(),
-  my_activities: z.any().array(), // TODO
+  my_activities: z.any().array().or(z.null()), // TODO
   link_my_anime_list: z.string(),
   my_request: Request.or(z.null()),
   enigmatic_title: z.string(),

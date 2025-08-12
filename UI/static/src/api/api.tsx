@@ -11,7 +11,7 @@ import { toaster } from "../components/ui/toaster";
 import z, { ZodError } from "zod";
 
 const createApi = (_ctx: null) => {
-  const base = ``;
+  const base = `http://localhost:8006`;
   const $ = axios.create({
     baseURL: `${base}/api/`,
   });
@@ -41,6 +41,8 @@ export const useAPI = () => {
 
 export const handleError = (e: unknown) => {
   if (e instanceof ZodError) {
+    console.log(`Error parsing data:\n${z.prettifyError(e)}`);
+    console.log(e.issues);
     toaster.error({
       description: `Error parsing data:\n${z.prettifyError(e)}`,
     });
