@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
 import { Request } from "./requests";
+import { handleZodError } from "./api";
 
 export const User = z.object({
   id: z.int(),
@@ -31,7 +32,7 @@ export const createUsersApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const res = await $.get("/users/");
-      return User.array().parse(res.data.data.list_users);
+      return handleZodError(() => User.array().parse(res.data.data.list_users));
     },
     async setMemberStatus(props: {
       user_tg_id: number;
@@ -43,7 +44,7 @@ export const createUsersApi = ($: AxiosInstance) => {
       });
     },
     async wipe() {
-      await $.delete('/users/')
-    }
+      await $.delete("/users/");
+    },
   };
 };
