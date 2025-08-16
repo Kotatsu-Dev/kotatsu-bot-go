@@ -8,8 +8,6 @@ import {
   Portal,
   Stack,
   Tabs,
-  Text,
-  Wrap,
 } from "@chakra-ui/react";
 import "./App.css";
 import { Provider } from "./components/ui/provider";
