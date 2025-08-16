@@ -37,9 +37,9 @@ function App() {
             <Tabs.Trigger value="messages" flexShrink={0}>
               Messages
             </Tabs.Trigger>
-            <Tabs.Trigger value="requests" flexShrink={0}>
+            {/* <Tabs.Trigger value="requests" flexShrink={0}>
               Requests
-            </Tabs.Trigger>
+            </Tabs.Trigger> */}
             <Tabs.Trigger value="export" flexShrink={0}>
               Export
             </Tabs.Trigger>
