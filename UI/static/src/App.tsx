@@ -1,4 +1,16 @@
-import { Tabs } from "@chakra-ui/react";
+import {
+  Box,
+  Container,
+  Drawer,
+  Flex,
+  Icon,
+  IconButton,
+  Portal,
+  Stack,
+  Tabs,
+  Text,
+  Wrap,
+} from "@chakra-ui/react";
 import "./App.css";
 import { Provider } from "./components/ui/provider";
 import { APIProvider } from "./api/api";
@@ -12,40 +24,129 @@ import { RequestTab } from "./components/RequestTab";
 import { ExportTab } from "./components/ExportTab";
 import { DeletionTab } from "./components/DeletionTab";
 import { RouletteTab } from "./components/RouletteTab";
+import { useState } from "react";
+import {
+  FaBars,
+  FaCalendarPlus,
+  FaClock,
+  FaFileExport,
+  FaTrash,
+  FaUsers,
+} from "react-icons/fa";
+import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
+
+const tabs = [
+  {
+    icon: <FaClock />,
+    value: "data",
+    title: "Data",
+  },
+  {
+    icon: <FaCalendarPlus />,
+    value: "events",
+    title: "Events",
+  },
+  {
+    icon: <FaCalendarDays />,
+    value: "calendar",
+    title: "Calendar",
+  },
+  {
+    icon: <FaUsers />,
+    value: "users",
+    title: "Users",
+  },
+  {
+    icon: <FaShuffle />,
+    value: "roulettes",
+    title: "Roulettes",
+  },
+  {
+    icon: <FaMessage />,
+    value: "messages",
+    title: "Messages",
+  },
+  // {
+  //   value: "requests",
+  //   title: "Requests",
+  // },
+  {
+    icon: <FaFileExport />,
+    value: "export",
+    title: "Export",
+  },
+  {
+    icon: <FaTrash />,
+    value: "deletion",
+    title: "Deletion",
+  },
+];
 
 function App() {
+  const [tab, setTab] = useState("data");
+
   return (
     <Provider>
       <APIProvider>
-        <Tabs.Root defaultValue={"data"} colorPalette={"orange"}>
-          <Tabs.List maxW={"100%"} overflowX={"scroll"} scrollbarWidth={"none"}>
-            <Tabs.Trigger value="data" flexShrink={0}>
-              Data
-            </Tabs.Trigger>
-            <Tabs.Trigger value="events" flexShrink={0}>
-              Events
-            </Tabs.Trigger>
-            <Tabs.Trigger value="calendar" flexShrink={0}>
-              Calendar
-            </Tabs.Trigger>
-            <Tabs.Trigger value="users" flexShrink={0}>
-              Users
-            </Tabs.Trigger>
-            <Tabs.Trigger value="roulettes" flexShrink={0}>
-              Roulettes
-            </Tabs.Trigger>
-            <Tabs.Trigger value="messages" flexShrink={0}>
-              Messages
-            </Tabs.Trigger>
-            <Tabs.Trigger value="requests" flexShrink={0}>
-              Requests
-            </Tabs.Trigger>
-            <Tabs.Trigger value="export" flexShrink={0}>
-              Export
-            </Tabs.Trigger>
-            <Tabs.Trigger value="deletion" flexShrink={0}>
-              Deletion
-            </Tabs.Trigger>
+        <Box
+          borderBottom={"colorPalette.500"}
+          borderBottomWidth={1}
+          display={{ base: "flex", md: "none" }}
+        >
+          <Container maxW={"lg"} pt={2} pb={2} colorPalette={"orange"}>
+            <Drawer.Root placement={"start"}>
+              <Drawer.Trigger asChild>
+                <IconButton>
+                  <FaBars />
+                </IconButton>
+              </Drawer.Trigger>
+              <Portal>
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                  <Drawer.Content>
+                    <Drawer.Header>
+                      <Drawer.Title>Menu</Drawer.Title>
+                    </Drawer.Header>
+                    <Drawer.Body>
+                      <Stack>
+                        {tabs.map((tab) => (
+                          <Drawer.ActionTrigger asChild key={tab.value}>
+                            <Box
+                              textStyle="lg"
+                              cursor={"pointer"}
+                              onClick={() => setTab(tab.value)}
+                            >
+                              <Flex gap={2} alignItems={"center"}>
+                                <Icon size="md">{tab.icon}</Icon>
+                                {tab.title}
+                              </Flex>
+                            </Box>
+                          </Drawer.ActionTrigger>
+                        ))}
+                      </Stack>
+                    </Drawer.Body>
+                  </Drawer.Content>
+                </Drawer.Positioner>
+              </Portal>
+            </Drawer.Root>
+          </Container>
+        </Box>
+        <Tabs.Root
+          value={tab}
+          onValueChange={(e) => setTab(e.value)}
+          colorPalette={"orange"}
+        >
+          <Tabs.List
+            maxW={"100%"}
+            overflowX={"scroll"}
+            scrollbarWidth={"none"}
+            display={{ base: "none", md: "flex" }}
+          >
+            {tabs.map((tab) => (
+              <Tabs.Trigger key={tab.value} value={tab.value} flexShrink={0}>
+                {tab.title}
+              </Tabs.Trigger>
+            ))}
           </Tabs.List>
           <Tabs.Content value="data">
             <DataTab />
