@@ -1,6 +1,5 @@
 import { handleError, useAPI } from "../api/api";
 import {
-  Badge,
   Button,
   Card,
   Container,
@@ -9,6 +8,7 @@ import {
   Link,
   SimpleGrid,
   Stack,
+  Status,
   Tabs,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -78,14 +78,22 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
             <DataList.ItemLabel>Status</DataList.ItemLabel>
             <DataList.ItemValue>
               {user.is_club_member ? (
-                <Badge colorPalette={"green"}>Member</Badge>
+                <Status.Root colorPalette={"green"}>
+                  <Status.Indicator />
+                  Member
+                </Status.Root>
               ) : user.my_request ? (
-                <Badge colorPalette={"yellow"}>
-                  Submitted ({formatDistanceToNow(user.my_request.created_at)}{" "}
-                  ago)
-                </Badge>
+                <Status.Root colorPalette={"yellow"}>
+                  <Status.Indicator />
+                  {`Submitted (${formatDistanceToNow(
+                    user.my_request.created_at
+                  )} ago)`}
+                </Status.Root>
               ) : (
-                <Badge colorPalette={"red"}>Not member</Badge>
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  Not member
+                </Status.Root>
               )}
             </DataList.ItemValue>
           </DataList.Item>
@@ -95,7 +103,10 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
               {user.full_name ? (
                 user.full_name
               ) : (
-                <Badge colorPalette={"red"}>Unknown</Badge>
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  Unknown
+                </Status.Root>
               )}
             </DataList.ItemValue>
           </DataList.Item>
@@ -111,7 +122,10 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
                   @{user.user_name}
                 </Link>
               ) : (
-                <Badge colorPalette={"red"}>None</Badge>
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  None
+                </Status.Root>
               )}
             </DataList.ItemValue>
           </DataList.Item>
@@ -119,16 +133,29 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
             <DataList.ItemLabel>From ITMO</DataList.ItemLabel>
             <DataList.ItemValue>
               {user.is_itmo ? (
-                <Badge colorPalette={"green"}>Yes</Badge>
+                <Status.Root colorPalette={"green"}>
+                  <Status.Indicator />
+                  Yes
+                </Status.Root>
               ) : (
-                <Badge colorPalette={"red"}>No</Badge>
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  No
+                </Status.Root>
               )}
             </DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
             <DataList.ItemLabel>ISU</DataList.ItemLabel>
             <DataList.ItemValue>
-              {user.isu ? user.isu : <Badge colorPalette={"red"}>None</Badge>}
+              {user.isu ? (
+                user.isu
+              ) : (
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  None
+                </Status.Root>
+              )}
             </DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
@@ -137,7 +164,10 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
               {user.phone_number.length ? (
                 user.phone_number
               ) : (
-                <Badge colorPalette={"red"}>None</Badge>
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  None
+                </Status.Root>
               )}
             </DataList.ItemValue>
           </DataList.Item>
