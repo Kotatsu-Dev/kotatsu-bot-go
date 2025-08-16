@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Badge,
   Button,
@@ -41,24 +41,32 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
   };
 
   const kickUser = async () => {
-    await api.users.setMemberStatus({
-      user_tg_id: user.user_tg_id,
-      is_club_member: false,
-    });
-    toaster.success({
-      description: "Successfully kicked user",
-    });
+    try {
+      await api.users.setMemberStatus({
+        user_tg_id: user.user_tg_id,
+        is_club_member: false,
+      });
+      toaster.success({
+        description: "Successfully kicked user",
+      });
+    } catch (e) {
+      handleError(e);
+    }
     props.reload();
   };
 
   const addUser = async () => {
-    await api.users.setMemberStatus({
-      user_tg_id: user.user_tg_id,
-      is_club_member: true,
-    });
-    toaster.success({
-      description: "Successfully added user",
-    });
+    try {
+      await api.users.setMemberStatus({
+        user_tg_id: user.user_tg_id,
+        is_club_member: true,
+      });
+      toaster.success({
+        description: "Successfully added user",
+      });
+    } catch (e) {
+      handleError(e);
+    }
     props.reload();
   };
 

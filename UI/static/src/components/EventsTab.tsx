@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Button,
   Container,
@@ -25,11 +25,15 @@ export const EventsTab = () => {
   const { register, handleSubmit, reset } = useForm<Inputs>();
 
   const createEvent: SubmitHandler<Inputs> = async (e) => {
-    await api.activities.create(e);
-    toaster.success({
-      description: "Event successfully created!",
-    });
-    reset();
+    try {
+      await api.activities.create(e);
+      toaster.success({
+        description: "Event successfully created!",
+      });
+      reset();
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   return (

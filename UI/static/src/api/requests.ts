@@ -12,9 +12,9 @@ export type Request = z.infer<typeof Request>;
 
 export const createRequestsApi = ($: AxiosInstance) => {
   return {
-    async getAll() { 
-        const res = await $.get('/requests/');
-        return Request.array().parse(res.data.data.list_requests); 
+    async getAll() {
+      const res = await $.get("/requests/");
+      return Request.array().parse(res.data.data.list_requests);
     },
     async accept(props: { id: number }) {
       await $.put("/requests/choice", {

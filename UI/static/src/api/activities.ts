@@ -19,7 +19,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const res = await $.get("/activities/");
-      return Activity.array().parse(res.data.data.list_activities);
+      return  Activity.array().parse(res.data.data.list_activities);
     },
 
     async setStatus({ id, status }: { id: number; status: boolean }) {

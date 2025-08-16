@@ -57,15 +57,57 @@ type AnimeRoulette_CreateJSON struct {
 }
 
 type AnimeRoulette_ReadJSON struct {
-	ID               uint           `json:"id"`
-	CreatedAt        time.Time      `json:"created_at"`
-	StartDate        time.Time      `json:"start_date"`
-	AnnounceDate     time.Time      `json:"announce_date"`
-	DistributionDate time.Time      `json:"distribution_date"`
-	EndDate          time.Time      `json:"end_date"`
-	Theme            string         `json:"theme"`
-	Participants     []User         `json:"participants"`
-	Distribution     *pq.Int32Array `json:"distribution"`
+	ID               uint            `json:"id"`
+	CreatedAt        time.Time       `json:"created_at"`
+	StartDate        time.Time       `json:"start_date"`
+	AnnounceDate     time.Time       `json:"announce_date"`
+	DistributionDate time.Time       `json:"distribution_date"`
+	EndDate          time.Time       `json:"end_date"`
+	Theme            string          `json:"theme"`
+	Participants     []User_ReadJSON `json:"participants"`
+	Distribution     *pq.Int32Array  `json:"distribution"`
+}
+
+func RequestToReadJson(req *Request) (res *Request_ReadJSON) {
+	if req != nil {
+		res = &Request_ReadJSON{
+			ID:        req.ID,
+			CreatedAt: req.CreatedAt,
+			Type:      req.Type,
+			Status:    req.Status,
+			UserID:    req.UserID,
+		}
+	}
+	return
+}
+
+func ParticipantsToReadJson(participants []User) (res []User_ReadJSON) {
+	for _, user := range participants {
+		res = append(res, User_ReadJSON{
+			ID:                    user.ID,
+			CreatedAt:             user.CreatedAt,
+			Step:                  user.Step,
+			UserTgID:              user.UserTgID,
+			LastMessageID:         user.LastMessageID,
+			UserName:              user.UserName,
+			FullTgName:            user.FullTgName,
+			ISU:                   user.ISU,
+			FullName:              user.FullName,
+			PhoneNumber:           user.PhoneNumber,
+			SecretCode:            user.SecretCode,
+			IsITMO:                user.IsITMO,
+			IsClubMember:          user.IsClubMember,
+			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
+			IsSentRequest:         user.IsSentRequest,
+			IsFilledData:          user.IsFilledData,
+			TempActivityID:        user.TempActivityID,
+			MyActivities:          user.MyActivities,
+			LinkMyAnimeList:       user.LinkMyAnimeList,
+			MyRequest:             RequestToReadJson(user.MyRequest),
+			EnigmaticTitle:        user.EnigmaticTitle,
+		})
+	}
+	return
 }
 
 // Добавить аниме рулетку
@@ -118,7 +160,7 @@ func DB_GET_AnimeRoulette_BY_Theme(theme string) (int, *AnimeRoulette_ReadJSON) 
 		AnnounceDate:     anime_roulette.AnnounceDate,
 		DistributionDate: anime_roulette.DistributionDate,
 		EndDate:          anime_roulette.EndDate,
-		Participants:     anime_roulette.Participants,
+		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
 	}
 
 	return DB_ANSWER_SUCCESS, &anime_roulette_read
@@ -151,7 +193,7 @@ func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) 
 		AnnounceDate:     anime_roulette.AnnounceDate,
 		DistributionDate: anime_roulette.DistributionDate,
 		EndDate:          anime_roulette.EndDate,
-		Participants:     anime_roulette.Participants,
+		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
 	}
 
 	return DB_ANSWER_SUCCESS, &anime_roulette_read
@@ -184,7 +226,7 @@ func DB_GET_AnimeRoulettes() []AnimeRoulette_ReadJSON {
 			AnnounceDate:     anime_roulette.AnnounceDate,
 			DistributionDate: anime_roulette.DistributionDate,
 			EndDate:          anime_roulette.EndDate,
-			Participants:     anime_roulette.Participants,
+			Participants:     ParticipantsToReadJson(anime_roulette.Participants),
 		}
 		anime_roulettes_list = append(anime_roulettes_list, current_anime_roulette)
 	}

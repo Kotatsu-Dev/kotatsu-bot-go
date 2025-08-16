@@ -11,7 +11,7 @@ const Roulette = z.object({
   distribution_date: z.iso.datetime({ offset: true }).pipe(z.coerce.date()),
   end_date: z.iso.datetime({ offset: true }).pipe(z.coerce.date()),
   theme: z.string(),
-  participants: User.array(),
+  participants: User.array().or(z.null()),
   distribution: z.int().array().or(z.null()),
 });
 export type Roulette = z.infer<typeof Roulette>;

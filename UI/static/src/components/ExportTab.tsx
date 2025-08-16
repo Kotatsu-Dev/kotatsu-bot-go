@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import { exportJSON } from "../misc";
 import { Button, Container, Heading, Stack } from "@chakra-ui/react";
 
@@ -6,35 +6,59 @@ export const ExportTab = () => {
   const api = useAPI();
 
   const allUsers = async () => {
-    const users = await api.users.getAll();
-    exportJSON(users);
+    try {
+      const users = await api.users.getAll();
+      exportJSON(users);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const allEvents = async () => {
-    const events = await api.activities.getAll();
-    exportJSON(events);
+    try {
+      const events = await api.activities.getAll();
+      exportJSON(events);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const allRequests = async () => {
-    const requests = await api.requests.getAll();
-    exportJSON(requests);
+    try {
+      const requests = await api.requests.getAll();
+      exportJSON(requests);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const allRoulettes = async () => {
-    const roulettes = await api.roulettes.getAll();
-    exportJSON(roulettes);
+    try {
+      const roulettes = await api.roulettes.getAll();
+      exportJSON(roulettes);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const allClubMembers = async () => {
-    const users = await api.users.getAll();
-    const clubMembers = users.filter((user) => user.is_club_member);
-    exportJSON(clubMembers);
+    try {
+      const users = await api.users.getAll();
+      const clubMembers = users.filter((user) => user.is_club_member);
+      exportJSON(clubMembers);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   const allNonClubMembers = async () => {
-    const users = await api.users.getAll();
-    const clubMembers = users.filter((user) => !user.is_club_member);
-    exportJSON(clubMembers);
+    try {
+      const users = await api.users.getAll();
+      const clubMembers = users.filter((user) => !user.is_club_member);
+      exportJSON(clubMembers);
+    } catch (e) {
+      handleError(e);
+    }
   };
 
   return (

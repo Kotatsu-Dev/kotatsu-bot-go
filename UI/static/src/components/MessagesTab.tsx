@@ -1,4 +1,4 @@
-import { useAPI } from "../api/api";
+import { handleError, useAPI } from "../api/api";
 import {
   Button,
   Container,
@@ -26,11 +26,15 @@ export const MessagesTab = () => {
   } = useForm<Inputs>();
 
   const sendBroadcast: SubmitHandler<Inputs> = async (e) => {
-    await api.broadcast.send(e);
-    toaster.success({
-      description: "Message broadcasted successfully",
-    });
-    reset();
+    try {
+      await api.broadcast.send(e);
+      toaster.success({
+        description: "Message broadcasted successfully",
+      });
+      reset();
+    } catch(e) {
+      handleError(e);
+    }
   };
 
   return (
