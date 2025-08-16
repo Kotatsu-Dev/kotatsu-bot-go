@@ -2,11 +2,14 @@ import {
   Box,
   Container,
   Drawer,
+  Flex,
+  Icon,
   IconButton,
   Portal,
   Stack,
   Tabs,
   Text,
+  Wrap,
 } from "@chakra-ui/react";
 import "./App.css";
 import { Provider } from "./components/ui/provider";
@@ -22,30 +25,44 @@ import { ExportTab } from "./components/ExportTab";
 import { DeletionTab } from "./components/DeletionTab";
 import { RouletteTab } from "./components/RouletteTab";
 import { useState } from "react";
-import { FaBars } from "react-icons/fa";
+import {
+  FaBars,
+  FaCalendarPlus,
+  FaClock,
+  FaFileExport,
+  FaTrash,
+  FaUsers,
+} from "react-icons/fa";
+import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
 
 const tabs = [
   {
+    icon: <FaClock />,
     value: "data",
     title: "Data",
   },
   {
+    icon: <FaCalendarPlus />,
     value: "events",
     title: "Events",
   },
   {
+    icon: <FaCalendarDays />,
     value: "calendar",
     title: "Calendar",
   },
   {
+    icon: <FaUsers />,
     value: "users",
     title: "Users",
   },
   {
+    icon: <FaShuffle />,
     value: "roulettes",
     title: "Roulettes",
   },
   {
+    icon: <FaMessage />,
     value: "messages",
     title: "Messages",
   },
@@ -54,10 +71,12 @@ const tabs = [
   //   title: "Requests",
   // },
   {
+    icon: <FaFileExport />,
     value: "export",
     title: "Export",
   },
   {
+    icon: <FaTrash />,
     value: "deletion",
     title: "Deletion",
   },
@@ -97,7 +116,10 @@ function App() {
                               cursor={"pointer"}
                               onClick={() => setTab(tab.value)}
                             >
-                              {tab.title}
+                              <Flex gap={2} alignItems={"center"}>
+                                <Icon size="md">{tab.icon}</Icon>
+                                {tab.title}
+                              </Flex>
                             </Box>
                           </Drawer.ActionTrigger>
                         ))}
