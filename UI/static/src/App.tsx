@@ -142,6 +142,7 @@ function App() {
           >
             {tabs.map((tab) => (
               <Tabs.Trigger key={tab.value} value={tab.value} flexShrink={0}>
+                <Icon>{tab.icon}</Icon>
                 {tab.title}
               </Tabs.Trigger>
             ))}
