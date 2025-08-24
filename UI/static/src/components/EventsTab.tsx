@@ -4,10 +4,12 @@ import {
   Card,
   Container,
   DataList,
+  DownloadTrigger,
   Field,
   Fieldset,
   FileUpload,
   Heading,
+  IconButton,
   Input,
   Stack,
   Status,
@@ -20,8 +22,9 @@ import { type Activity } from "../api/activities";
 import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { Workbook } from "exceljs";
+import { FaDownload, FaEye } from "react-icons/fa";
 
-const downloadExcel = async (event: Activity) => {
+const exportExcel = async (event: Activity) => {
   const wb = new Workbook();
   const sheet = wb.addWorksheet("СЗ");
   sheet.addRow([
@@ -154,14 +157,7 @@ const downloadExcel = async (event: Activity) => {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "СЗ.xlsx";
-  document.body.appendChild(a);
-  a.style = "display: none";
-  a.click();
-  a.remove();
+  return blob;
 };
 
 const EventCard = (props: { value: Activity; reload: () => void }) => {
@@ -215,16 +211,31 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
         </DataList.Root>
       </Card.Body>
       <Card.Footer>
-        <Button variant={"outline"} onClick={() => downloadExcel(event)}>
-          Download signed up
-        </Button>
         <Button
           disabled={!event.status}
           colorPalette={"red"}
+          flexGrow={1}
           onClick={() => deleteEvent(event)}
         >
           Delete
         </Button>
+        <DownloadTrigger
+          data={() => exportExcel(event)}
+          fileName="СЗ.xlsx"
+          mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          asChild
+        >
+          <IconButton aria-label="Download signed up" variant={"outline"}>
+            <FaDownload />
+          </IconButton>
+        </DownloadTrigger>
+        <IconButton
+          aria-label="Download signed up"
+          variant={"outline"}
+          disabled
+        >
+          <FaEye />
+        </IconButton>
       </Card.Footer>
     </Card.Root>
   );
@@ -318,7 +329,7 @@ export const EventsTab = () => {
         </Fieldset.Content>
         <Button type={"submit"}>Create event</Button>
       </Fieldset.Root>
-      <Tabs.Root fitted variant={"enclosed"} defaultValue={"all"}>
+      <Tabs.Root fitted variant={"enclosed"} defaultValue={"upcoming"}>
         <Tabs.List>
           <Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
           <Tabs.Trigger value="past">Past</Tabs.Trigger>
