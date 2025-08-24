@@ -16,6 +16,7 @@ import {
   Portal,
   Stack,
   Status,
+  Table,
   Tabs,
   Textarea,
 } from "@chakra-ui/react";
@@ -232,13 +233,46 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
             <FaDownload />
           </IconButton>
         </DownloadTrigger>
-        <IconButton
-          aria-label="Download signed up"
-          variant={"outline"}
-          disabled
-        >
-          <FaEye />
-        </IconButton>
+        <Dialog.Root>
+          <Dialog.Trigger asChild>
+            <IconButton aria-label="Show signed up" variant={"outline"}>
+              <FaEye />
+            </IconButton>
+          </Dialog.Trigger>
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner colorPalette={"orange"}>
+              <Dialog.Content>
+                <Dialog.Header>
+                  <Dialog.Title>Signed up for "{event.title}"</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body>
+                  <Table.Root>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeader>Name</Table.ColumnHeader>
+                        <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                        <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {event.participants.map((user) => (
+                        <Table.Row key={user.id}>
+                          <Table.Cell>{user.full_name}</Table.Cell>
+                          <Table.Cell>{user.user_name}</Table.Cell>
+                          <Table.Cell>{user.phone_number}</Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                </Dialog.Body>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton size="sm" />
+                </Dialog.CloseTrigger>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
       </Card.Footer>
     </Card.Root>
   );
