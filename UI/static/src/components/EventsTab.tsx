@@ -2,8 +2,10 @@ import { handleError, useAPI } from "../api/api";
 import {
   Button,
   Card,
+  CloseButton,
   Container,
   DataList,
+  Dialog,
   DownloadTrigger,
   Field,
   Fieldset,
@@ -11,6 +13,7 @@ import {
   Heading,
   IconButton,
   Input,
+  Portal,
   Stack,
   Status,
   Tabs,
@@ -252,17 +255,21 @@ type Inputs = {
 export const EventsTab = () => {
   const api = useAPI();
   const [events, setEvents] = useState<Activity[]>([]);
+  const [open, setOpen] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>();
 
-  const createEvent: SubmitHandler<Inputs> = async (e) => {
+  const createEvent: SubmitHandler<Inputs> = async (data, event) => {
     try {
-      await api.activities.create(e);
+      await api.activities.create(data);
       toaster.success({
         description: "Event successfully created!",
       });
       reset();
+      setOpen(false);
+      loadEvents();
     } catch (e) {
       handleError(e);
+      event?.stopPropagation();
     }
   };
 
@@ -287,76 +294,104 @@ export const EventsTab = () => {
   }, []);
 
   return (
-    <Container maxW={"lg"} as={"form"} onSubmit={handleSubmit(createEvent)}>
-      <Fieldset.Root maxW="lg">
-        <Fieldset.Legend>
-          <Heading>Create new event</Heading>
-        </Fieldset.Legend>
-        <Fieldset.Content>
-          <Field.Root>
-            <Field.Label>Event title</Field.Label>
-            <Input placeholder="Enter event title" {...register("title")} />
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>Date</Field.Label>
-            <Input type={"datetime-local"} {...register("date_meeting")} />
-            {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>Location</Field.Label>
-            <Input placeholder="Enter location" {...register("location")} />
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>Description</Field.Label>
-            <Textarea
-              placeholder="Enter event description"
-              {...register("description")}
-            />
-          </Field.Root>
-          <FileUpload.Root
-            maxFiles={5}
-            accept={"image/*"}
-            {...register("send_images")}
-          >
-            <FileUpload.HiddenInput />
-            <FileUpload.Trigger asChild>
-              <Button variant="outline" w="full">
-                Upload images for event
-              </Button>
-            </FileUpload.Trigger>
-            <FileUpload.List showSize clearable />
-          </FileUpload.Root>
-        </Fieldset.Content>
-        <Button type={"submit"}>Create event</Button>
-      </Fieldset.Root>
-      <Tabs.Root fitted variant={"enclosed"} defaultValue={"upcoming"}>
-        <Tabs.List>
-          <Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
-          <Tabs.Trigger value="past">Past</Tabs.Trigger>
-          <Tabs.Trigger value="inactive">Inactive</Tabs.Trigger>
-        </Tabs.List>
-        <Tabs.Content value="upcoming">
-          <Stack>
-            {upcoming.map((event) => (
-              <EventCard key={event.id} value={event} reload={loadEvents} />
-            ))}
-          </Stack>
-        </Tabs.Content>
-        <Tabs.Content value="past">
-          <Stack>
-            {past.map((event) => (
-              <EventCard key={event.id} value={event} reload={loadEvents} />
-            ))}
-          </Stack>
-        </Tabs.Content>
-        <Tabs.Content value="inactive">
-          <Stack>
-            {inactive.map((event) => (
-              <EventCard key={event.id} value={event} reload={loadEvents} />
-            ))}
-          </Stack>
-        </Tabs.Content>
-      </Tabs.Root>
+    <Container maxW={"lg"}>
+      <Stack>
+        <Dialog.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+          <Dialog.Trigger asChild>
+            <Button>New event</Button>
+          </Dialog.Trigger>
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner colorPalette={"orange"}>
+              <Dialog.Content>
+                <Dialog.Header>
+                  <Dialog.Title>Create new event</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body as={"form"} onSubmit={handleSubmit(createEvent)}>
+                  <Fieldset.Root>
+                    <Fieldset.Content>
+                      <Field.Root>
+                        <Field.Label>Event title</Field.Label>
+                        <Input
+                          placeholder="Enter event title"
+                          {...register("title")}
+                        />
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Date</Field.Label>
+                        <Input
+                          type={"datetime-local"}
+                          {...register("date_meeting")}
+                        />
+                        {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Location</Field.Label>
+                        <Input
+                          placeholder="Enter location"
+                          {...register("location")}
+                        />
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Description</Field.Label>
+                        <Textarea
+                          placeholder="Enter event description"
+                          {...register("description")}
+                        />
+                      </Field.Root>
+                      <FileUpload.Root
+                        maxFiles={5}
+                        accept={"image/*"}
+                        {...register("send_images")}
+                      >
+                        <FileUpload.HiddenInput />
+                        <FileUpload.Trigger asChild>
+                          <Button variant="outline" w="full">
+                            Upload images for event
+                          </Button>
+                        </FileUpload.Trigger>
+                        <FileUpload.List showSize clearable />
+                      </FileUpload.Root>
+                    </Fieldset.Content>
+                    <Button type={"submit"}>Create event</Button>
+                  </Fieldset.Root>
+                </Dialog.Body>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton size="sm" />
+                </Dialog.CloseTrigger>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
+        <Tabs.Root fitted variant={"enclosed"} defaultValue={"upcoming"}>
+          <Tabs.List>
+            <Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
+            <Tabs.Trigger value="past">Past</Tabs.Trigger>
+            <Tabs.Trigger value="inactive">Inactive</Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="upcoming">
+            <Stack>
+              {upcoming.map((event) => (
+                <EventCard key={event.id} value={event} reload={loadEvents} />
+              ))}
+            </Stack>
+          </Tabs.Content>
+          <Tabs.Content value="past">
+            <Stack>
+              {past.map((event) => (
+                <EventCard key={event.id} value={event} reload={loadEvents} />
+              ))}
+            </Stack>
+          </Tabs.Content>
+          <Tabs.Content value="inactive">
+            <Stack>
+              {inactive.map((event) => (
+                <EventCard key={event.id} value={event} reload={loadEvents} />
+              ))}
+            </Stack>
+          </Tabs.Content>
+        </Tabs.Root>
+      </Stack>
     </Container>
   );
 };
