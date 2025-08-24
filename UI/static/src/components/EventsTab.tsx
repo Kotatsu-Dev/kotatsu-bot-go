@@ -325,25 +325,25 @@ export const EventsTab = () => {
           <Tabs.Trigger value="inactive">Inactive</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="upcoming">
-          {upcoming.map((event) => (
-            <Stack key={event.id}>
-              <EventCard value={event} reload={loadEvents} />
-            </Stack>
-          ))}
+          <Stack>
+            {upcoming.map((event) => (
+              <EventCard key={event.id} value={event} reload={loadEvents} />
+            ))}
+          </Stack>
         </Tabs.Content>
         <Tabs.Content value="past">
-          {past.map((event) => (
-            <Stack key={event.id}>
-              <EventCard value={event} reload={loadEvents} />
-            </Stack>
-          ))}
+          <Stack>
+            {past.map((event) => (
+              <EventCard key={event.id} value={event} reload={loadEvents} />
+            ))}
+          </Stack>
         </Tabs.Content>
         <Tabs.Content value="inactive">
-          {inactive.map((event) => (
-            <Stack key={event.id}>
-              <EventCard value={event} reload={loadEvents} />
-            </Stack>
-          ))}
+          <Stack>
+            {inactive.map((event) => (
+              <EventCard key={event.id} value={event} reload={loadEvents} />
+            ))}
+          </Stack>
         </Tabs.Content>
       </Tabs.Root>
     </Container>

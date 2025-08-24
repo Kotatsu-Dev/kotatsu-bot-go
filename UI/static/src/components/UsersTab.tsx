@@ -225,25 +225,25 @@ export const UsersTab = () => {
             <Tabs.Trigger value="requests">Requests</Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="all">
-            {users.map((user) => (
-              <Stack key={user.id}>
-                <UserComponent value={user} reload={loadUsers} />
-              </Stack>
-            ))}
+            <Stack>
+              {users.map((user) => (
+                <UserComponent key={user.id} value={user} reload={loadUsers} />
+              ))}
+            </Stack>
           </Tabs.Content>
           <Tabs.Content value="members">
-            {members.map((user) => (
-              <Stack key={user.id}>
-                <UserComponent value={user} reload={loadUsers} />
-              </Stack>
-            ))}
+            <Stack>
+              {members.map((user) => (
+                <UserComponent key={user.id} value={user} reload={loadUsers} />
+              ))}
+            </Stack>
           </Tabs.Content>
           <Tabs.Content value="requests">
-            {requests.map((user) => (
-              <Stack key={user.id}>
-                <UserComponent value={user} reload={loadUsers} />
-              </Stack>
-            ))}
+            <Stack>
+              {requests.map((user) => (
+                <UserComponent key={user.id} value={user} reload={loadUsers} />
+              ))}
+            </Stack>
           </Tabs.Content>
         </Tabs.Root>
       </Stack>
