@@ -1137,6 +1137,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 
 	params.Text = "Введи свой номер мобильного телефона" + "\n" +
 		"Он необходим для оформления пропуска на территорию Университета ИТМО, в котором проходят мероприятия клуба"
+	params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
 
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = current_user.UserTgID
@@ -1166,11 +1167,20 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = update.Message.From.ID
 
+	phone_number := ""
+
 	// Регулярное выражение для валидации номера
 	regex := regexp.MustCompile(`^(?:\+7|8)\d{10}$`)
 
 	if regex.MatchString(update.Message.Text) {
-		update_user_data["phone_number"] = update.Message.Text
+		phone_number = update.Message.Text
+	} else if update.Message.Contact != nil {
+		phone_number = update.Message.Contact.PhoneNumber
+	}
+
+	if phone_number != "" {
+		update_user_data["phone_number"] = phone_number
+		params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("")
 
 		if action == "join_club" {
 			params.Text = "Если у тебя есть код для вступления, отправь его" + "\n" +

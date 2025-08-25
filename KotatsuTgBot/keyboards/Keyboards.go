@@ -472,3 +472,19 @@ func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
 		InlineKeyboard: inlineKeyboard,
 	}
 }
+
+func CreateKeyboard_RequestContact() *models.ReplyKeyboardMarkup {
+	return &models.ReplyKeyboardMarkup{
+		Keyboard: [][]models.KeyboardButton{
+			{
+				{
+					Text:           "Отправить свой номер",
+					RequestContact: true,
+				},
+				{Text: "⬅ Вернуться в главное меню"},
+			},
+		},
+		ResizeKeyboard:  true,
+		OneTimeKeyboard: false,
+	}
+}
