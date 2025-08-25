@@ -16,23 +16,23 @@ import (
 
 type User struct {
 	gorm.Model
-	Step                  int         `json:"step"`                                            // Текущий шаг
-	UserTgID              int64       `json:"user_tg_id"`                                      // ID пользователя в Телеграм
-	LastMessageID         int         `json:"last_message_id"`                                 // ID последнего сообщения от бота
-	UserName              string      `json:"user_name"`                                       // Имя пользователя в Телеграм
-	FullTgName            string      `json:"full_tg_name"`                                    // Полное имя пользователя в Телеграм
-	ISU                   string      `json:"isu"`                                             // ИСУ для ИТМО
-	FullName              string      `json:"full_name"`                                       // Имя пользователя
-	PhoneNumber           string      `json:"phone_number"`                                    // Номер телефона пользователя
-	SecretCode            string      `json:"secret_code"`                                     // Секретный код пользователя
-	IsITMO                bool        `json:"is_itmo"`                                         // Студент ИТМО
-	IsClubMember          bool        `json:"is_club_member"`                                  // Член клуба
-	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                         // Подписка на рассылку
-	IsSentRequest         bool        `json:"is_sent_request"`                                 // Отправлена ли заявка
-	IsFilledData          bool        `json:"is_filled_data"`                                  // Заполнены ли данные?
-	TempActivityID        int         `json:"temp_activity_id"`                                // Временное хранение при записи на мероприятие
-	MyActivities          []*Activity `json:"my_activities" gorm:"many2many:user_activities;"` // Простой список моих мероприятий
-	LinkMyAnimeList       string      `json:"link_my_anime_list"`                              // Мой список аниме
+	Step                  int         `json:"step"`                                                                        // Текущий шаг
+	UserTgID              int64       `json:"user_tg_id"`                                                                  // ID пользователя в Телеграм
+	LastMessageID         int         `json:"last_message_id"`                                                             // ID последнего сообщения от бота
+	UserName              string      `json:"user_name"`                                                                   // Имя пользователя в Телеграм
+	FullTgName            string      `json:"full_tg_name"`                                                                // Полное имя пользователя в Телеграм
+	ISU                   string      `json:"isu"`                                                                         // ИСУ для ИТМО
+	FullName              string      `json:"full_name"`                                                                   // Имя пользователя
+	PhoneNumber           string      `json:"phone_number"`                                                                // Номер телефона пользователя
+	SecretCode            string      `json:"secret_code"`                                                                 // Секретный код пользователя
+	IsITMO                bool        `json:"is_itmo"`                                                                     // Студент ИТМО
+	IsClubMember          bool        `json:"is_club_member"`                                                              // Член клуба
+	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                                                     // Подписка на рассылку
+	IsSentRequest         bool        `json:"is_sent_request"`                                                             // Отправлена ли заявка
+	IsFilledData          bool        `json:"is_filled_data"`                                                              // Заполнены ли данные?
+	TempActivityID        int         `json:"temp_activity_id"`                                                            // Временное хранение при записи на мероприятие
+	MyActivities          []*Activity `json:"my_activities" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"` // Простой список моих мероприятий
+	LinkMyAnimeList       string      `json:"link_my_anime_list"`                                                          // Мой список аниме
 	MyRequest             *Request    `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	AnimeRouletteID       *uint       `json:"anime_roulette_id"`
 	EnigmaticTitle        string      `json:"enigmatic_title"` // Загаданная тема для аниме рулетки
