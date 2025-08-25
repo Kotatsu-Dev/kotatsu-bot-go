@@ -38,6 +38,8 @@ import (
 	"strings"
 )
 
+var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)`)
+
 // Удалить элемент массива
 func RemoveIndex(s []int64, index int) []int64 {
 	return append(s[:index], s[index+1:]...)
@@ -1069,6 +1071,17 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 		ParseMode: models.ParseModeHTML,
 	}
 
+	matched := fullNameRegexp.MatchString(update.Message.Text)
+
+	if !matched {
+		params.Text = "Неправильный формат ФИО, попробуй ещё раз в формате Фамилия Имя Отчество."
+		_, err_msg := b.SendMessage(ctx, params)
+		if err_msg != nil {
+			rr_debug.PrintLOG("botHandlers.go", "proccessStep_ITMO_EnterFullName", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+		}
+		return
+	}
+
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = update.Message.From.ID
 	update_user_data["full_name"] = update.Message.Text
@@ -1109,6 +1122,17 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.From.ID,
 		ParseMode: models.ParseModeHTML,
+	}
+
+	matched := fullNameRegexp.MatchString(update.Message.Text)
+
+	if !matched {
+		params.Text = "Неправильный формат ФИО, попробуй ещё раз в формате Фамилия Имя Отчество."
+		_, err_msg := b.SendMessage(ctx, params)
+		if err_msg != nil {
+			rr_debug.PrintLOG("botHandlers.go", "proccessStep_ITMO_EnterFullName", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+		}
+		return
 	}
 
 	params.Text = "Введи свой номер мобильного телефона" + "\n" +
