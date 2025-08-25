@@ -26,7 +26,6 @@ import { useState } from "react";
 import {
   FaBars,
   FaCalendarPlus,
-  FaClock,
   FaFileExport,
   FaTrash,
   FaUsers,
@@ -34,11 +33,11 @@ import {
 import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
 
 const tabs = [
-  {
-    icon: <FaClock />,
-    value: "data",
-    title: "Data",
-  },
+  // {
+  //   icon: <FaClock />,
+  //   value: "data",
+  //   title: "Data",
+  // },
   {
     icon: <FaCalendarPlus />,
     value: "events",
