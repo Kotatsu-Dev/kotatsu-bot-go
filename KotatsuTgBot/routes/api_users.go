@@ -88,6 +88,19 @@ func Handler_API_Users_UpdateObject_ClubMember(c *gin.Context) {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
 		}
 		return
+	} else {
+		v, ok := update_json["user_tg_id"].(float64)
+		if !ok {
+			rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", "ok")
+			if config.GetConfig().CONFIG_IS_DEBUG {
+				Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: tg_user_id not expected")
+			} else {
+				Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
+			}
+			return
+		} else {
+			update_json["user_tg_id"] = int64(v)
+		}
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
