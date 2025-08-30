@@ -246,8 +246,11 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 			rr_debug.PrintLOG("main.go", "update.Message.Text", "activity_GetObjects()", "Ошибка работы с БД", "")
 		}
 	} else {
-		params.Text = "Вы не зарегистрированны в системе" + "\n" +
-			"Продолжая использование чат-бота, вы соглашаетесь на обработку персональных данных в соответствии с 152-ФЗ «О персональных данных»."
+		b.SendDocument(ctx, &bot.SendDocumentParams{
+			ChatID:   update.Message.Chat.ID,
+			Document: &models.InputFileString{Data: "CAACAgIAAx0CbgUG4QACCWpostfAVRPNDHNAWu8vcIbjv0nuagACrXQAAl8iQUmAFQIjshq4bTYE"},
+		})
+		params.Text = "Продолжая общение со мной, ты соглашаешься на обработку персональных данных в соответствии со 152-ФЗ «О персональных данных»."
 		params.ReplyMarkup = keyboards.Registration
 	}
 
@@ -291,8 +294,8 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 			rr_debug.PrintLOG("main.go", "update.Message.Text", "activity_GetObjects()", "Ошибка работы с БД", "")
 		}
 	} else {
-		params.Text = "Вы не зарегистрированны в системе" + "\n" +
-			"Продолжая использование чат-бота, вы соглашаетесь на обработку персональных данных в соответствии с 152-ФЗ «О персональных данных»."
+		params.Text = "Привет!" + "\n" +
+			"Продолжая общение со мной, ты соглашаешься на обработку персональных данных в соответствии со 152-ФЗ «О персональных данных»."
 		params.ReplyMarkup = keyboards.Registration
 	}
 
@@ -357,15 +360,18 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 	}
 
 	if current_user.IsSentRequest {
-		params.Text = "Ты уже отправил(а) заявку на вступление в клуб. Ожидай ответа от бота"
+		params.Text = "Твою заявку ещё не обработали. Пожалуйста, подожди ответа руководителя или напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
 
 	} else {
 		params_load.Text = "Инициализация..."
-		params.Text = "Перед вступлением в клуб, пожалуйста, ознакомься с правилами:" + "\n" + "\n" +
-			"1. У клуба открытый тип членства — достаточно проживать в Санкт-Петербурге и интересоваться аниме, мангой, ранобэ, JRPG, визуальными новеллами, косплеем или другими произведениями отаку-культуры." + "\n" + "\n" +
-			"Уважай интересы и взгляды других участников. За разжигание ненависти и оскорбления можем исключить из клуба." + "\n" + "\n" +
-			"2. Посещать все мероприятия клуба не обязательно — выбирай те, что приходятся тебе по душе. Но если мы не видели и не слышали тебя более 4 месяцев, членство в клубе может быть прекращено, но мы обязательно заранее свяжемся и предупредим. Вернуться можно в любой момент — это не бан и не наказание, а просто наш способ держать список участников актуальным, чтобы в нём не оставалось студентов, которые потеряли интерес к клубу или отчислились из ИТМО." + "\n" + "\n" +
-			"Если участию в мероприятиях мешала учёба или работа — из клуба не исключаем, достаточно ответить на наше предупреждение. Мы тоже студенты, всё понимаем."
+		params.Text = "Перед вступлением в клуб немного о правилах:" + "\n" +
+			"0. Для посещения большинства мероприятий вступать в клуб не обязательно." + "\n" +
+			"Если хочешь просто к нам прийти, перейди в меню «Запись на мероприятия»" +
+			"1. Чтобы вступить в клуб, посети хотя бы 3 мероприятия. Онлайн-встречи тоже считаются :)" + "\n" +
+			"2. Относись ко всем участникам с уважением. Никого нельзя унижать за их интересы и вкусы." + "\n" +
+			"3. Наш клуб — официальная структура в ИТМО, поэтому не забывай о правилах Университета." + "\n" +
+			"<a href=\"https://kotatsu.spb.ru/rules/Правила клуба Котацу (последняя редакция).pdf\">Полные правила</a> (там скучно и намного официальнее, но больше деталей)"
+		params.ParseMode = models.ParseModeHTML
 		params_load.ReplyMarkup = keyboards.CommunicationManager
 		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 
@@ -423,7 +429,8 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 		}
 
 		if !status_one {
-			params.Text = "Никаких мероприятий на данный момент не проводится"
+			params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
+				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
 			params.ReplyMarkup = keyboards.ListEvents
 
 			_, err_msg := b.SendMessage(ctx, params)
@@ -477,7 +484,7 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 				params_photo.Photo = inputFile
 				params_photo.Caption = "Список текущих мероприятий:"
-				params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list)
+				params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 
 				// Отправляем фото
 				_, err = b.SendPhoto(ctx, params_photo)
@@ -488,7 +495,7 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 			} else if os.IsNotExist(err) {
 				params.Text = "Список текущих мероприятий:"
-				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list)
+				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 
 				_, err_msg := b.SendMessage(ctx, params_load)
 				if err_msg != nil {
@@ -497,7 +504,7 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 			} else {
 				rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
 				params.Text = "Список текущих мероприятий:"
-				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list)
+				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 
 				_, err_msg := b.SendMessage(ctx, params_load)
 				if err_msg != nil {
@@ -566,7 +573,7 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 
 	_, user := db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Ты успешно был(а) подписан(а) на нашу рассылку!"
+	params.Text = "Теперь я буду присылать тебе важные сообщения от клуба прямо в этот чат"
 	if user != nil && user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(true)
 	} else {
@@ -590,7 +597,7 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 	update_user_data["is_subscribe_newsletter"] = false
 	_, user := db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Ты успешно был(а) отписан(а) на нашу рассылку!"
+	params.Text = "Хорошо-хорошо, больше не буду :("
 	if user != nil && user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(false)
 	} else {
@@ -1249,8 +1256,8 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 	db_answer_code := db.DB_CREATE_Request(current_user.ID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		params_user.Text = "Заявка на вступление в клуб была отправлена!" + "\n" +
-			"Ожидай сообщение от бота — он уведомит о рассмотрении заявки"
+		params_user.Text = "Отправила твою заявку руководителю клуба." + "\n" +
+			"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
 
 		params_support.Text = "К нам поступила новая заявка на вступление в клуб от пользователя: " + current_user.FullName
 		_, err_msg := b.SendMessage(ctx, params_support)
@@ -1512,6 +1519,55 @@ func proccessText_Unknown(ctx context.Context, b *bot.Bot, update *models.Update
 // Inline - клавиатура
 //
 
+func formatDate(t time.Time) string {
+	var weekday, month string
+	switch t.Weekday() {
+	case time.Monday:
+		weekday = "понедельник"
+	case time.Tuesday:
+		weekday = "вторник"
+	case time.Wednesday:
+		weekday = "среда"
+	case time.Thursday:
+		weekday = "четверг"
+	case time.Friday:
+		weekday = "пятница"
+	case time.Saturday:
+		weekday = "суббота"
+	case time.Sunday:
+		weekday = "воскресенье"
+	}
+
+	switch t.Month() {
+	case time.January:
+		month = "января"
+	case time.February:
+		month = "февраля"
+	case time.April:
+		month = "апреля"
+	case time.March:
+		month = "марта"
+	case time.May:
+		month = "мая"
+	case time.June:
+		month = "июня"
+	case time.July:
+		month = "июля"
+	case time.August:
+		month = "августа"
+	case time.September:
+		month = "сентября"
+	case time.October:
+		month = "октября"
+	case time.November:
+		month = "ноября"
+	case time.December:
+		month = "декабря"
+	}
+
+	return fmt.Sprintf("%d %s (%s)", t.Day(), month, weekday)
+}
+
 // Вступление в клуб - клавиши "из ИТМО", "не из ИТМО"
 func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 
@@ -1714,7 +1770,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(activity_id))
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
-			var formattedTime string
+			var formattedTime, formattedDate string
 			is_participant := false
 
 			for _, participant := range activity.Participants {
@@ -1725,10 +1781,10 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 
 			// Определите желаемый формат дд.мм чч:мм
-			format := "02.01 15:04"
 
 			// Используйте метод Format для форматирования времени
-			formattedTime = activity.DateMeeting.Format(format)
+			formattedTime = activity.DateMeeting.Format("15:04")
+			formattedDate = formatDate(activity.DateMeeting)
 
 			if len(activity.PathsImages) != 0 {
 				for _, output_image_path := range activity.PathsImages {
@@ -1759,10 +1815,16 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 				params_photos.Media = media_group
 
-				params.Text = "Подробнее о мероприятии: " + activity.Title + "\n" +
-					"<b>Описание:</b> " + activity.Description + "\n" +
-					"<b>Дата и время: </b>" + formattedTime + "\n" +
-					"<b>Место проведения: </b>" + activity.Location
+				params.Text = fmt.Sprintf("<b>%s</b>\n\n"+
+					"%s\n\n"+
+					"📅 <b>%s</b>\n"+
+					"🕒 <b>%s</b>\n"+
+					"📍 <b>%s</b>",
+					activity.Title,
+					activity.Description,
+					formattedDate,
+					formattedTime,
+					activity.Location)
 
 				if is_participant {
 					params.ReplyMarkup = keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID))
@@ -1781,10 +1843,16 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				}
 			} else {
 
-				params.Text = "Подробнее о мероприятии: " + activity.Title + "\n" +
-					"<b>Описание:</b> " + activity.Description + "\n" +
-					"<b>Дата и время: </b>" + formattedTime + "\n" +
-					"<b>Место проведения: </b>" + activity.Location
+				params.Text = fmt.Sprintf("<b>%s</b>\n\n"+
+					"%s\n\n"+
+					"📅 <b>%s</b>\n"+
+					"🕒 <b>%s</b>\n"+
+					"📍 <b>%s</b>",
+					activity.Title,
+					activity.Description,
+					formattedDate,
+					formattedTime,
+					activity.Location)
 
 				if is_participant {
 					params.ReplyMarkup = keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID))

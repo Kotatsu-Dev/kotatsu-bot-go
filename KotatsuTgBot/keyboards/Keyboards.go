@@ -262,19 +262,32 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 }
 
 // Inline-клавиатура - Список мероприятий
-func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON) *models.InlineKeyboardMarkup {
+func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64) *models.InlineKeyboardMarkup {
 	inlineKeyboard := [][]models.InlineKeyboardButton{}
 
 	var title string
 	var formattedTime string
 
 	// Определите желаемый формат дд.мм чч:мм
-	format := "02.01 15:04"
+	format := "02.01, 15:04"
 
 	for _, activity := range activities {
 
+		is_participant := false
+
+		for _, participant := range activity.Participants {
+			if participant.UserTgID == user_tg_id {
+				is_participant = true
+				break
+			}
+		}
+
 		formattedTime = activity.DateMeeting.Format(format)
-		title = "[" + formattedTime + "] " + activity.Title
+		if is_participant {
+			title = "✅ [" + formattedTime + "] " + activity.Title
+		} else {
+			title = "[" + formattedTime + "] " + activity.Title
+		}
 
 		row := []models.InlineKeyboardButton{
 			{
