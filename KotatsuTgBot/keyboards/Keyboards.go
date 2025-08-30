@@ -439,14 +439,14 @@ func CreateInlineKbd_RelevancePhoneNumber() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Да, актуальный",
+			Text:         "Номер актуальный, паспорт возьму",
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "yes"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Нет, изменить номер",
+			Text:         "У меня поменялся номер телефона",
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "no"),
 		},
 	}
@@ -466,14 +466,14 @@ func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Вы из ИТМО",
+			Text:         "Я студент/сотрудник/выпускник ИТМО",
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "from_ITMO"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Вы не из ИТМО",
+			Text:         "Я не из ИТМО",
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "not_from_ITMO"),
 		},
 	}

@@ -1943,7 +1943,9 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				}
 			} else {
 				params_load.Text = "Получение данных..."
-				params.Text = "Твой номер телефона " + current_user.PhoneNumber + " является актуальным?"
+				params.Text = fmt.Sprintf("В прошлый раз ты указывал(а) номер %s.\n"+
+					"В день мероприятия обязательно возьми телефон и паспорт с собой — с этого номера нужно позвонить на терминал для печати пропуска, а паспорт может попросить охрана.",
+					current_user.PhoneNumber)
 				params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 				params.ReplyMarkup = keyboards.CreateInlineKbd_RelevancePhoneNumber()
 
@@ -1956,7 +1958,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 		} else {
 			params_load.Text = "Инициализация..."
-			params.Text = "Чтобы записаться на мероприятие, выбери один из вариантов ниже и предоставь нам нужные данные для записи"
+			params.Text = "Кажется, мы с тобой ещё не знакомы. Подскажи, ты работаешь или учишься в ИТМО?"
 
 			params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 			params.ReplyMarkup = keyboards.CreateInlineKbd_Appointment()
