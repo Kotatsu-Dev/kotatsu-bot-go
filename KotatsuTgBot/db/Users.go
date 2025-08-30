@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+type Gender string
+
 type User struct {
 	gorm.Model
 	Step                  int         `json:"step"`                                                                        // Текущий шаг
@@ -21,6 +23,8 @@ type User struct {
 	LastMessageID         int         `json:"last_message_id"`                                                             // ID последнего сообщения от бота
 	UserName              string      `json:"user_name"`                                                                   // Имя пользователя в Телеграм
 	FullTgName            string      `json:"full_tg_name"`                                                                // Полное имя пользователя в Телеграм
+	Gender                Gender      `json:"gender"`                                                                      // Пол пользователя
+	IsVisitedEvents       bool        `json:"is_visited_events"`                                                           // Посетил ли пользователь достаточное количество мероприятий
 	ISU                   string      `json:"isu"`                                                                         // ИСУ для ИТМО
 	FullName              string      `json:"full_name"`                                                                   // Имя пользователя
 	PhoneNumber           string      `json:"phone_number"`                                                                // Номер телефона пользователя
@@ -52,6 +56,8 @@ type User_ReadJSON struct {
 	LastMessageID         int               `json:"last_message_id"`
 	UserName              string            `json:"user_name"`
 	FullTgName            string            `json:"full_tg_name"`
+	Gender                Gender            `json:"gender"`
+	IsVisitedEvents       bool              `json:"is_visited_events"`
 	ISU                   string            `json:"isu"`
 	FullName              string            `json:"full_name"`
 	PhoneNumber           string            `json:"phone_number"`
@@ -115,6 +121,8 @@ func DB_GET_User_BY_UserTgID(user_tg_id int64) (int, *User_ReadJSON) {
 		CreatedAt:             user.CreatedAt,
 		Step:                  user.Step,
 		UserTgID:              user.UserTgID,
+		Gender:                user.Gender,
+		IsVisitedEvents:       user.IsVisitedEvents,
 		LastMessageID:         user.LastMessageID,
 		UserName:              user.UserName,
 		FullTgName:            user.FullTgName,
@@ -232,6 +240,14 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 		case "full_name":
 			if v, ok := value.(string); ok && v != user.FullName {
 				user.FullName = v
+			}
+		case "gender":
+			if v, ok := value.(string); ok && v != string(user.Gender) {
+				user.Gender = Gender(v)
+			}
+		case "is_visited_events":
+			if v, ok := value.(bool); ok && v != user.IsVisitedEvents {
+				user.IsVisitedEvents = v
 			}
 		case "phone_number":
 			if v, ok := value.(string); ok && v != user.PhoneNumber {
