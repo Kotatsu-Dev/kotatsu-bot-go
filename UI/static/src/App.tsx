@@ -28,7 +28,6 @@ import {
   FaCalendarPlus,
   FaClock,
   FaFileExport,
-  FaTrash,
   FaUsers,
 } from "react-icons/fa";
 import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
@@ -73,11 +72,11 @@ const tabs = [
     value: "export",
     title: "Export",
   },
-  {
-    icon: <FaTrash />,
-    value: "deletion",
-    title: "Deletion",
-  },
+  // {
+  //   icon: <FaTrash />,
+  //   value: "deletion",
+  //   title: "Deletion",
+  // },
 ];
 
 function App() {
