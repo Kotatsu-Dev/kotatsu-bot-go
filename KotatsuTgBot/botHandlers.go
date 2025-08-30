@@ -1329,7 +1329,7 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 
 		update_user_data := make(map[string]interface{})
 		update_user_data["user_tg_id"] = update.Message.From.ID
-		update_user_data["phone_number"] = update.Message.Text
+		update_user_data["phone_number"] = phone_number
 
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 		switch db_answer_code {
