@@ -494,6 +494,8 @@ func CreateKeyboard_RequestContact() *models.ReplyKeyboardMarkup {
 					Text:           "Отправить свой номер",
 					RequestContact: true,
 				},
+				{Text: "Я не пользуюсь номером, к которому привязан Telegram"},
+			}, {
 				{Text: "⬅ Вернуться в главное меню"},
 			},
 		},

@@ -150,6 +150,9 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 						case "⬅ Вернуться в главное меню":
 							proccessText_BackMeinMenu(ctx, b, update, user)
 
+						case "Я не пользуюсь номером, к которому привязан Telegram":
+							proccessText_NoPhoneNumber(ctx, b, update, user)
+
 						default:
 
 							switch user.Step {
@@ -638,6 +641,32 @@ func proccessText_BackMeinMenu(ctx context.Context, b *bot.Bot, update *models.U
 	}
 
 	params.Text = "Главное меню"
+
+	if current_user.IsClubMember {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+	} else {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+	}
+
+	update_user_data := make(map[string]interface{})
+	update_user_data["user_tg_id"] = update.Message.From.ID
+	update_user_data["step"] = config.STEP_DEFAULT
+	db.DB_UPDATE_User(update_user_data)
+
+	_, err_msg := b.SendMessage(ctx, params)
+	if err_msg != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessText_BackMeinMenu", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+	}
+}
+
+func proccessText_NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
+	params := &bot.SendMessageParams{
+		ChatID:    update.Message.From.ID,
+		ParseMode: models.ParseModeHTML,
+	}
+
+	params.Text = "Я не могу записать тебя по номеру, не привязанному к аккаунту в Telegram :(\n" +
+		"Пожалуйста, напиши в сообщения канала @anime_itmo (значок чата внизу канала), руководитель поможет тебе с записью и пропуском"
 
 	if current_user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
@@ -1285,10 +1314,18 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 		ParseMode: models.ParseModeHTML,
 	}
 
+	phone_number := ""
+
 	// Регулярное выражение для валидации номера
 	regex := regexp.MustCompile(`^(?:\+7|8)\d{10}$`)
 
 	if regex.MatchString(update.Message.Text) {
+		phone_number = update.Message.Text
+	} else if update.Message.Contact != nil {
+		phone_number = update.Message.Contact.PhoneNumber
+	}
+
+	if phone_number != "" {
 
 		update_user_data := make(map[string]interface{})
 		update_user_data["user_tg_id"] = update.Message.From.ID
@@ -1909,6 +1946,13 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				params.Text = "Твой номер телефона " + current_user.PhoneNumber + " является актуальным?"
 				params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 				params.ReplyMarkup = keyboards.CreateInlineKbd_RelevancePhoneNumber()
+
+				fmt.Println(activity_id)
+
+				db.DB_UPDATE_User(map[string]interface{}{
+					"user_tg_id":       current_user.UserTgID,
+					"temp_activity_id": int(activity_id),
+				})
 			}
 		} else {
 			params_load.Text = "Инициализация..."
@@ -1916,6 +1960,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 			params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 			params.ReplyMarkup = keyboards.CreateInlineKbd_Appointment()
+
+			db.DB_UPDATE_User(map[string]interface{}{
+				"user_tg_id":       current_user.UserTgID,
+				"temp_activity_id": int(activity_id),
+			})
 		}
 
 		_, err_msg_load := b.SendMessage(ctx, params_load)
@@ -1988,7 +2037,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 
 		update_user_data := make(map[string]interface{})
-		update_user_data["user_tg_id"] = update.Message.From.ID
+		update_user_data["user_tg_id"] = update.CallbackQuery.From.ID
 
 		parts = strings.Split(update.CallbackQuery.Data, "::")
 		data = parts[1]
@@ -2005,7 +2054,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db.DB_UPDATE_User(update_user_data)
 
 				params.Text = "Укажи свой новый номер телефона в формате: +7 или 8 в начале, далее 10 цифр"
-				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
+				params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
 			}
 
 			_, err_msg := b.SendMessage(ctx, params)
