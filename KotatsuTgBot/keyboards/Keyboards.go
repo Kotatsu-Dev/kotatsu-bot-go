@@ -33,6 +33,17 @@ var Registration = &models.ReplyKeyboardMarkup{
 	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
 }
 
+var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Повелитель демонов"},
+			{Text: "Девочка волшебница"},
+		},
+	},
+	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
+}
+
 // Клавиатура для незарегистрированных пользователей
 func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboardMarkup {
 	var news_letter_text string

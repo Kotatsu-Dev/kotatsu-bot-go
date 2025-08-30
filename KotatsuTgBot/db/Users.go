@@ -242,7 +242,9 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 				user.FullName = v
 			}
 		case "gender":
-			if v, ok := value.(string); ok && v != string(user.Gender) {
+			if v, ok := value.(Gender); ok && v != user.Gender {
+				user.Gender = v
+			} else if v, ok := value.(string); ok && v != string(user.Gender) {
 				user.Gender = Gender(v)
 			}
 		case "is_visited_events":

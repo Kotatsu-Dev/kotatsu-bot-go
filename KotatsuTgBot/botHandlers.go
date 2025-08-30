@@ -81,6 +81,11 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 					switch db_answer_code {
 					case db.DB_ANSWER_SUCCESS:
 						switch update.Message.Text {
+						case "Повелитель демонов":
+							proccessText_SetGender(ctx, b, update, user, "male")
+						case "Девочка волшебница":
+							proccessText_SetGender(ctx, b, update, user, "female")
+
 						case "⛩ Вступить в клуб":
 							proccessText_JoinClub(ctx, b, update, user)
 
@@ -229,8 +234,8 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 
 		switch db_answer_reg {
 		case db.DB_ANSWER_SUCCESS:
-			params.Text = "Главное меню"
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+			params.Text = "Кто ты?"
+			params.ReplyMarkup = keyboards.Keyboard_GenderSelect
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
 			params.Text = "Привет! Мы уже знакомы, можешь выбирать нужный раздел."
@@ -378,6 +383,31 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 		if err_msg_load != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage(params_load)", "Ошибка отправки сообщения", err_msg_load.Error())
 		}
+	}
+
+	_, err_msg := b.SendMessage(ctx, params)
+	if err_msg != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+	}
+}
+
+func proccessText_SetGender(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, gender db.Gender) {
+	params := &bot.SendMessageParams{
+		ChatID:    update.Message.Chat.ID,
+		ParseMode: models.ParseModeHTML,
+	}
+
+	db.DB_UPDATE_User(map[string]interface{}{
+		"user_tg_id": current_user.UserTgID,
+		"gender":     gender,
+	})
+
+	params.Text = "Главное меню"
+
+	if current_user.IsClubMember {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+	} else {
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
