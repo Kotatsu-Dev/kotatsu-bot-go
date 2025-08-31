@@ -44,6 +44,28 @@ var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
 	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
 }
 
+var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Да, я уже мандаринка"},
+			{Text: "Ещё нет :("},
+		},
+	},
+	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
+}
+
+var Keyboard_WasntAtEvents = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Хорошо, заполню позже"},
+			{Text: "Хочу продолжить"},
+		},
+	},
+	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
+}
+
 // Клавиатура для незарегистрированных пользователей
 func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboardMarkup {
 	var news_letter_text string

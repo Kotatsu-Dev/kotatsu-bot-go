@@ -86,6 +86,14 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 						case "Девочка волшебница":
 							proccessText_SetGender(ctx, b, update, user, "female")
 
+						case "Да, я уже мандаринка":
+							proccessText_WasAtEvents(ctx, b, update, user, true)
+						case "Ещё нет :(":
+							proccessText_WasAtEvents(ctx, b, update, user, false)
+						case "Хорошо, заполню позже":
+							proccessText_WasntAtEvents(ctx, b, update, user, false)
+						case "Хочу продолжить":
+							proccessText_WasntAtEvents(ctx, b, update, user, true)
 						case "⛩ Вступить в клуб":
 							proccessText_JoinClub(ctx, b, update, user)
 
@@ -374,10 +382,12 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 			"1. Чтобы вступить в клуб, посети хотя бы 3 мероприятия. Онлайн-встречи тоже считаются :)\n" +
 			"2. Относись ко всем участникам с уважением. Никого нельзя унижать за их интересы и вкусы\n" +
 			"3. Наш клуб — официальная структура в ИТМО, поэтому не забывай о правилах Университета.\n\n" +
-			"<a href=\"https://kotatsu.spb.ru/rules/current.pdf\">Полные правила</a> (там скучно и намного официальнее, но больше деталей)"
+			"<a href=\"https://kotatsu.spb.ru/rules/current.pdf\">Полные правила</a> (там скучно и намного официальнее, но больше деталей)\n\n" +
+			"Уже посетил(а) 3 наших мероприятия?"
 		params.ParseMode = models.ParseModeHTML
 		params_load.ReplyMarkup = keyboards.CommunicationManager
-		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		params.ReplyMarkup = keyboards.Keyboard_WasAtEvents
 
 		_, err_msg_load := b.SendMessage(ctx, params_load)
 		if err_msg_load != nil {
@@ -408,6 +418,59 @@ func proccessText_SetGender(ctx context.Context, b *bot.Bot, update *models.Upda
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
 	} else {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+	}
+
+	_, err_msg := b.SendMessage(ctx, params)
+	if err_msg != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+	}
+}
+
+func proccessText_WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, actually bool) {
+	params := &bot.SendMessageParams{
+		ChatID:    update.Message.Chat.ID,
+		ParseMode: models.ParseModeHTML,
+	}
+
+	if actually {
+		params.Text = "Важный вопрос: кто ты, витязь?"
+		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+	} else {
+		params.Text = "К сожалению, вступить без посещения хотя бы 3 мероприятий не выйдет.\n" +
+			"Пожалуйста, заполни заявку на вступление после того, как познакомишься с нами поближе.\n" +
+			"Можешь продолжить заполнение заявки, тогда тебе напишет рук. клуба."
+
+		params.ReplyMarkup = keyboards.Keyboard_WasntAtEvents
+	}
+
+	db.DB_UPDATE_User(map[string]interface{}{
+		"user_tg_id":        current_user.UserTgID,
+		"is_visited_events": actually,
+	})
+
+	_, err_msg := b.SendMessage(ctx, params)
+	if err_msg != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+	}
+}
+
+func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, cont bool) {
+	params := &bot.SendMessageParams{
+		ChatID:    update.Message.Chat.ID,
+		ParseMode: models.ParseModeHTML,
+	}
+
+	if cont {
+		params.Text = "Важный вопрос: кто ты, витязь?"
+		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+	} else {
+		params.Text = "Главное меню"
+
+		if current_user.IsClubMember {
+			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		} else {
+			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		}
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
