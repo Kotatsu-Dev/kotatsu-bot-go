@@ -338,7 +338,7 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 
 		full_tg_name = update.Message.From.FirstName + " " + update.Message.From.LastName
 
-		params.Text = "Окаэринасай," + full_tg_name
+		params.Text = "Окаэринасай, " + full_tg_name
 
 		if user.IsClubMember {
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(user.IsSubscribeNewsletter)
