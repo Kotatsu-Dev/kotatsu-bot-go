@@ -433,7 +433,7 @@ func proccessText_WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Up
 	}
 
 	if actually {
-		params.Text = "Важный вопрос: кто ты, витязь?"
+		params.Text = "Подскажи, ты учишься или работаешь в ИТМО?"
 		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 	} else {
 		params.Text = "К сожалению, вступить без посещения хотя бы 3 мероприятий не выйдет.\n" +
@@ -461,7 +461,7 @@ func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.
 	}
 
 	if cont {
-		params.Text = "Важный вопрос: кто ты, витязь?"
+		params.Text = "Подскажи, ты учишься или работаешь в ИТМО?"
 		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 	} else {
 		params.Text = "Главное меню"
@@ -642,7 +642,7 @@ func proccessText_MyActivities(ctx context.Context, b *bot.Bot, update *models.U
 			}
 		}
 
-		params.Text = "Список мероприятий, на которые ты записан(а)"
+		params.Text = "Я записывала тебя на эти мероприятия"
 		params.ReplyMarkup = keyboards.CreateInlineKbd_MyActivitiesList(active_activities_list)
 	}
 
