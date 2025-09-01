@@ -497,112 +497,94 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 		ParseMode: models.ParseModeHTML,
 	}
 
-	status_one := false
 	var active_activities_list []db.Activity_ReadJSON
 
 	activities_list := db.DB_GET_Activities()
 
-	if len(activities_list) == 0 {
-		params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "/n" +
-			"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
-		params.ReplyMarkup = keyboards.ListEvents
+	params_load.ReplyMarkup = keyboards.ListEvents
 
-		_, err_msg := b.SendMessage(ctx, params)
+	_, err_msg := b.SendMessage(ctx, params_load)
+	if err_msg != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
+	}
+
+	directory := "./img/calendar_activities"
+	// Получите список файлов в каталоге
+	files, err_dir := os.ReadDir(directory)
+	if err_dir != nil {
+		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.ReadDir", "Ошибка поиска файла календаря", err_dir.Error())
+	}
+
+	fileInfo := files[0]
+	filePath := filepath.Join(directory, fileInfo.Name())
+
+	for _, activity := range activities_list {
+		if activity.Status {
+			active_activities_list = append(active_activities_list, activity)
+		}
+	}
+
+	// Проверить наличие файла - Календарь мероприятий
+	calendar_activities_path := filePath
+	_, err := os.Stat(calendar_activities_path)
+	if err == nil {
+
+		// Открываем файл
+		file, err := os.Open(filePath)
+		if err != nil {
+			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Open(filePath)", "Ошибка открытия файла календаря", err.Error())
+			return
+		}
+		defer file.Close()
+
+		// Создаем экземпляр InputFileUpload
+		inputFile := &models.InputFileUpload{
+			Filename: filepath.Base(filePath),
+			Data:     file,
+		}
+
+		params_photo.Photo = inputFile
+		if len(active_activities_list) > 0 {
+			params_photo.Caption = "Список текущих мероприятий:"
+			params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+		} else {
+			params_photo.Caption = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
+				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+		}
+
+		// Отправляем фото
+		_, err = b.SendPhoto(ctx, params_photo)
+		if err != nil {
+			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "b.SendPhoto(ctx, params_photo)", "Ошибка отправки фото файла календаря", err.Error())
+			return
+		}
+
+	} else if os.IsNotExist(err) {
+		if len(active_activities_list) > 0 {
+			params.Text = "Список текущих мероприятий:"
+			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+		} else {
+			params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
+				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+		}
+
+		_, err_msg := b.SendMessage(ctx, params_load)
 		if err_msg != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 		}
-
 	} else {
-
-		for _, activity_load := range activities_list {
-			if activity_load.Status {
-				status_one = true
-				break
-			}
-		}
-
-		if !status_one {
+		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
+		if len(active_activities_list) > 0 {
+			params.Text = "Список текущих мероприятий:"
+			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+		} else {
 			params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
 				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
-			params.ReplyMarkup = keyboards.ListEvents
+		}
 
-			_, err_msg := b.SendMessage(ctx, params)
-			if err_msg != nil {
-				rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
-			}
-			return
-		} else {
-			params_load.ReplyMarkup = keyboards.ListEvents
-
-			_, err_msg := b.SendMessage(ctx, params_load)
-			if err_msg != nil {
-				rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
-			}
-
-			directory := "./img/calendar_activities"
-			// Получите список файлов в каталоге
-			files, err_dir := os.ReadDir(directory)
-			if err_dir != nil {
-				rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.ReadDir", "Ошибка поиска файла календаря", err_dir.Error())
-			}
-
-			fileInfo := files[0]
-			filePath := filepath.Join(directory, fileInfo.Name())
-
-			for _, activity := range activities_list {
-				if activity.Status {
-					active_activities_list = append(active_activities_list, activity)
-				}
-			}
-
-			// Проверить наличие файла - Календарь мероприятий
-			calendar_activities_path := filePath
-			_, err := os.Stat(calendar_activities_path)
-			if err == nil {
-
-				// Открываем файл
-				file, err := os.Open(filePath)
-				if err != nil {
-					rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Open(filePath)", "Ошибка открытия файла календаря", err.Error())
-					return
-				}
-				defer file.Close()
-
-				// Создаем экземпляр InputFileUpload
-				inputFile := &models.InputFileUpload{
-					Filename: filepath.Base(filePath),
-					Data:     file,
-				}
-
-				params_photo.Photo = inputFile
-				params_photo.Caption = "Список текущих мероприятий:"
-				params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
-
-				// Отправляем фото
-				_, err = b.SendPhoto(ctx, params_photo)
-				if err != nil {
-					rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "b.SendPhoto(ctx, params_photo)", "Ошибка отправки фото файла календаря", err.Error())
-					return
-				}
-
-			} else if os.IsNotExist(err) {
-				params.Text = "Список текущих мероприятий:"
-				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
-
-				_, err_msg := b.SendMessage(ctx, params_load)
-				if err_msg != nil {
-					rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
-				}
-			} else {
-				rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
-				params.Text = "Список текущих мероприятий:"
-				params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
-
-				_, err_msg := b.SendMessage(ctx, params_load)
-				if err_msg != nil {
-					rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
-				}
-			}
+		_, err_msg := b.SendMessage(ctx, params_load)
+		if err_msg != nil {
+			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 		}
 	}
 }
