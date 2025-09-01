@@ -105,7 +105,7 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 			{
 				{Text: news_letter_text},
 				{Text: "📝 Запись на мероприятия"},
-				{Text: "🤝 Акции и партнёры"},
+				// {Text: "🤝 Акции и партнёры"},
 				{Text: "📂 Мои мероприятия"},
 			},
 			{
