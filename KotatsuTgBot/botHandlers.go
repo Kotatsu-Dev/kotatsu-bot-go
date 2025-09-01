@@ -247,7 +247,7 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
 			params.Text = "Привет! Мы уже знакомы, можешь выбирать нужный раздел."
-			
+
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
 			if old_user.IsClubMember {
@@ -503,8 +503,8 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 	activities_list := db.DB_GET_Activities()
 
 	if len(activities_list) == 0 {
-		params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "/n" + 
-		"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+		params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "/n" +
+			"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
 		params.ReplyMarkup = keyboards.ListEvents
 
 		_, err_msg := b.SendMessage(ctx, params)
@@ -1212,10 +1212,41 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 	update_user_data["full_name"] = update.Message.Text
 
 	if action == "join_club" {
-		params.Text = "Если у тебя есть код для вступления, отправь его" + "\n" +
-			"Если кода нет, отправь цифру '0'"
+		params_support := &bot.SendMessageParams{
+			ChatID:    config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
+			ParseMode: models.ParseModeHTML,
+		}
 
-		update_user_data["step"] = config.STEP_ITMO_ENTER_SECRET_CODE
+		update_user_data := make(map[string]interface{})
+		update_user_data["user_tg_id"] = update.Message.From.ID
+		update_user_data["secret_code"] = "0"
+
+		update_user_data["step"] = config.STEP_DEFAULT
+		update_user_data["is_sent_request"] = true
+		update_user_data["is_filled_data"] = true
+
+		update_user_data["is_itmo"] = true
+
+		db.DB_UPDATE_User(update_user_data)
+
+		db_answer_code := db.DB_CREATE_Request(current_user.ID)
+		switch db_answer_code {
+		case db.DB_ANSWER_SUCCESS:
+			params.Text = "Отправила твою заявку руководителю клуба." + "\n" +
+				"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
+
+			params_support.Text = "НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ" + "\n" + current_user.FullName
+			_, err_msg := b.SendMessage(ctx, params_support)
+			if err_msg != nil {
+				rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
+			}
+
+		default:
+			params.Text = "Упс, кажется, у меня ошибка." + "\n" +
+				"Напиши в сообщения канала @anime_itmo (значок чата внизу канала) и сообщи об ошибке."
+		}
+
+		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 
 	} else {
 		update_user_data["step"] = config.STEP_DEFAULT
@@ -1308,10 +1339,41 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 		params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("")
 
 		if action == "join_club" {
-			params.Text = "Если у тебя есть код для вступления, отправь его" + "\n" +
-				"Если кода нет, отправь цифру '0'"
+			params_support := &bot.SendMessageParams{
+				ChatID:    config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
+				ParseMode: models.ParseModeHTML,
+			}
 
-			update_user_data["step"] = config.STEP_NOITMO_ENTER_SECRET_CODE
+			update_user_data := make(map[string]interface{})
+			update_user_data["user_tg_id"] = update.Message.From.ID
+			update_user_data["secret_code"] = "0"
+
+			update_user_data["step"] = config.STEP_DEFAULT
+			update_user_data["is_sent_request"] = true
+			update_user_data["is_filled_data"] = true
+
+			update_user_data["is_itmo"] = false
+
+			db.DB_UPDATE_User(update_user_data)
+
+			db_answer_code := db.DB_CREATE_Request(current_user.ID)
+			switch db_answer_code {
+			case db.DB_ANSWER_SUCCESS:
+				params.Text = "Отправила твою заявку руководителю клуба." + "\n" +
+					"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
+
+				params_support.Text = "НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ" + "\n" + current_user.FullName
+				_, err_msg := b.SendMessage(ctx, params_support)
+				if err_msg != nil {
+					rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
+				}
+
+			default:
+				params.Text = "Упс, кажется, у меня ошибка." + "\n" +
+					"Напиши в сообщения канала @anime_itmo (значок чата внизу канала) и сообщи об ошибке."
+			}
+
+			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 		} else {
 			update_user_data["step"] = config.STEP_DEFAULT
 			update_user_data["is_itmo"] = false
@@ -1480,8 +1542,8 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 			"Причина выхода не была указана"
 
 		params_user.Text = "Жаль, что ты уходишь :(\n" +
-		"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
-		"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
+			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
+			"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
 		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 
 		db.DB_UPDATE_User(update_user_data)
@@ -1509,8 +1571,8 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 			"Указанная причина: " + update.Message.Text
 
 		params_user.Text = "Жаль, что ты уходишь :(\n" +
-		"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
-		"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
+			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
+			"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
 		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 
 		db.DB_UPDATE_User(update_user_data)
