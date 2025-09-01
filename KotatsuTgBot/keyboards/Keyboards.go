@@ -81,9 +81,9 @@ func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboa
 				{Text: "⛩ Вступить в клуб"},
 				{Text: "📝 Запись на мероприятия"},
 			},
-			{
+			/*{
 				{Text: news_letter_text},
-			},
+			},*/
 		},
 		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
 		OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
@@ -103,7 +103,7 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 	var keyboard = &models.ReplyKeyboardMarkup{
 		Keyboard: [][]models.KeyboardButton{
 			{
-				{Text: news_letter_text},
+				//{Text: news_letter_text},
 				{Text: "📝 Запись на мероприятия"},
 				// {Text: "🤝 Акции и партнёры"},
 				{Text: "📂 Мои мероприятия"},
