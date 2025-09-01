@@ -1,0 +1,53 @@
+name: Deploy test bot
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.22
+
+      - name: Build app
+        run: cd KotatsuTgBot && go build -o kotatsutgbot
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Build frontend
+        run: cd UI/static && npm ci && npm run build
+
+      - name: Copy app to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.host }}
+          username: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+          port: ${{ secrets.port }}
+          source: KotatsuTgBot/kotatsutgbot,UI/
+          target: "dist"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.host }}
+          username: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+          port: ${{ secrets.port }}
+          script: 
+            sudo systemctl stop test_kotatsu_bot &&
+            cp dist/KotatsuTgBot/kotatsutgbot kotatsu_bot_test/kotatsutgbot &&
+            cp -r dist/UI/assets/* kotatsu_bot_test/assets/ &&
+            cp -r dist/UI/static/* kotatsu_bot_test/static/ &&
+            sudo systemctl start test_kotatsu_bot &&
+            systemctl status test_kotatsu_bot

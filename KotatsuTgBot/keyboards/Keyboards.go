@@ -33,6 +33,39 @@ var Registration = &models.ReplyKeyboardMarkup{
 	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
 }
 
+var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Повелитель демонов"},
+			{Text: "Девочка волшебница"},
+		},
+	},
+	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
+}
+
+var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Да, я уже мандаринка"},
+			{Text: "Ещё нет :("},
+		},
+	},
+	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
+}
+
+var Keyboard_WasntAtEvents = &models.ReplyKeyboardMarkup{
+	Keyboard: [][]models.KeyboardButton{
+		{
+			{Text: "Хорошо, заполню позже"},
+			{Text: "Хочу продолжить"},
+		},
+	},
+	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
+	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
+}
+
 // Клавиатура для незарегистрированных пользователей
 func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboardMarkup {
 	var news_letter_text string
@@ -72,7 +105,7 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 			{
 				{Text: news_letter_text},
 				{Text: "📝 Запись на мероприятия"},
-				{Text: "🤝 Акции и партнёры"},
+				// {Text: "🤝 Акции и партнёры"},
 				{Text: "📂 Мои мероприятия"},
 			},
 			{
@@ -262,19 +295,32 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 }
 
 // Inline-клавиатура - Список мероприятий
-func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON) *models.InlineKeyboardMarkup {
+func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64) *models.InlineKeyboardMarkup {
 	inlineKeyboard := [][]models.InlineKeyboardButton{}
 
 	var title string
 	var formattedTime string
 
 	// Определите желаемый формат дд.мм чч:мм
-	format := "02.01 15:04"
+	format := "02.01, 15:04"
 
 	for _, activity := range activities {
 
+		is_participant := false
+
+		for _, participant := range activity.Participants {
+			if participant.UserTgID == user_tg_id {
+				is_participant = true
+				break
+			}
+		}
+
 		formattedTime = activity.DateMeeting.Format(format)
-		title = "[" + formattedTime + "] " + activity.Title
+		if is_participant {
+			title = "✅ [" + formattedTime + "] " + activity.Title
+		} else {
+			title = "[" + formattedTime + "] " + activity.Title
+		}
 
 		row := []models.InlineKeyboardButton{
 			{
@@ -426,14 +472,14 @@ func CreateInlineKbd_RelevancePhoneNumber() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Да, актуальный",
+			Text:         "Номер актуальный, паспорт возьму",
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "yes"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Нет, изменить номер",
+			Text:         "У меня поменялся номер телефона",
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "no"),
 		},
 	}
@@ -453,14 +499,14 @@ func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Вы из ИТМО",
+			Text:         "Я студент/сотрудник/выпускник ИТМО",
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "from_ITMO"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Вы не из ИТМО",
+			Text:         "Я не из ИТМО",
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "not_from_ITMO"),
 		},
 	}
@@ -470,5 +516,23 @@ func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
 
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: inlineKeyboard,
+	}
+}
+
+func CreateKeyboard_RequestContact() *models.ReplyKeyboardMarkup {
+	return &models.ReplyKeyboardMarkup{
+		Keyboard: [][]models.KeyboardButton{
+			{
+				{
+					Text:           "Отправить свой номер",
+					RequestContact: true,
+				},
+				{Text: "Я не пользуюсь номером, к которому привязан Telegram"},
+			}, {
+				{Text: "⬅ Вернуться в главное меню"},
+			},
+		},
+		ResizeKeyboard:  true,
+		OneTimeKeyboard: false,
 	}
 }

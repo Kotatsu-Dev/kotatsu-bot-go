@@ -53,6 +53,11 @@ func Handler_AdminPanel(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_panel.html", gin.H{})
 }
 
+func Handler_NewAdminPanel(c *gin.Context) {
+	c.Header("Content-Type", "text/html")
+	c.File("./static/dist/index.html")
+}
+
 // /Выдача фронта для ответа от техподдержки
 func Handler_SupportResponse(c *gin.Context) {
 	c.HTML(http.StatusOK, "support_response.html", gin.H{})
@@ -64,12 +69,12 @@ func Handler_GetCalendarActivities_Image_File(c *gin.Context) {
 	if _, err := os.Stat("./img/calendar_activities/calendar_activities.png"); err == nil {
 		// Answer_OK(c)
 		Answer_File(c, "/img/calendar_activities/calendar_activities.png")
+	} else if _, err := os.Stat("./img/calendar_activities/calendar_activities.jpg"); err == nil {
+		Answer_File(c, "/img/calendar_activities/calendar_activities.jpg")
 	} else {
 		// Файл не найден, возвращаем ошибку 404
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 	}
-
-	return
 }
 
 // SendMessageUser
@@ -173,7 +178,6 @@ func Handler_SendMessageUser(c *gin.Context) {
 	} else {
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 	}
-	return
 }
 
 // SendMessageUserFromSupport
@@ -221,7 +225,6 @@ func Handler_SendMessageUserFromSupport(c *gin.Context) {
 	} else {
 		Answer_OK(c)
 	}
-	return
 }
 
 // Загрузка файла для календаря мероприятий
@@ -253,7 +256,6 @@ func Handler_UploadFile_CalendarActivities(c *gin.Context) {
 	}
 
 	Answer_OK(c)
-	return
 }
 
 // Удалить всё в БД
@@ -270,5 +272,4 @@ func Handler_DeleteObjects_All(c *gin.Context) {
 	}
 
 	Answer_OK(c)
-	return
 }

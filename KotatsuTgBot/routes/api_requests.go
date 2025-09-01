@@ -41,7 +41,6 @@ func Handler_API_Requests_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Обновить данные в заявке
@@ -143,11 +142,12 @@ func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
 		}
 
 		if status == 1 {
-			params.Text = "Добро пожаловать в аниме-клуб «Котацу» — твоя заявка на вступление успешно обработана!"
+			params.Text = "Котацу анимэ-бу э ёукосо! Твоя заявка на вступление в клуб принята, поздравляю!"
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(user.IsSubscribeNewsletter)
 		} else {
-			params.Text = "К сожалению, клуб отклонил твою заявку на вступление" + "\n" +
-				"Возможно, ты указал неверные данные. Чтобы узнать причину, свяжись с клубом через кнопку в меню бота"
+			params.Text = "К сожалению, заявка на вступление в клуб отклонена :(" + "\n" +
+				"Если руководитель не связывался с тобой, напиши в сообщения канала @anime_itmo (значок чата внизу канала)" + "\n" +
+				"Напомним, что посещать мероприятия можно без вступления в клуб"
 		}
 
 		// Удаляем заявку по ID

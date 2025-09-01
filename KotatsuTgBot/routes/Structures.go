@@ -58,6 +58,7 @@ type UpdateObject_Activity_Data struct {
 // =========================================================================
 type Create_AnimeRoulettes struct {
 	Stages []Create_AnimeRoulettes_Stages `json:"stages"`
+	Theme  *string                        `json:"theme"`
 }
 
 type Create_AnimeRoulettes_Stages struct {

@@ -558,12 +558,7 @@ $(function () {
         let end_date_stage1 = $("#datetime-picker2").val();
 
         let credentials = {
-            "stage_new_date": 1,
-            "stage_date":
-                {
-                    "stage": 0,
-                    "end_date": end_date_stage1,
-                }
+            "start_date": end_date_stage1
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -581,12 +576,7 @@ $(function () {
         let end_date_stage2 = $("#datetime-picker3").val();
 
         let credentials = {
-            "stage_new_date": 2,
-            "stage_date":
-                {
-                    "stage": 1,
-                    "end_date": end_date_stage2,
-                }
+            "announce_date": end_date_stage2,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -604,12 +594,7 @@ $(function () {
         let end_date_stage3 = $("#datetime-picker4").val();
 
         let credentials = {
-            "stage_new_date": 3,
-            "stage_date":
-                {
-                    "stage": 2,
-                    "end_date": end_date_stage3,
-                }
+            "distribution_date": end_date_stage3,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -627,12 +612,7 @@ $(function () {
         let end_date_stage4 = $("#datetime-picker5").val();
 
         let credentials = {
-            "stage_new_date": 4,
-            "stage_date":
-                {
-                    "stage": 3,
-                    "end_date": end_date_stage4,
-                }
+            "end_date": end_date_stage4,
         };
 
         let rouletteUpdateRequest = ajax_PUT(CONFIG_APP_URL_BASE+"api/roulettes", credentials, {});
@@ -1227,6 +1207,7 @@ function formatRequests(list_users) {
 
     let is_itmo = "";
     let secret_code = "";
+    let tg_url = "";
 
     let header_table = `<table class="request-table">
                     <thead>
@@ -1264,6 +1245,10 @@ function formatRequests(list_users) {
             secret_code = element.user_info.secret_code;
         }
 
+        if (element.user_info.user_name) {
+            tg_url = `https://t.me/${element.user_info.user_name}`
+        }
+
         switch (request_type) {
             case "all_users":
                 list_element += `<tr>
@@ -1275,14 +1260,14 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td class="tg_url">${element.user_info.tg_url}</td>
+                                    <td class="tg_url">${tg_url}</td>
                                 </tr>`
                 break;
         
             case "itmo_users":
                 if (element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.id}</td>
+                                    <td>${element.ID}</td>
                                     <td>${created_at_form}</td>
                                     <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
@@ -1290,7 +1275,7 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td>${element.user_info.tg_url}</td>
+                                    <td>${tg_url}</td>
                                 </tr>`
                 }
                 break;
@@ -1298,7 +1283,7 @@ function formatRequests(list_users) {
             case "no_itmo_users":
                 if (!element.user_info.is_itmo) {
                     list_element += `<tr>
-                                    <td>${element.id}</td>
+                                    <td>${element.ID}</td>
                                     <td>${created_at_form}</td>
                                     <td>${element.user_info.user_tg_id}</td>
                                     <td>${is_itmo}</td>
@@ -1306,7 +1291,7 @@ function formatRequests(list_users) {
                                     <td>${element.user_info.full_name}</td>
                                     <td>${secret_code}</td>
                                     <td>${element.user_info.phone_number}</td>
-                                    <td>${element.user_info.tg_url}</td>
+                                    <td>${tg_url}</td>
                                 </tr>`
                 }
                 break;
@@ -1626,10 +1611,10 @@ function handler_getRequest(request_type, request) {
                         sessionStorage.setItem("action_anime_roulette", "change");
 
                         let data = request.responseJSON.data;
-                        $("#datetime-picker2").val(formatTodayDateTime(data.Stages[0].EndDate));
-                        $("#datetime-picker3").val(formatTodayDateTime(data.Stages[1].EndDate));
-                        $("#datetime-picker4").val(formatTodayDateTime(data.Stages[2].EndDate));
-                        $("#datetime-picker5").val(formatTodayDateTime(data.Stages[3].EndDate));
+                        $("#datetime-picker2").val(formatTodayDateTime(data.start_date));
+                        $("#datetime-picker3").val(formatTodayDateTime(data.announce_date));
+                        $("#datetime-picker4").val(formatTodayDateTime(data.distribution_date));
+                        $("#datetime-picker5").val(formatTodayDateTime(data.end_date));
                         
                         break;
                 }

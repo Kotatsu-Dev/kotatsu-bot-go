@@ -34,7 +34,6 @@ func Handler_API_AnimeRoulettes_GetList(c *gin.Context) {
 	}
 
 	Answer_SendObject(c, answer)
-	return
 }
 
 // Получить активную рулетку
@@ -83,7 +82,7 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	// Формат строки даты и времени
 	layout := "2006-01-02 15:04"
 
-	var anime_roulette_stages []db.RouletteStages
+	var start_date, announce_date, distribution_date, end_date time.Time
 
 	for index, stage := range json_data.Stages {
 		// Парсим строку в time.Time
@@ -93,16 +92,24 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 			return
 		}
 
-		current_stage := db.RouletteStages{
-			Stage:   index,
-			EndDate: end_date_stage,
+		switch index {
+		case 0:
+			start_date = end_date_stage
+		case 1:
+			announce_date = end_date_stage
+		case 2:
+			distribution_date = end_date_stage
+		case 3:
+			end_date = end_date_stage
 		}
-
-		anime_roulette_stages = append(anime_roulette_stages, current_stage)
 	}
 
 	current_anime_roulette := new(db.AnimeRoulette_CreateJSON)
-	current_anime_roulette.Stages = anime_roulette_stages
+	current_anime_roulette.StartDate = start_date
+	current_anime_roulette.AnnounceDate = announce_date
+	current_anime_roulette.DistributionDate = distribution_date
+	current_anime_roulette.EndDate = end_date
+	current_anime_roulette.Theme = json_data.Theme
 
 	db_error_code := db.DB_CREATE_AnimeRoulette(current_anime_roulette)
 
