@@ -115,7 +115,7 @@ func RunServer() {
 		{
 			requests.GET("/", Handler_API_Requests_GetList)
 			requests.PUT("/", Handler_API_Requests_UpdateObject)
-			requests.PUT("/choice", Handler_API_Requests_UpdateObject_Choise)
+			requests.PUT("/choice", Handler_API_Requests_UpdateObject_Choice)
 			requests.DELETE("/", Handler_API_Requests_DeleteObject_ALL)
 		}
 
