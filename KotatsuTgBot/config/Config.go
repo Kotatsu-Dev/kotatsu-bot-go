@@ -34,6 +34,8 @@ type Config struct {
 	CONFIG_DB_NAME     string
 	CONFIG_DB_PASSWORD string
 	CONFIG_DB_IS_DEBUG bool
+
+	AUTH_SECRET string
 }
 
 var config *Config = nil

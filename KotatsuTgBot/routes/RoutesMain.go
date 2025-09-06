@@ -82,6 +82,7 @@ func RunServer() {
 	r.GET("/new-admin-panel", Handler_NewAdminPanel)
 	r.GET("/get-calendar-file", Handler_GetCalendarActivities_Image_File)
 	r.GET("/support-response", Handler_SupportResponse)
+	r.GET("/login", Handler_Login)
 
 	// Основные пути
 	r.POST("/send-message-user", Handler_SendMessageUser)
@@ -92,6 +93,7 @@ func RunServer() {
 
 	// Группа API
 	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
 	// api.Use(middleware.AuthRequired())
 	{
 
