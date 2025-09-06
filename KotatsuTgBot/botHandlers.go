@@ -1673,6 +1673,10 @@ func proccessStep_AnimeRoulette_EnterLinkMyAnimeList(ctx context.Context, b *bot
 
 // Неизвестное сообщение или шаг
 func proccessText_Unknown(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if !(update.Message != nil && update.Message.Chat.Type == models.ChatTypePrivate) {
+		return
+	}
+
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.From.ID,
 		ParseMode: models.ParseModeHTML,
