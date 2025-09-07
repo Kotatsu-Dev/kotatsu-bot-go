@@ -11,7 +11,7 @@ import {
   Status,
   Tabs,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "./ui/toaster";
 import type { User } from "@/api/users";
 import { formatDistanceToNow } from "date-fns";
@@ -199,20 +199,50 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
   );
 };
 
+const UserComponentMemo = memo(UserComponent);
+
 export const UsersTab = () => {
   const api = useAPI();
   const [users, setUsers] = useState<User[]>([]);
 
-  const members = users.filter((user) => user.is_club_member);
-  const requests = users.filter((user) => !!user.my_request);
+  const members = useMemo(
+    () => users.filter((user) => user.is_club_member),
+    [users]
+  );
+  const requests = useMemo(
+    () => users.filter((user) => !!user.my_request),
+    [users]
+  );
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setUsers(await api.users.getAll());
-  };
+  }, []);
 
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const usersRendered = useMemo(
+    () =>
+      users.map((user) => (
+        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
+      )),
+    [users]
+  );
+  const membersRendered = useMemo(
+    () =>
+      members.map((user) => (
+        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
+      )),
+    [members]
+  );
+  const requestsRendered = useMemo(
+    () =>
+      requests.map((user) => (
+        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
+      )),
+    [requests]
+  );
 
   return (
     <Container maxW={"lg"}>
@@ -225,25 +255,13 @@ export const UsersTab = () => {
             <Tabs.Trigger value="requests">Requests</Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="all">
-            <Stack>
-              {users.map((user) => (
-                <UserComponent key={user.id} value={user} reload={loadUsers} />
-              ))}
-            </Stack>
+            <Stack>{usersRendered}</Stack>
           </Tabs.Content>
           <Tabs.Content value="members">
-            <Stack>
-              {members.map((user) => (
-                <UserComponent key={user.id} value={user} reload={loadUsers} />
-              ))}
-            </Stack>
+            <Stack>{membersRendered}</Stack>
           </Tabs.Content>
           <Tabs.Content value="requests">
-            <Stack>
-              {requests.map((user) => (
-                <UserComponent key={user.id} value={user} reload={loadUsers} />
-              ))}
-            </Stack>
+            <Stack>{requestsRendered}</Stack>
           </Tabs.Content>
         </Tabs.Root>
       </Stack>
