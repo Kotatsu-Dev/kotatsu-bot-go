@@ -2073,7 +2073,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				switch db_answer_code {
 				case db.DB_ANSWER_SUCCESS:
 					db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), current_user.ID)
-					params.Text = "Запись на мероприятие: " + activity.Title + " подтверждена"
+					params.Text = "Я записала тебя на мероприятие «" + activity.Title + "»"
 					params.ReplyMarkup = keyboards.ListEvents
 				}
 			} else {
