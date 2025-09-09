@@ -29,6 +29,7 @@ import (
 	//Системные пакеты
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
@@ -66,7 +67,10 @@ func RunServer() {
 	}
 
 	//CORS
-	r.Use(middleware.CORSMiddleware())
+	r.Use(cors.New(cors.Config{
+		AllowOriginFunc:  func(origin string) bool { return true },
+		AllowCredentials: true,
+	}))
 
 	//
 	// 	   --------- Пути ---------
@@ -94,7 +98,6 @@ func RunServer() {
 	// Группа API
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
-	// api.Use(middleware.AuthRequired())
 	{
 
 		users := api.Group("/users")
