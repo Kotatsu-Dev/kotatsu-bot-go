@@ -148,7 +148,7 @@ func DB_UPDATE_Request(update_json map[string]interface{}) int {
 }
 
 // Одобряем или отклоняем заявку
-func DB_UPDATE_Choise_Request(update_json map[string]interface{}) (int, *User) {
+func DB_UPDATE_Choice_Request(update_json map[string]interface{}) (int, *User) {
 
 	db := DB_Database()
 
@@ -169,8 +169,12 @@ func DB_UPDATE_Choise_Request(update_json map[string]interface{}) (int, *User) {
 	db.First(&user, request.UserID)
 
 	if status, ok := update_json["status"].(int); ok {
-		if status == 1 {
+		switch status {
+		case 1:
 			user.IsClubMember = true
+			user.IsSentRequest = false
+			db.Save(&user)
+		case 2:
 			user.IsSentRequest = false
 			db.Save(&user)
 		}

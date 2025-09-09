@@ -29,6 +29,7 @@ import (
 	//Системные пакеты
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
@@ -66,7 +67,10 @@ func RunServer() {
 	}
 
 	//CORS
-	r.Use(middleware.CORSMiddleware())
+	r.Use(cors.New(cors.Config{
+		AllowOriginFunc:  func(origin string) bool { return true },
+		AllowCredentials: true,
+	}))
 
 	//
 	// 	   --------- Пути ---------
@@ -82,6 +86,7 @@ func RunServer() {
 	r.GET("/new-admin-panel", Handler_NewAdminPanel)
 	r.GET("/get-calendar-file", Handler_GetCalendarActivities_Image_File)
 	r.GET("/support-response", Handler_SupportResponse)
+	r.GET("/login", Handler_Login)
 
 	// Основные пути
 	r.POST("/send-message-user", Handler_SendMessageUser)
@@ -92,7 +97,7 @@ func RunServer() {
 
 	// Группа API
 	api := r.Group("/api")
-	// api.Use(middleware.AuthRequired())
+	api.Use(middleware.AuthMiddleware())
 	{
 
 		users := api.Group("/users")
@@ -115,7 +120,7 @@ func RunServer() {
 		{
 			requests.GET("/", Handler_API_Requests_GetList)
 			requests.PUT("/", Handler_API_Requests_UpdateObject)
-			requests.PUT("/choice", Handler_API_Requests_UpdateObject_Choise)
+			requests.PUT("/choice", Handler_API_Requests_UpdateObject_Choice)
 			requests.DELETE("/", Handler_API_Requests_DeleteObject_ALL)
 		}
 

@@ -94,7 +94,7 @@ func Handler_API_Requests_DeleteObject_ALL(c *gin.Context) {
 }
 
 // Одобрить или отклонить заявку
-func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
+func Handler_API_Requests_UpdateObject_Choice(c *gin.Context) {
 
 	var update_json map[string]interface{}
 	err := c.ShouldBindJSON(&update_json)
@@ -122,7 +122,7 @@ func Handler_API_Requests_UpdateObject_Choise(c *gin.Context) {
 	}
 	request_id := uint(request_id_)
 
-	db_answer_code, user := db.DB_UPDATE_Choise_Request(map[string]interface{}{"status": status, "request_id": request_id})
+	db_answer_code, user := db.DB_UPDATE_Choice_Request(map[string]interface{}{"status": status, "request_id": request_id})
 
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:

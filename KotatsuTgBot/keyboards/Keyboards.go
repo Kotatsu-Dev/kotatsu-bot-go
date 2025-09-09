@@ -68,12 +68,12 @@ var Keyboard_WasntAtEvents = &models.ReplyKeyboardMarkup{
 
 // Клавиатура для незарегистрированных пользователей
 func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboardMarkup {
-	var news_letter_text string
+	/*var news_letter_text string
 	if news_letter {
 		news_letter_text = "❌ Отписаться от рассылки"
 	} else {
 		news_letter_text = "📰 Подписаться на рассылку"
-	}
+	}*/
 
 	var keyboard = &models.ReplyKeyboardMarkup{
 		Keyboard: [][]models.KeyboardButton{
@@ -81,7 +81,7 @@ func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboa
 				{Text: "⛩ Вступить в клуб"},
 				{Text: "📝 Запись на мероприятия"},
 			},
-			/*{
+			/*/*{
 				{Text: news_letter_text},
 			},*/
 		},
@@ -93,12 +93,12 @@ func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboa
 
 // Клавиатура для главного меню участника клуба
 func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKeyboardMarkup {
-	var news_letter_text string
+	/*var news_letter_text string
 	if news_letter {
 		news_letter_text = "❌ Отписаться от рассылки"
 	} else {
 		news_letter_text = "📰 Подписаться на рассылку"
-	}
+	}*/
 
 	var keyboard = &models.ReplyKeyboardMarkup{
 		Keyboard: [][]models.KeyboardButton{
@@ -109,6 +109,7 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 				{Text: "📂 Мои мероприятия"},
 			},
 			{
+				//{Text: news_letter_text},
 				{Text: "🚪 Покинуть клуб"},
 			},
 		},

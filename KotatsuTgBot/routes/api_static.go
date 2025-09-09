@@ -16,6 +16,7 @@ package routes
 
 import (
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
@@ -61,6 +62,11 @@ func Handler_NewAdminPanel(c *gin.Context) {
 // /Выдача фронта для ответа от техподдержки
 func Handler_SupportResponse(c *gin.Context) {
 	c.HTML(http.StatusOK, "support_response.html", gin.H{})
+}
+
+func Handler_Login(c *gin.Context) {
+	c.SetCookie("session_token", c.Request.URL.RawQuery, 3600*24, "/", "", false, true)
+	c.Redirect(http.StatusFound, "/new-admin-panel")
 }
 
 // Получить изображение текущего календаря мероприятий

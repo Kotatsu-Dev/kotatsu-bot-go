@@ -39,7 +39,7 @@ export const createUsersApi = ($: AxiosInstance) => {
     }) {
       await $.put("/users/club-member", {
         user_tg_id: props.user_tg_id.toString(),
-        is_club_member: Number(props.is_club_member),
+        is_club_member: props.is_club_member,
       });
     },
     async wipe() {

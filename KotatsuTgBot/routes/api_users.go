@@ -16,10 +16,12 @@ package routes
 
 import (
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
 	"rr/kotatsutgbot/rr_debug"
+	"strconv"
 
 	//Сторонние библиотеки
 	"github.com/gin-gonic/gin"
@@ -89,7 +91,7 @@ func Handler_API_Users_UpdateObject_ClubMember(c *gin.Context) {
 		}
 		return
 	} else {
-		v, ok := update_json["user_tg_id"].(float64)
+		v, ok := update_json["user_tg_id"].(string)
 		if !ok {
 			rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", "ok")
 			if config.GetConfig().CONFIG_IS_DEBUG {
@@ -99,7 +101,16 @@ func Handler_API_Users_UpdateObject_ClubMember(c *gin.Context) {
 			}
 			return
 		} else {
-			update_json["user_tg_id"] = int64(v)
+			update_json["user_tg_id"], err = strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", "ok")
+				if config.GetConfig().CONFIG_IS_DEBUG {
+					Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: tg_user_id not expected")
+				} else {
+					Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
+				}
+				return
+			}
 		}
 	}
 
