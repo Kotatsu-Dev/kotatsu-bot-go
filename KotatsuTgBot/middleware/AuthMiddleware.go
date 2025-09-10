@@ -63,6 +63,19 @@ func CheckIsAdmin(userId int64) bool {
 	return false
 }
 
+func CheckIsMember(userId int64) bool {
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN)
+	if err != nil {
+		return false
+	}
+
+	_, err = b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
+		ChatID: config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
+		UserID: userId,
+	})
+	return err == nil
+}
+
 func ParseAndVerifySessionCookie(cookieValue string) (userID int64, isValid bool) {
 	parts := strings.Split(cookieValue, ":")
 	if len(parts) != 3 {
@@ -111,7 +124,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		if !CheckIsAdmin(userID) {
+		if !CheckIsMember(userID) {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "you shall not pass",
 			})
