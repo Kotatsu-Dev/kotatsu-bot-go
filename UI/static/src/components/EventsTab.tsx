@@ -358,6 +358,7 @@ export const EventsTab = () => {
                           {...register("date_meeting")}
                         />
                         {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
+                        {/* https://codesandbox.io/p/sandbox/all-in-one-solution-7lrvdg?file=%2Fsrc%2Fmain.tsx%3A17%2C6-17%2C10 */}
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>Location</Field.Label>
