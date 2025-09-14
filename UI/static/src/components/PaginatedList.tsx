@@ -28,7 +28,7 @@ export const PaginatedList = <T,>(props: {
           page={page}
           onPageChange={(e) => setPage(e.page)}
         >
-          <ButtonGroup variant="ghost" size="sm">
+          <ButtonGroup variant="ghost" size={{base: 'xs', sm: 'sm'}}>
             <Pagination.PrevTrigger asChild>
               <IconButton>
                 <FaChevronLeft />
