@@ -2055,6 +2055,10 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 					rr_debug.PrintLOG("botHandlers.go", "BotHandler_CallbackQuery_ACTIVITIES", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 				}
 			}
+			db.DB_UPDATE_User(map[string]interface{}{
+				"user_tg_id": update.CallbackQuery.From.ID,
+				"step":       config.STEP_ACTIVITY,
+			})
 		}
 
 	// Подписаться на мероприятие

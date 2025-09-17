@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
 	"time"
@@ -12,12 +13,20 @@ import (
 )
 
 func StartCron(b *bot.Bot) {
-	ticker := time.NewTicker(1 * time.Minute)
+	minute_ticker := time.NewTicker(1 * time.Minute)
+	halfhour_ticker := time.NewTicker(30 * time.Minute)
 
 	go func() {
 		for {
 			check_roulette(b)
-			<-ticker.C
+			<-minute_ticker.C
+		}
+	}()
+
+	go func() {
+		for {
+			check_step(b)
+			<-halfhour_ticker.C
 		}
 	}()
 }
@@ -94,5 +103,39 @@ func check_roulette(b *bot.Bot) {
 			b.SendMessage(context.TODO(), params)
 		}
 
+	}
+}
+
+func check_step(b *bot.Bot) {
+	rr_debug.PrintLOG("cron.go", "check_step", "INFO", "Начинаем проверку шагов", "")
+
+	users_outdated := db.DB_GET_Users_BY_Step(config.STEP_ACTIVITY_OUTDATED)
+
+	for _, user := range users_outdated {
+		text := "Ты прочитал(а) описание мероприятия, но не нажал(а) «Запиши меня».\n" +
+			"Если хочешь записаться на мероприятие, выбери его ещё раз и не забудь нажать кнопку под описанием."
+
+		if !user.IsITMO {
+			text += " Без записи я не смогу попросить для тебя пропуск в Университет."
+		}
+
+		params := &bot.SendMessageParams{
+			ChatID: user.UserTgID,
+			Text:   text,
+		}
+
+		b.SendMessage(context.TODO(), params)
+		db.DB_UPDATE_User(map[string]interface{}{
+			"user_tg_id": user.UserTgID,
+			"step":       config.STEP_DEFAULT,
+		})
+	}
+
+	users_active := db.DB_GET_Users_BY_Step(config.STEP_ACTIVITY)
+	for _, user := range users_active {
+		db.DB_UPDATE_User(map[string]interface{}{
+			"user_tg_id": user.UserTgID,
+			"step":       config.STEP_ACTIVITY_OUTDATED,
+		})
 	}
 }

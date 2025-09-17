@@ -144,6 +144,48 @@ func DB_GET_User_BY_UserTgID(user_tg_id int64) (int, *User_ReadJSON) {
 	return DB_ANSWER_SUCCESS, &user_read
 }
 
+func DB_GET_Users_BY_Step(step int) []User_ReadJSON {
+
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var users []User
+	db.Preload("MyRequest").Preload("MyActivities").Where("step = ?", step).Find(&users)
+
+	users_read := make([]User_ReadJSON, len(users))
+
+	for i, user := range users {
+		users_read[i] = User_ReadJSON{
+			ID:                    user.ID,
+			CreatedAt:             user.CreatedAt,
+			Step:                  user.Step,
+			UserTgID:              user.UserTgID,
+			Gender:                user.Gender,
+			IsVisitedEvents:       user.IsVisitedEvents,
+			LastMessageID:         user.LastMessageID,
+			UserName:              user.UserName,
+			FullTgName:            user.FullTgName,
+			ISU:                   user.ISU,
+			FullName:              user.FullName,
+			PhoneNumber:           user.PhoneNumber,
+			SecretCode:            user.SecretCode,
+			IsITMO:                user.IsITMO,
+			IsClubMember:          user.IsClubMember,
+			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
+			IsSentRequest:         user.IsSentRequest,
+			IsFilledData:          user.IsFilledData,
+			TempActivityID:        user.TempActivityID,
+			MyActivities:          user.MyActivities,
+			LinkMyAnimeList:       user.LinkMyAnimeList,
+			EnigmaticTitle:        user.EnigmaticTitle,
+		}
+	}
+
+	return users_read
+}
+
 // Получить список всех пользователей
 func DB_GET_Users() []User_ReadJSON {
 
