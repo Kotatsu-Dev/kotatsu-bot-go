@@ -79,7 +79,7 @@ const tabs = [
 ];
 
 function App() {
-  const [tab, setTab] = useState("data");
+  const [tab, setTab] = useState(tabs[0].value);
 
   return (
     <Provider>
