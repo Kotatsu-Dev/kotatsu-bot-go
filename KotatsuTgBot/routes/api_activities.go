@@ -17,6 +17,7 @@ package routes
 import (
 
 	//Внутренние пакеты проекта
+
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
@@ -41,6 +42,9 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 	location := c.PostForm("location")
 
 	files := c.Request.MultipartForm.File["send_images"]
+	if len(files) <= 0 {
+		files = c.Request.MultipartForm.File["send_images[]"]
+	}
 
 	x := 0
 	x_str := ""
