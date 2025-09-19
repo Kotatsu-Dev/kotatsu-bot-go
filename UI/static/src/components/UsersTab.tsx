@@ -15,8 +15,9 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "./ui/toaster";
 import type { User } from "@/api/users";
 import { formatDistanceToNow } from "date-fns";
+import { PaginatedList } from "./PaginatedList";
 
-const UserComponent = (props: { value: User; reload: () => void }) => {
+const UserCard = memo((props: { value: User; reload: () => void }) => {
   const api = useAPI();
   const user = props.value;
 
@@ -197,9 +198,7 @@ const UserComponent = (props: { value: User; reload: () => void }) => {
       </Card.Footer>
     </Card.Root>
   );
-};
-
-const UserComponentMemo = memo(UserComponent);
+});
 
 export const UsersTab = () => {
   const api = useAPI();
@@ -222,28 +221,6 @@ export const UsersTab = () => {
     loadUsers();
   }, []);
 
-  const usersRendered = useMemo(
-    () =>
-      users.map((user) => (
-        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
-      )),
-    [users]
-  );
-  const membersRendered = useMemo(
-    () =>
-      members.map((user) => (
-        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
-      )),
-    [members]
-  );
-  const requestsRendered = useMemo(
-    () =>
-      requests.map((user) => (
-        <UserComponentMemo key={user.id} value={user} reload={loadUsers} />
-      )),
-    [requests]
-  );
-
   return (
     <Container maxW={"lg"}>
       <Stack>
@@ -255,13 +232,31 @@ export const UsersTab = () => {
             <Tabs.Trigger value="requests">Requests</Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="all">
-            <Stack>{usersRendered}</Stack>
+            <PaginatedList
+              items={users}
+              pageSize={5}
+              render={(user) => (
+                <UserCard key={user.id} value={user} reload={loadUsers} />
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="members">
-            <Stack>{membersRendered}</Stack>
+            <PaginatedList
+              items={members}
+              pageSize={5}
+              render={(user) => (
+                <UserCard key={user.id} value={user} reload={loadUsers} />
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="requests">
-            <Stack>{requestsRendered}</Stack>
+            <PaginatedList
+              items={requests}
+              pageSize={5}
+              render={(user) => (
+                <UserCard key={user.id} value={user} reload={loadUsers} />
+              )}
+            />
           </Tabs.Content>
         </Tabs.Root>
       </Stack>

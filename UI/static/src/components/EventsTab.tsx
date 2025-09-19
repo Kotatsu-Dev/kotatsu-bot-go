@@ -252,6 +252,7 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
                       <Table.Row>
                         <Table.ColumnHeader>Name</Table.ColumnHeader>
                         <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                        <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
                         <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
                       </Table.Row>
                     </Table.Header>
@@ -260,6 +261,19 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
                         <Table.Row key={user.id}>
                           <Table.Cell>{user.full_name}</Table.Cell>
                           <Table.Cell>{user.user_name}</Table.Cell>
+                          <Table.Cell>
+                            {user.is_itmo ? (
+                              <Status.Root colorPalette={"green"}>
+                                <Status.Indicator />
+                                Yes
+                              </Status.Root>
+                            ) : (
+                              <Status.Root colorPalette={"red"}>
+                                <Status.Indicator />
+                                No
+                              </Status.Root>
+                            )}
+                          </Table.Cell>
                           <Table.Cell>{user.phone_number}</Table.Cell>
                         </Table.Row>
                       ))}
@@ -358,6 +372,7 @@ export const EventsTab = () => {
                           {...register("date_meeting")}
                         />
                         {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
+                        {/* https://codesandbox.io/p/sandbox/all-in-one-solution-7lrvdg?file=%2Fsrc%2Fmain.tsx%3A17%2C6-17%2C10 */}
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>Location</Field.Label>

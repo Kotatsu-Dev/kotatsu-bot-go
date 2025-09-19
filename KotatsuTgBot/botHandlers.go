@@ -1330,12 +1330,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 
 	phone_number := ""
 
-	// Регулярное выражение для валидации номера
-	regex := regexp.MustCompile(`^(?:\+7|8)\d{10}$`)
-
-	if regex.MatchString(update.Message.Text) {
-		phone_number = update.Message.Text
-	} else if update.Message.Contact != nil {
+	if update.Message.Contact != nil {
 		phone_number = update.Message.Contact.PhoneNumber
 	}
 
@@ -1472,12 +1467,7 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 
 	phone_number := ""
 
-	// Регулярное выражение для валидации номера
-	regex := regexp.MustCompile(`^(?:\+7|8)\d{10}$`)
-
-	if regex.MatchString(update.Message.Text) {
-		phone_number = update.Message.Text
-	} else if update.Message.Contact != nil {
+	if update.Message.Contact != nil {
 		phone_number = update.Message.Contact.PhoneNumber
 	}
 
@@ -2065,6 +2055,10 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 					rr_debug.PrintLOG("botHandlers.go", "BotHandler_CallbackQuery_ACTIVITIES", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 				}
 			}
+			db.DB_UPDATE_User(map[string]interface{}{
+				"user_tg_id": update.CallbackQuery.From.ID,
+				"step":       config.STEP_ACTIVITY,
+			})
 		}
 
 	// Подписаться на мероприятие
