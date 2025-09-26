@@ -1,5 +1,5 @@
 import { useState, type FormEventHandler } from "react";
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Container,
@@ -8,7 +8,7 @@ import {
   Image,
   Stack,
 } from "@chakra-ui/react";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 
 export const CalendarTab = () => {
   const api = useAPI();

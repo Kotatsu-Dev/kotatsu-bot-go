@@ -1,4 +1,4 @@
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
@@ -20,13 +20,14 @@ import {
   Tabs,
   Textarea,
 } from "@chakra-ui/react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { toaster } from "./ui/toaster";
-import { type Activity } from "../api/activities";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import { toaster } from "../ui/toaster";
+import { type Activity } from "../../api/activities";
 import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { Workbook } from "exceljs";
 import { FaDownload, FaEye } from "react-icons/fa";
+import { Calendar } from "../Calendar";
 
 const exportExcel = async (event: Activity) => {
   const wb = new Workbook();
@@ -304,7 +305,7 @@ export const EventsTab = () => {
   const api = useAPI();
   const [events, setEvents] = useState<Activity[]>([]);
   const [open, setOpen] = useState(false);
-  const { register, handleSubmit, reset } = useForm<Inputs>();
+  const { register, handleSubmit, reset, control } = useForm<Inputs>();
 
   const createEvent: SubmitHandler<Inputs> = async (data, event) => {
     try {
@@ -367,9 +368,14 @@ export const EventsTab = () => {
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>Date</Field.Label>
-                        <Input
+                        {/* <Input
                           type={"datetime-local"}
                           {...register("date_meeting")}
+                        /> */}
+                        <Controller
+                          control={control}
+                          name="date_meeting"
+                          render={({ field }) => <Calendar {...field} />}
                         />
                         {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
                         {/* https://codesandbox.io/p/sandbox/all-in-one-solution-7lrvdg?file=%2Fsrc%2Fmain.tsx%3A17%2C6-17%2C10 */}

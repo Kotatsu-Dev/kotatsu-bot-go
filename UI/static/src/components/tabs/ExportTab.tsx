@@ -1,5 +1,5 @@
-import { handleError, useAPI } from "../api/api";
-import { exportJSON } from "../misc";
+import { handleError, useAPI } from "../../api/api";
+import { exportJSON } from "../../misc";
 import { Button, Container, Heading, Stack } from "@chakra-ui/react";
 
 export const ExportTab = () => {

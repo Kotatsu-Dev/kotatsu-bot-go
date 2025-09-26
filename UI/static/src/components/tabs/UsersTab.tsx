@@ -1,4 +1,4 @@
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
@@ -12,7 +12,7 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 import type { User } from "@/api/users";
 import { formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";

@@ -1,5 +1,5 @@
 import type { Roulette } from "@/api/roulettes";
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
@@ -16,8 +16,9 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { format, isFuture, isPast, parse } from "date-fns";
-import { toaster } from "./ui/toaster";
+import { isFuture, isPast } from "date-fns";
+import { toaster } from "../ui/toaster";
+import { Calendar } from "../Calendar";
 
 const RouletteComponent = (props: {
   defaultValue?: Roulette;
@@ -38,7 +39,6 @@ const RouletteComponent = (props: {
       distribution: null,
     }
   );
-  const toValue = (d: Date) => format(d, "yyyy-MM-dd HH:mm");
 
   const save = async () => {
     try {
@@ -70,70 +70,58 @@ const RouletteComponent = (props: {
           <Fieldset.Content>
             <Field.Root>
               <Field.Label>Start date</Field.Label>
-              <Input
-                type="datetime-local"
-                onChange={(e) =>
-                  setRoulette((roulette) => ({
-                    ...roulette,
-                    start_date: parse(
-                      e.target.value,
-                      "yyyy-MM-dd'T'HH:mm",
-                      new Date()
-                    ),
-                  }))
-                }
-                defaultValue={toValue(roulette.start_date)}
+              <Calendar
+                onChange={(date) => {
+                  if (date) {
+                    setRoulette((roulette) => ({
+                      ...roulette,
+                      start_date: date,
+                    }));
+                  }
+                }}
+                defaultValue={roulette.start_date}
               />
             </Field.Root>
             <Field.Root>
               <Field.Label>Theme publication date</Field.Label>
-              <Input
-                type="datetime-local"
-                onChange={(e) =>
-                  setRoulette((roulette) => ({
-                    ...roulette,
-                    announce_date: parse(
-                      e.target.value,
-                      "yyyy-MM-dd'T'HH:mm",
-                      new Date()
-                    ),
-                  }))
-                }
-                defaultValue={toValue(roulette.announce_date)}
+              <Calendar
+                onChange={(date) => {
+                  if (date) {
+                    setRoulette((roulette) => ({
+                      ...roulette,
+                      announce_date: date,
+                    }));
+                  }
+                }}
+                defaultValue={roulette.announce_date}
               />
             </Field.Root>
             <Field.Root>
               <Field.Label>Distribution date</Field.Label>
-              <Input
-                type="datetime-local"
-                onChange={(e) =>
-                  setRoulette((roulette) => ({
-                    ...roulette,
-                    distribution_date: parse(
-                      e.target.value,
-                      "yyyy-MM-dd'T'HH:mm",
-                      new Date()
-                    ),
-                  }))
-                }
-                defaultValue={toValue(roulette.distribution_date)}
+              <Calendar
+                onChange={(date) => {
+                  if (date) {
+                    setRoulette((roulette) => ({
+                      ...roulette,
+                      distribution_date: date,
+                    }));
+                  }
+                }}
+                defaultValue={roulette.distribution_date}
               />
             </Field.Root>
             <Field.Root>
               <Field.Label>End date</Field.Label>
-              <Input
-                type="datetime-local"
-                onChange={(e) =>
-                  setRoulette((roulette) => ({
-                    ...roulette,
-                    end_date: parse(
-                      e.target.value,
-                      "yyyy-MM-dd'T'HH:mm",
-                      new Date()
-                    ),
-                  }))
-                }
-                defaultValue={toValue(roulette.end_date)}
+              <Calendar
+                onChange={(date) => {
+                  if (date) {
+                    setRoulette((roulette) => ({
+                      ...roulette,
+                      end_date: date,
+                    }));
+                  }
+                }}
+                defaultValue={roulette.end_date}
               />
             </Field.Root>
             <Field.Root>
@@ -179,10 +167,10 @@ export const RouletteTab = () => {
   const loadRoulettes = async () => {
     try {
       setRoulettes(await api.roulettes.getAll());
-    } catch(e) {
+    } catch (e) {
       handleError(e);
     }
-  }
+  };
 
   useEffect(() => {
     loadRoulettes();

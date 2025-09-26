@@ -12,6 +12,7 @@
   "dependencies": {
     "@chakra-ui/react": "^3.22.0",
     "@emotion/react": "^11.14.0",
+    "@rehookify/datepicker": "^6.6.8",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "exceljs": "^4.4.0",

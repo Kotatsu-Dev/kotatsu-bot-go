@@ -12,16 +12,16 @@ import {
 import "./App.css";
 import { Provider } from "./components/ui/provider";
 import { APIProvider } from "./api/api";
-import { DataTab } from "./components/DataTab";
+import { DataTab } from "./components/tabs/DataTab";
 import { Toaster } from "./components/ui/toaster";
-import { EventsTab } from "./components/EventsTab";
-import { CalendarTab } from "./components/CalendarTab";
-import { UsersTab } from "./components/UsersTab";
-import { MessagesTab } from "./components/MessagesTab";
-import { RequestTab } from "./components/RequestTab";
-import { ExportTab } from "./components/ExportTab";
-import { DeletionTab } from "./components/DeletionTab";
-import { RouletteTab } from "./components/RouletteTab";
+import { EventsTab } from "./components/tabs/EventsTab";
+import { CalendarTab } from "./components/tabs/CalendarTab";
+import { UsersTab } from "./components/tabs/UsersTab";
+import { MessagesTab } from "./components/tabs/MessagesTab";
+import { RequestTab } from "./components/tabs/RequestTab";
+import { ExportTab } from "./components/tabs/ExportTab";
+import { DeletionTab } from "./components/tabs/DeletionTab";
+import { RouletteTab } from "./components/tabs/RouletteTab";
 import { useState } from "react";
 import {
   FaBars,

@@ -1,4 +1,4 @@
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
@@ -13,7 +13,7 @@ import {
   Status,
   Table,
 } from "@chakra-ui/react";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 import { useState } from "react";
 import type { User } from "@/api/users";
 import type { Activity } from "@/api/activities";

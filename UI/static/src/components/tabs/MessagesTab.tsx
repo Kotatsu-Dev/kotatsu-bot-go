@@ -1,4 +1,4 @@
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Container,
@@ -9,7 +9,7 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 
 type Inputs = {
   message: string;
