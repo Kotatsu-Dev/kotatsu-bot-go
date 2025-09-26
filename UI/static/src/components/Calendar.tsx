@@ -36,6 +36,7 @@ export const Calendar: FC<Props> = (props) => {
     propGetters: { dayButton, timeButton, addOffset, subtractOffset },
   } = useDatePicker({
     selectedDates,
+    focusDate: props.defaultValue,
     onDatesChange(dates) {
       setSelectedDates(dates);
       props.onChange?.(dates.at(0) ?? null);
@@ -44,8 +45,6 @@ export const Calendar: FC<Props> = (props) => {
     onOffsetChange,
     calendar: { startDay: 1 },
   });
-
-  console.log(time);
 
   const { year, month, days } = calendars[0];
 
@@ -121,9 +120,10 @@ export const Calendar: FC<Props> = (props) => {
           onChange={(e) =>
             timeButton(time[(e.target as any).value]).onClick?.(e as any)
           }
-          defaultValue={time.findIndex((dpTime) => dpTime.selected)}
         >
-          <NativeSelect.Field>
+          <NativeSelect.Field
+            defaultValue={time.findIndex((dpTime) => dpTime.selected)}
+          >
             {time.map((dpTime, i) => (
               <option
                 key={`${dpTime.$date.toDateString()} ${dpTime.time}`}
