@@ -1,5 +1,4 @@
 import type { AxiosInstance } from "axios";
-import { format } from "date-fns";
 import z from "zod";
 
 const Activity = z.object({
@@ -19,7 +18,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
   return {
     async getAll() {
       const res = await $.get("/activities/");
-      return  Activity.array().parse(res.data.data.list_activities);
+      return Activity.array().parse(res.data.data.list_activities);
     },
 
     async setStatus({ id, status }: { id: number; status: boolean }) {
@@ -38,7 +37,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
     }) {
       await $.postForm("/activities/", {
         ...props,
-        date_meeting: format(props.date_meeting, "yyyy-MM-dd HH:mm"),
+        date_meeting: props.date_meeting.toISOString(),
       });
     },
 

@@ -80,13 +80,12 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	}
 
 	// Формат строки даты и времени
-	layout := "2006-01-02 15:04"
 
 	var start_date, announce_date, distribution_date, end_date time.Time
 
 	for index, stage := range json_data.Stages {
 		// Парсим строку в time.Time
-		end_date_stage, err_time := time.Parse(layout, stage.EndDate)
+		end_date_stage, err_time := time.Parse(time.RFC3339, stage.EndDate)
 		if err_time != nil {
 			rr_debug.PrintLOG("api_anime_roulettes.go", "Handler_API_AnimeRoulettes_CreateObject", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 			return
