@@ -75,7 +75,7 @@ export const Calendar: FC<Props> = (props) => {
             <Popover.Positioner>
               <Popover.Content colorPalette={"orange"}>
                 <Popover.Arrow />
-                <Popover.Body>
+                <Popover.Body overflowY="auto">
                   <Stack direction={"row"} alignItems={"center"} mb={4}>
                     <IconButton
                       {...subtractOffset({ months: 1 })}
