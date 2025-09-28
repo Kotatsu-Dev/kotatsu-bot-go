@@ -5,6 +5,7 @@ import {
   Container,
   DataList,
   Heading,
+  Input,
   Link,
   SimpleGrid,
   Stack,
@@ -16,6 +17,8 @@ import { toaster } from "../ui/toaster";
 import type { User } from "@/api/users";
 import { formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
+import { useDebounceValue } from "usehooks-ts";
+import Fuse from "fuse.js";
 
 const UserCard = memo((props: { value: User; reload: () => void }) => {
   const api = useAPI();
@@ -203,14 +206,33 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
 export const UsersTab = () => {
   const api = useAPI();
   const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useDebounceValue("", 500);
+
+  const currentUsers = useMemo(
+    () =>
+      search.length == 0
+        ? users
+        : new Fuse(users, {
+            keys: [
+              "user_name",
+              "full_tg_name",
+              "isu",
+              "full_name",
+              "phone_number",
+            ],
+          })
+            .search(search)
+            .map((e) => e.item),
+    [users, search]
+  );
 
   const members = useMemo(
-    () => users.filter((user) => user.is_club_member),
-    [users]
+    () => currentUsers.filter((user) => user.is_club_member),
+    [currentUsers]
   );
   const requests = useMemo(
-    () => users.filter((user) => !!user.my_request),
-    [users]
+    () => currentUsers.filter((user) => !!user.my_request),
+    [currentUsers]
   );
 
   const loadUsers = useCallback(async () => {
@@ -225,6 +247,10 @@ export const UsersTab = () => {
     <Container maxW={"lg"}>
       <Stack>
         <Heading textAlign={"center"}>User management</Heading>
+        <Input
+          defaultValue={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
         <Tabs.Root fitted variant={"enclosed"} defaultValue={"all"}>
           <Tabs.List>
             <Tabs.Trigger value="all">Everybody</Tabs.Trigger>
@@ -233,7 +259,7 @@ export const UsersTab = () => {
           </Tabs.List>
           <Tabs.Content value="all">
             <PaginatedList
-              items={users}
+              items={currentUsers}
               pageSize={5}
               render={(user) => (
                 <UserCard key={user.id} value={user} reload={loadUsers} />
