@@ -2096,6 +2096,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 					db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), current_user.ID)
 					params.Text = "Я записала тебя на мероприятие «" + activity.Title + "»"
 					params.ReplyMarkup = keyboards.ListEvents
+
+					db.DB_UPDATE_User(map[string]interface{}{
+						"user_tg_id": current_user.UserTgID,
+						"step":       config.STEP_DEFAULT,
+					})
 				}
 			} else {
 				params.Text = fmt.Sprintf("В прошлый раз ты указывал(а) номер %s.\n"+
@@ -2108,6 +2113,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 				db.DB_UPDATE_User(map[string]interface{}{
 					"user_tg_id":       current_user.UserTgID,
+					"step":             config.STEP_DEFAULT,
 					"temp_activity_id": int(activity_id),
 				})
 			}
@@ -2204,6 +2210,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
 				params.Text = "Я записала тебя на «" + activity.Title + "»"
 				params.ReplyMarkup = keyboards.ListEvents
+				update_user_data["step"] = config.STEP_DEFAULT
 
 			} else {
 				update_user_data["step"] = config.STEP_CHANGING_PHONE
