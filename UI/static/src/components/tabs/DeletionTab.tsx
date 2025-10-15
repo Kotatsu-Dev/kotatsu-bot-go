@@ -1,6 +1,6 @@
-import { handleError, useAPI } from "../api/api";
+import { handleError, useAPI } from "../../api/api";
 import { Button, Container, Heading, Stack } from "@chakra-ui/react";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 
 export const DeletionTab = () => {
   const api = useAPI();

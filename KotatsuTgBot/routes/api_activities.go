@@ -83,12 +83,8 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 		Answer_BadRequest(c, ANSWER_EMPTY_FIELDS().Code, ANSWER_EMPTY_FIELDS().Message)
 		return
 	} else {
-
-		// Формат строки даты и времени
-		layout := "2006-01-02 15:04"
-
 		// Парсим строку в time.Time
-		date_meeting_time, err_time := time.Parse(layout, dateMeeting)
+		date_meeting_time, err_time := time.Parse(time.RFC3339, dateMeeting)
 		if err_time != nil {
 			rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_CreateObject", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 			return

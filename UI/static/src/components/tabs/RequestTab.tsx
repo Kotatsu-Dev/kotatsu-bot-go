@@ -1,5 +1,5 @@
-import { handleError, useAPI } from "../api/api";
-import { type User } from "../api/users";
+import { handleError, useAPI } from "../../api/api";
+import { type User } from "../../api/users";
 import {
   Badge,
   Button,
@@ -17,7 +17,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../ui/toaster";
 
 export const RequestTab = () => {
   const api = useAPI();

@@ -273,11 +273,8 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 
 		case "start_date":
 			if v, ok := value.(string); ok {
-				// Формат строки даты и времени
-				layout := "2006-01-02 15:04"
-
 				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(layout, v)
+				v_date, err_time := time.Parse(time.RFC3339, v)
 				if err_time != nil {
 					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 				}
@@ -287,11 +284,8 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 
 		case "announce_date":
 			if v, ok := value.(string); ok {
-				// Формат строки даты и времени
-				layout := "2006-01-02 15:04"
-
 				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(layout, v)
+				v_date, err_time := time.Parse(time.RFC3339, v)
 				if err_time != nil {
 					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 				}
@@ -300,11 +294,8 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 			}
 		case "distribution_date":
 			if v, ok := value.(string); ok {
-				// Формат строки даты и времени
-				layout := "2006-01-02 15:04"
-
 				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(layout, v)
+				v_date, err_time := time.Parse(time.RFC3339, v)
 				if err_time != nil {
 					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 				}
@@ -313,11 +304,8 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 			}
 		case "end_date":
 			if v, ok := value.(string); ok {
-				// Формат строки даты и времени
-				layout := "2006-01-02 15:04"
-
 				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(layout, v)
+				v_date, err_time := time.Parse(time.RFC3339, v)
 				if err_time != nil {
 					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 				}

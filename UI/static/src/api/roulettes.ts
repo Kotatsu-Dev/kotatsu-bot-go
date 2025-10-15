@@ -1,7 +1,6 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
 import { User } from "./users";
-import { format } from "date-fns";
 
 const Roulette = z.object({
   id: z.int().nonnegative(),
@@ -34,19 +33,19 @@ export const createRoulettesApi = ($: AxiosInstance) => {
         stages: [
           {
             stage: 0,
-            end_date: format(props.start_date, `yyyy-MM-dd HH:mm`),
+            end_date: props.start_date.toISOString(),
           },
           {
             stage: 1,
-            end_date: format(props.announce_date, `yyyy-MM-dd HH:mm`),
+            end_date: props.announce_date.toISOString(),
           },
           {
             stage: 2,
-            end_date: format(props.distribution_date, `yyyy-MM-dd HH:mm`),
+            end_date: props.distribution_date.toISOString(),
           },
           {
             stage: 3,
-            end_date: format(props.end_date, `yyyy-MM-dd HH:mm`),
+            end_date: props.end_date.toISOString(),
           },
         ],
         theme: props.theme,
@@ -63,10 +62,10 @@ export const createRoulettesApi = ($: AxiosInstance) => {
     }) {
       await $.put("/roulettes/", {
         id: props.id,
-        start_date: format(props.start_date, `yyyy-MM-dd HH:mm`),
-        announce_date: format(props.announce_date, `yyyy-MM-dd HH:mm`),
-        distribution_date: format(props.distribution_date, `yyyy-MM-dd HH:mm`),
-        end_date: format(props.end_date, `yyyy-MM-dd HH:mm`),
+        start_date: props.start_date.toISOString(),
+        announce_date: props.announce_date.toISOString(),
+        distribution_date: props.distribution_date.toISOString(),
+        end_date: props.end_date.toISOString(),
         theme: props.theme,
       });
     },
