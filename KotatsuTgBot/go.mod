@@ -16,6 +16,8 @@ require github.com/gin-contrib/static v1.1.5
 
 require github.com/gin-contrib/cors v1.7.6
 
+require github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
+
 require (
 	github.com/bytedance/sonic v1.13.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
