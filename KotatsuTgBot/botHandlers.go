@@ -1957,7 +1957,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 
 			// Определите желаемый формат дд.мм чч:мм
-			loc, _ := time.LoadLocation("Etc/GMT+3")
+			loc, _ := time.LoadLocation("Europe/Moscow")
 
 			// Используйте метод Format для форматирования времени
 			formattedTime = activity.DateMeeting.In(loc).Format("15:04")

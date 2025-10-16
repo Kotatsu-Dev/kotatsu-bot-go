@@ -317,7 +317,7 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 			}
 		}
 
-		loc, _ := time.LoadLocation("Etc/GMT+3")
+		loc, _ := time.LoadLocation("Europe/Moscow")
 		formattedTime = activity.DateMeeting.In(loc).Format(format)
 		if is_participant {
 			title = "✅ [" + formattedTime + "] " + activity.Title
@@ -383,7 +383,7 @@ func CreateInlineKbd_MyActivitiesList(my_activities []*db.Activity) *models.Inli
 
 	// Определите желаемый формат дд.мм чч:мм
 	format := "02.01 15:04"
-	loc, _ := time.LoadLocation("Etc/GMT+3")
+	loc, _ := time.LoadLocation("Europe/Moscow")
 
 	for _, activity := range my_activities {
 
