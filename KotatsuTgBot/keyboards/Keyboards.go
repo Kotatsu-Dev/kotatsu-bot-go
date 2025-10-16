@@ -9,6 +9,7 @@ package keyboards
 import (
 	//Внутренние пакеты проекта
 	"rr/kotatsutgbot/db"
+	"time"
 
 	//Сторонние библиотеки
 	"github.com/go-telegram/bot/models"
@@ -316,7 +317,8 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 			}
 		}
 
-		formattedTime = activity.DateMeeting.Format(format)
+		loc, _ := time.LoadLocation("Etc/GMT+3")
+		formattedTime = activity.DateMeeting.In(loc).Format(format)
 		if is_participant {
 			title = "✅ [" + formattedTime + "] " + activity.Title
 		} else {
@@ -381,10 +383,11 @@ func CreateInlineKbd_MyActivitiesList(my_activities []*db.Activity) *models.Inli
 
 	// Определите желаемый формат дд.мм чч:мм
 	format := "02.01 15:04"
+	loc, _ := time.LoadLocation("Etc/GMT+3")
 
 	for _, activity := range my_activities {
 
-		formattedTime = activity.DateMeeting.Format(format)
+		formattedTime = activity.DateMeeting.In(loc).Format(format)
 		title = "[" + formattedTime + "] " + activity.Title
 
 		row := []models.InlineKeyboardButton{

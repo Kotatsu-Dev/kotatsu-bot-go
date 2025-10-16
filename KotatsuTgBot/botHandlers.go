@@ -1957,10 +1957,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 
 			// Определите желаемый формат дд.мм чч:мм
+			loc, _ := time.LoadLocation("Etc/GMT+3")
 
 			// Используйте метод Format для форматирования времени
-			formattedTime = activity.DateMeeting.Format("15:04")
-			formattedDate = formatDate(activity.DateMeeting)
+			formattedTime = activity.DateMeeting.In(loc).Format("15:04")
+			formattedDate = formatDate(activity.DateMeeting.In(loc))
 
 			if len(activity.PathsImages) != 0 {
 				for _, output_image_path := range activity.PathsImages {
