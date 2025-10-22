@@ -243,11 +243,11 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 
 		switch db_answer_reg {
 		case db.DB_ANSWER_SUCCESS:
-			params.Text = "Кто ты?"
+			params.Text = config.T("gender_select")
 			params.ReplyMarkup = keyboards.Keyboard_GenderSelect
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
-			params.Text = "Привет! Мы уже знакомы, можешь выбирать нужный раздел."
+			params.Text = config.T("registered")
 
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
@@ -258,7 +258,7 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 			}
 
 		default:
-			params.Text = "Произошла ошибка работы с БД"
+			params.Text = config.T("error.database")
 			rr_debug.PrintLOG("main.go", "update.Message.Text", "activity_GetObjects()", "Ошибка работы с БД", "")
 		}
 	} else {
@@ -266,7 +266,7 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 			ChatID:   update.Message.Chat.ID,
 			Document: &models.InputFileString{Data: "CAACAgIAAx0CbgUG4QACCWpostfAVRPNDHNAWu8vcIbjv0nuagACrXQAAl8iQUmAFQIjshq4bTYE"},
 		})
-		params.Text = "Продолжая общение со мной, ты соглашаешься на обработку персональных данных в соответствии со 152-ФЗ «О персональных данных»."
+		params.Text = config.T("personal_data")
 		params.ReplyMarkup = keyboards.Registration
 	}
 
@@ -290,11 +290,11 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 
 		switch db_answer_reg {
 		case db.DB_ANSWER_SUCCESS:
-			params.Text = "Главное меню"
+			params.Text = config.T("main_menu")
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
-			params.Text = "Привет! Мы уже знакомы, можешь выбирать нужный раздел."
+			params.Text = config.T("registered")
 
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
@@ -305,7 +305,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 			}
 
 		default:
-			params.Text = "Произошла ошибка работы с БД"
+			params.Text = config.T("error.database")
 			rr_debug.PrintLOG("main.go", "update.Message.Text", "activity_GetObjects()", "Ошибка работы с БД", "")
 		}
 	} else {
@@ -326,7 +326,6 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 
 // Главное меню
 func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Update) {
-
 	db_answer_code, user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
@@ -335,11 +334,7 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 			ParseMode: models.ParseModeHTML,
 		}
 
-		var full_tg_name string
-
-		full_tg_name = update.Message.From.FirstName + " " + update.Message.From.LastName
-
-		params.Text = "Окаэринасай, " + full_tg_name
+		params.Text = config.TT("welcome", update.Message.From)
 
 		if user.IsClubMember {
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(user.IsSubscribeNewsletter)
@@ -364,12 +359,12 @@ func BotHandler_Command_Login(ctx context.Context, b *bot.Bot, update *models.Up
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:    update.Message.Chat.ID,
 		ParseMode: models.ParseModeHTML,
-		Text:      "Для входа нажмите кнопку",
+		Text:      config.T("login.text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: [][]models.InlineKeyboardButton{
 				{
 					{
-						Text: "Войти", URL: url,
+						Text: config.T("login.button"), URL: url,
 					},
 				},
 			},
@@ -396,17 +391,10 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 	}
 
 	if current_user.IsSentRequest {
-		params.Text = "Твою заявку ещё не обработали. Пожалуйста, подожди ответа руководителя или напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
+		params.Text = config.T("request.in_progress")
 
 	} else {
-		params.Text = "Перед вступлением в клуб немного о правилах:\n" +
-			"0. Для посещения большинства мероприятий вступать в клуб не обязательно.\n" +
-			"Если хочешь просто к нам прийти, перейди в меню «Запись на мероприятия»\n" +
-			"1. Чтобы вступить в клуб, посети хотя бы 3 мероприятия. Онлайн-встречи тоже считаются :)\n" +
-			"2. Относись ко всем участникам с уважением. Никого нельзя унижать за их интересы и вкусы\n" +
-			"3. Наш клуб — официальная структура в ИТМО, поэтому не забывай о правилах Университета.\n\n" +
-			"<a href=\"https://kotatsu.spb.ru/rules/current.pdf\">Полные правила</a> (там скучно и намного официальнее, но больше деталей)\n\n" +
-			"Уже посетил(а) 3 наших мероприятия?"
+		params.Text = config.T("request.rules")
 		params.ParseMode = models.ParseModeHTML
 		params_load.ReplyMarkup = keyboards.CommunicationManager
 		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
@@ -435,7 +423,7 @@ func proccessText_SetGender(ctx context.Context, b *bot.Bot, update *models.Upda
 		"gender":     gender,
 	})
 
-	params.Text = "Главное меню"
+	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
@@ -456,12 +444,10 @@ func proccessText_WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Up
 	}
 
 	if actually {
-		params.Text = "Подскажи, ты учишься или работаешь в ИТМО?"
+		params.Text = config.T("request.is_itmo")
 		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 	} else {
-		params.Text = "К сожалению, вступить без посещения хотя бы 3 мероприятий не выйдет.\n" +
-			"Пожалуйста, заполни заявку на вступление после того, как познакомишься с нами поближе.\n" +
-			"Можешь продолжить заполнение заявки, тогда тебе напишет рук. клуба."
+		params.Text = config.T("request.not_enough_visits")
 
 		params.ReplyMarkup = keyboards.Keyboard_WasntAtEvents
 	}
@@ -484,10 +470,10 @@ func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.
 	}
 
 	if cont {
-		params.Text = "Подскажи, ты учишься или работаешь в ИТМО?"
+		params.Text = config.T("request.is_itmo")
 		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 	} else {
-		params.Text = "Главное меню"
+		params.Text = config.T("main_menu")
 
 		if current_user.IsClubMember {
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
@@ -1971,10 +1957,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 
 			// Определите желаемый формат дд.мм чч:мм
+			loc, _ := time.LoadLocation("Europe/Moscow")
 
 			// Используйте метод Format для форматирования времени
-			formattedTime = activity.DateMeeting.Format("15:04")
-			formattedDate = formatDate(activity.DateMeeting)
+			formattedTime = activity.DateMeeting.In(loc).Format("15:04")
+			formattedDate = formatDate(activity.DateMeeting.In(loc))
 
 			if len(activity.PathsImages) != 0 {
 				for _, output_image_path := range activity.PathsImages {

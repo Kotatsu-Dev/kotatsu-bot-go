@@ -16,12 +16,14 @@ func StartCron(b *bot.Bot) {
 	minute_ticker := time.NewTicker(1 * time.Minute)
 	halfhour_ticker := time.NewTicker(30 * time.Minute)
 
-	go func() {
-		for {
-			check_roulette(b)
-			<-minute_ticker.C
-		}
-	}()
+	if config.GetConfig().ROULETTES {
+		go func() {
+			for {
+				check_roulette(b)
+				<-minute_ticker.C
+			}
+		}()
+	}
 
 	go func() {
 		for {

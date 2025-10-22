@@ -36,9 +36,11 @@ type Config struct {
 	CONFIG_DB_IS_DEBUG bool
 
 	AUTH_SECRET string
+	ROULETTES   bool
 }
 
 var config *Config = nil
+var DEFAULT_CONFIG = Config{ROULETTES: true}
 
 func GetConfig() Config {
 	if config != nil {
@@ -50,7 +52,7 @@ func GetConfig() Config {
 		panic(err.Error())
 	}
 
-	var tmpConfig Config
+	tmpConfig := DEFAULT_CONFIG
 	err = toml.Unmarshal(data, &tmpConfig)
 	if err != nil {
 		panic(err.Error())
