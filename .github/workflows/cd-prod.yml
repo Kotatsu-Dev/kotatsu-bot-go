@@ -49,6 +49,6 @@ jobs:
             cp dist_prod/KotatsuTgBot/kotatsutgbot kotatsu_bot_prod/kotatsutgbot &&
             cp -r dist_prod/UI/assets/* kotatsu_bot_prod/assets/ &&
             cp -r dist_prod/UI/static/* kotatsu_bot_prod/static/ &&
-            cp -r dist_prod/UI/locales/* kotatsu_bot_test/locales/ &&
+            cp -r dist_prod/UI/locales/* kotatsu_bot_prod/locales/ &&
             sudo systemctl start prod_kotatsu_bot &&
             systemctl status prod_kotatsu_bot
