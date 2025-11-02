@@ -309,8 +309,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 			rr_debug.PrintLOG("main.go", "update.Message.Text", "activity_GetObjects()", "Ошибка работы с БД", "")
 		}
 	} else {
-		params.Text = "Привет!" + "\n" +
-			"Продолжая общение со мной, ты соглашаешься на обработку персональных данных в соответствии со 152-ФЗ «О персональных данных»."
+		params.Text = config.T("hello") + "\n" + config.T("personal_data")
 		params.ReplyMarkup = keyboards.Registration
 	}
 
@@ -491,10 +490,7 @@ func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.
 // Запись на мероприятия
 func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *models.Update) {
 
-	params := &bot.SendMessageParams{
-		ChatID:    update.Message.From.ID,
-		ParseMode: models.ParseModeHTML,
-	}
+	params := &bot.SendMessageParams{}
 
 	params_load := &bot.SendMessageParams{
 		ChatID:    update.Message.From.ID,
@@ -554,11 +550,10 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 		params_photo.Photo = inputFile
 		if len(active_activities_list) > 0 {
-			params_photo.Caption = "Список текущих мероприятий:"
+			params_photo.Caption = config.T("events.list")
 			params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 		} else {
-			params_photo.Caption = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
-				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+			params_photo.Caption = config.T("events.empty")
 		}
 
 		// Отправляем фото
@@ -570,11 +565,10 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 	} else if os.IsNotExist(err) {
 		if len(active_activities_list) > 0 {
-			params.Text = "Список текущих мероприятий:"
+			params.Text = config.T("events.list")
 			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 		} else {
-			params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
-				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+			params.Text = config.T("events.empty")
 		}
 
 		_, err_msg := b.SendMessage(ctx, params_load)
@@ -584,11 +578,10 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 	} else {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
 		if len(active_activities_list) > 0 {
-			params.Text = "Список текущих мероприятий:"
+			params.Text = config.T("events.list")
 			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
 		} else {
-			params.Text = "Сейчас нет мероприятий, на которые я могу тебя записать." + "\n" +
-				"Если в канале был анонс мероприятия, проверь, нет ли там ссылки на запись."
+			params.Text = config.T("events.empty")
 		}
 
 		_, err_msg := b.SendMessage(ctx, params_load)
@@ -605,7 +598,7 @@ func proccessText_Partners(ctx context.Context, b *bot.Bot, update *models.Updat
 		ParseMode: models.ParseModeHTML,
 	}
 
-	params.Text = "Список наших акций и партнёров"
+	params.Text = config.T("partners.list")
 	params.ReplyMarkup = keyboards.CreateInlineKbd_PartnersList()
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -624,7 +617,7 @@ func proccessText_MyActivities(ctx context.Context, b *bot.Bot, update *models.U
 	var active_activities_list []*db.Activity
 
 	if len(current_user.MyActivities) == 0 {
-		params.Text = "Сейчас ты не записан(а) ни на одно мероприятие"
+		params.Text = config.T("my_events.empty")
 	} else {
 
 		for _, activity := range current_user.MyActivities {
@@ -633,7 +626,7 @@ func proccessText_MyActivities(ctx context.Context, b *bot.Bot, update *models.U
 			}
 		}
 
-		params.Text = "Я записывала тебя на эти мероприятия"
+		params.Text = config.T("my_events.list")
 		params.ReplyMarkup = keyboards.CreateInlineKbd_MyActivitiesList(active_activities_list)
 	}
 
@@ -656,7 +649,7 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 
 	_, user := db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Теперь я буду присылать тебе важные сообщения от клуба прямо в этот чат"
+	params.Text = config.T("subscription.on")
 	if user != nil && user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(true)
 	} else {
@@ -680,7 +673,7 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 	update_user_data["is_subscribe_newsletter"] = false
 	_, user := db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Хорошо-хорошо, больше не буду :("
+	params.Text = config.T("subscription.off")
 	if user != nil && user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(false)
 	} else {
@@ -704,7 +697,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	update_user_data["step"] = config.STEP_MESSAGE_SUPPORT
 	db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Напиши своё обращение здесь, затем отправь его и оно будет направлено руководству клуба"
+	params.Text = config.T("feedback")
 	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -720,7 +713,7 @@ func proccessText_BackMeinMenu(ctx context.Context, b *bot.Bot, update *models.U
 		ParseMode: models.ParseModeHTML,
 	}
 
-	params.Text = "Главное меню"
+	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
@@ -745,8 +738,7 @@ func proccessText_NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.
 		ParseMode: models.ParseModeHTML,
 	}
 
-	params.Text = "Я не могу записать тебя по номеру, не привязанному к аккаунту в Telegram :(\n" +
-		"Пожалуйста, напиши в сообщения канала @anime_itmo (значок чата внизу канала), руководитель поможет тебе с записью и пропуском"
+	params.Text = config.T("request.no_phone_number")
 
 	if current_user.IsClubMember {
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
@@ -777,7 +769,7 @@ func proccessText_LeaveClub(ctx context.Context, b *bot.Bot, update *models.Upda
 	update_user_data["step"] = config.STEP_USER_LEAVES_CLUB
 	db.DB_UPDATE_User(update_user_data)
 
-	params.Text = "Пожалуйста, напиши причину, по которой хочешь покинуть клуб, или нажми на кнопку «Пропустить»"
+	params.Text = config.T("leave_reason")
 	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("skip")
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -799,7 +791,7 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		params.Text = "Меню рулетки"
+		params.Text = config.T("roulette.menu")
 
 		for _, participant := range current_anime_roulette.Participants {
 			if current_user.UserTgID == participant.UserTgID {
@@ -811,7 +803,7 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 		params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -842,11 +834,11 @@ func processText_AnimeRoulette_Participate(ctx context.Context, b *bot.Bot, upda
 			}
 
 			if is_participant {
-				params.Text = "Ты уже участвуешь в рулетке"
+				params.Text = config.T("roulette.already_participant")
 
 			} else {
 				db.DB_UPDATE_AnimeRoulette_ADD_Participants(current_user.ID)
-				params.Text = "Теперь ты участник рулетки! Скоро я вышлю тему, на которую нужно будет загадать аниме."
+				params.Text = config.T("roulette.registered")
 			}
 
 			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
@@ -859,15 +851,15 @@ func processText_AnimeRoulette_Participate(ctx context.Context, b *bot.Bot, upda
 			}
 
 			if is_participant {
-				params.Text = "Ты уже участвуешь в рулетке"
+				params.Text = config.T("roulette.already_participant")
 				params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
 			} else {
-				params.Text = "К сожалению, набор участников закончился. Следи за анонсами в канале @anime_itmo, чтобы не пропустить следующую рулетку."
+				params.Text = config.T("roulette.registration_end")
 			}
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -898,18 +890,18 @@ func processText_AnimeRoulette_CancelParticipate(ctx context.Context, b *bot.Bot
 		}
 
 		if !is_participant {
-			params.Text = "Ты не участвуешь в рулетке :("
+			params.Text = config.T("roulette.not_participant")
 		} else {
 			if indexToRemove != -1 {
 				db.DB_UPDATE_AnimeRoulette_REMOVE_Participants(current_user.ID)
-				params.Text = "Теперь ты не участвуешь в рулетке :("
+				params.Text = config.T("roulette.unregistered")
 			}
 		}
 
 		params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -932,7 +924,7 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 	case db.DB_ANSWER_SUCCESS:
 		now := time.Now()
 		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
-			params.Text = "Ещё рано — я объявлю тему позже"
+			params.Text = config.T("roulette.no_theme")
 		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
@@ -947,17 +939,17 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 				update_user_data["step"] = config.STEP_ANIME_RUOLETTE_ENTER_ENIGMATIC_TITLE
 				db.DB_UPDATE_User(update_user_data)
 
-				params.Text = "Отправь мне название аниме, которое хочешь загадать"
+				params.Text = config.T("roulette.send_title")
 				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
 			} else {
-				params.Text = "Ты не участвуешь в рулетке :("
+				params.Text = config.T("roulette.not_participant")
 			}
 		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
-			params.Text = "Сбор тайтлов уже закончился"
+			params.Text = config.T("roulette.ended")
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -993,21 +985,20 @@ func proccessText_AnimeRoulette_LinkMyList(ctx context.Context, b *bot.Bot, upda
 			db.DB_UPDATE_User(update_user_data)
 
 			if current_user.LinkMyAnimeList == "" {
-				params.Text = "Отправь ссылку на свой список аниме"
+				params.Text = config.T("roulette.send_list")
 			} else {
-				params.Text = "Твой список аниме: " + current_user.LinkMyAnimeList + "\n" +
-					"Хочешь изменить? Отправь новую ссылку."
+				params.Text = config.TT("roulette.your_list", current_user)
 
 				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
 			}
 
 		} else {
-			params.Text = "Ты не участвуешь в рулетке :("
+			params.Text = config.T("roulette.not_participant")
 			params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 
 	}
 
@@ -1027,14 +1018,7 @@ func proccessText_AnimeRoulette_Rules(ctx context.Context, b *bot.Bot, update *m
 		},
 	}
 
-	params.Text = "Участники рулетки загадывают аниме по заданной теме и случайным образом получают для просмотра то, что загадал другой участник." + "\n" + "\n" +
-		"Загадываемый тайтл должен иметь первый сезон не длиннее 30 серий, чтобы получивший его участник мог закончить просмотр в течение 3 недель." + "\n" +
-		"Нельзя загадывать длинные франшизы (более 80 серий или 5 ТВ-сезонов), хентай и другие запрещённые в РФ тайтлы." + "\n" +
-		"1 серия = 24 минуты." + "\n" + "\n" +
-		"Если уже загаданный тайтл вы смотрели, то необходимо попросить замену." + "\n" + "\n" +
-		"Цель рулетки: посмотреть загаданное аниме и написать отзыв в обсуждении: https://vk.com/topic-91030630_40877814." + "\n" +
-		"Если вы решили бросить просмотр, то подробно опиши причину, иначе отзыв не засчитается." + "\n" +
-		"За невыполнение цели следует наказание. И поверь, лучше до него не доводить: кто знает, что придётся выполнить в этот раз?"
+	params.Text = config.T("roulette.rules")
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -1054,21 +1038,21 @@ func proccessText_AnimeRoulette_MainTheme(ctx context.Context, b *bot.Bot, updat
 	case db.DB_ANSWER_SUCCESS:
 		now := time.Now()
 		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
-			params.Text = "Ещё рано — я объявлю тему позже"
+			params.Text = config.T("roulette.no_theme")
 		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			if current_anime_roulette.Theme == "" {
-				params.Text = "Ещё чуть-чуть — скоро объявлю тему"
+				params.Text = config.T("roulette.almost_no_theme")
 			} else {
 				params.Text = current_anime_roulette.Theme
 			}
 		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
-			params.Text = "Сбор тайтлов уже закончился"
+			params.Text = config.T("roulette.ended")
 		} else {
-			params.Text = "К сожалению, набор участников закончился. Следи за анонсами в канале @anime_itmo, чтобы не пропустить следующую рулетку."
+			params.Text = config.T("roulette.registration_end")
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -1084,7 +1068,7 @@ func proccessText_InDevelopment(ctx context.Context, b *bot.Bot, update *models.
 		ParseMode: models.ParseModeHTML,
 	}
 
-	params.Text = "В разработке"
+	params.Text = config.T("in_development")
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -1120,8 +1104,7 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	reference_number := generateRandomNumber(10)
 	reference_number_str := strconv.Itoa(reference_number)
 
-	params_user.Text = "Твоё сообщение успешно отправлено к руководству клуба." + "\n" +
-		"Номер твоего обращения: " + reference_number_str
+	params_user.Text = config.TT("feedback_sent", reference_number_str)
 
 	params_user.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 
@@ -1130,10 +1113,12 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 
 	user_tg_id_str := strconv.FormatInt(update.Message.From.ID, 10)
 
-	params_support.Text = "<b>Сообщение от пользователя</b>: " + user_name + "\n" +
-		"<b>TG URL</b>: " + profileURL + "\n" +
-		"<b>Текст обращения</b>: " + "\n" + update.Message.Text + "\n" +
-		"<b>Ссылка для ответа</b>: " + config.GetConfig().CONFIG_URL_BASE + "support-response/?user_tg_id=" + user_tg_id_str + "&reference_number=" + reference_number_str
+	params_support.Text = config.TT("feedback_text", map[string]any{
+		"user_name":  user_name,
+		"profileURL": profileURL,
+		"text":       update.Message.Text,
+		"link":       config.GetConfig().CONFIG_URL_BASE + "support-response/?user_tg_id=" + user_tg_id_str + "&reference_number=" + reference_number_str,
+	})
 
 	_, err_msg := b.SendMessage(ctx, params_support)
 	if err_msg != nil {
