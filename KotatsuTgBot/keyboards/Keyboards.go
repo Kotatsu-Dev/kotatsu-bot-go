@@ -8,6 +8,7 @@ package keyboards
 
 import (
 	//Внутренние пакеты проекта
+	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"time"
 
@@ -297,7 +298,7 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 }
 
 // Inline-клавиатура - Список мероприятий
-func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64) *models.InlineKeyboardMarkup {
+func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64, has_roulette bool) *models.InlineKeyboardMarkup {
 	inlineKeyboard := [][]models.InlineKeyboardButton{}
 
 	var title string
@@ -332,6 +333,15 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 			},
 		}
 		inlineKeyboard = append(inlineKeyboard, row)
+	}
+
+	if has_roulette {
+		inlineKeyboard = append(inlineKeyboard, []models.InlineKeyboardButton{
+			{
+				Text:         config.T("roulette.title"),
+				CallbackData: "ROULETTES",
+			},
+		})
 	}
 
 	return &models.InlineKeyboardMarkup{
