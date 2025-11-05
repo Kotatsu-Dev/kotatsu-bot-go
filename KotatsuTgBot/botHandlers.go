@@ -826,6 +826,7 @@ func processText_AnimeRoulette_Participate(ctx context.Context, b *bot.Bot, upda
 			} else {
 				db.DB_UPDATE_AnimeRoulette_ADD_Participants(current_user.ID)
 				params.Text = config.T("roulette.registered")
+				is_participant = true
 			}
 
 			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
@@ -882,6 +883,7 @@ func processText_AnimeRoulette_CancelParticipate(ctx context.Context, b *bot.Bot
 			if indexToRemove != -1 {
 				db.DB_UPDATE_AnimeRoulette_REMOVE_Participants(current_user.ID)
 				params.Text = config.T("roulette.unregistered")
+				is_participant = false
 			}
 		}
 

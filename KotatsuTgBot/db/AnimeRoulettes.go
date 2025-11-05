@@ -316,7 +316,6 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 	}
 
 	db.Save(&anime_roulette)
-	fmt.Println(db.Error)
 	return DB_ANSWER_SUCCESS
 }
 
