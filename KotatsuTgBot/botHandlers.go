@@ -492,11 +492,6 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 	params := &bot.SendMessageParams{}
 
-	params_load := &bot.SendMessageParams{
-		ChatID:    update.Message.From.ID,
-		ParseMode: models.ParseModeHTML,
-	}
-
 	params_photo := &bot.SendPhotoParams{
 		ChatID:    update.Message.From.ID,
 		ParseMode: models.ParseModeHTML,
@@ -505,13 +500,6 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 	var active_activities_list []db.Activity_ReadJSON
 
 	activities_list := db.DB_GET_Activities()
-
-	params_load.ReplyMarkup = keyboards.ListEvents
-
-	_, err_msg := b.SendMessage(ctx, params_load)
-	if err_msg != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
-	}
 
 	directory := "./img/calendar_activities"
 	// Получите список файлов в каталоге
@@ -528,6 +516,9 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 			active_activities_list = append(active_activities_list, activity)
 		}
 	}
+
+	status, _ := db.DB_GET_AnimeRoulette_BY_Status(true)
+	has_roulette := status == db.DB_ANSWER_SUCCESS
 
 	// Проверить наличие файла - Календарь мероприятий
 	calendar_activities_path := filePath
@@ -549,9 +540,9 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 		}
 
 		params_photo.Photo = inputFile
-		if len(active_activities_list) > 0 {
+		if len(active_activities_list) > 0 || has_roulette {
 			params_photo.Caption = config.T("events.list")
-			params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+			params_photo.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID, has_roulette)
 		} else {
 			params_photo.Caption = config.T("events.empty")
 		}
@@ -564,29 +555,19 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 		}
 
 	} else if os.IsNotExist(err) {
-		if len(active_activities_list) > 0 {
+		if len(active_activities_list) > 0 || has_roulette {
 			params.Text = config.T("events.list")
-			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID, has_roulette)
 		} else {
 			params.Text = config.T("events.empty")
-		}
-
-		_, err_msg := b.SendMessage(ctx, params_load)
-		if err_msg != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 		}
 	} else {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
-		if len(active_activities_list) > 0 {
+		if len(active_activities_list) > 0 || has_roulette {
 			params.Text = config.T("events.list")
-			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID)
+			params.ReplyMarkup = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID, has_roulette)
 		} else {
 			params.Text = config.T("events.empty")
-		}
-
-		_, err_msg := b.SendMessage(ctx, params_load)
-		if err_msg != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "bot.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
 		}
 	}
 }
@@ -780,8 +761,14 @@ func proccessText_LeaveClub(ctx context.Context, b *bot.Bot, update *models.Upda
 
 // Аниме рулетка
 func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
 	params := &bot.SendMessageParams{
-		ChatID:    update.Message.From.ID,
+		ChatID:    chat_id,
 		ParseMode: models.ParseModeHTML,
 	}
 
@@ -2199,5 +2186,13 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 		}
 
+	// Переход в подменю рулетки
+	case strings.HasPrefix(update.CallbackQuery.Data, "ROULETTES"):
+		b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+			CallbackQueryID: update.CallbackQuery.ID,
+			ShowAlert:       false,
+		})
+
+		processText_AnimeRoulette(ctx, b, update, current_user)
 	}
 }
