@@ -348,8 +348,9 @@ func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
 	defer sqlDB.Close()
 
 	var anime_roulette AnimeRoulette
+	now := time.Now()
+	db.Preload("Participants").Where("start_date < ?", now).Where("end_date > ?", now).First(&anime_roulette)
 
-	db.First(&anime_roulette)
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
@@ -361,9 +362,8 @@ func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
 	}
 
 	// Добавить пользователя в массив Participants
-	anime_roulette.Participants = append(anime_roulette.Participants, user)
-
-	db.Save(&anime_roulette)
+	res := db.Model(&anime_roulette).Association("Participants").Append(&user)
+	fmt.Println(res)
 	return DB_ANSWER_SUCCESS
 }
 
@@ -376,28 +376,21 @@ func DB_UPDATE_AnimeRoulette_REMOVE_Participants(user_id uint) int {
 
 	var anime_roulette AnimeRoulette
 
-	db.First(&anime_roulette)
+	now := time.Now()
+	db.Preload("Participants").Where("start_date < ?", now).Where("end_date > ?", now).First(&anime_roulette)
+
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	// Ищем индекс пользователя в массиве Participants
-	userIndex := -1
-	for i, participant := range anime_roulette.Participants {
-		if participant.ID == user_id {
-			userIndex = i
-			break
-		}
+	var user User
+	db.First(&user, user_id)
+	if user.ID == 0 {
+		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	if userIndex == -1 {
-		return DB_ANSWER_OBJECT_NOT_FOUND // Пользователь не найден в рулетке
-	}
+	db.Model(&anime_roulette).Association("Participants").Delete(&user)
 
-	// Удаляем пользователя из массива Participants
-	anime_roulette.Participants = append(anime_roulette.Participants[:userIndex], anime_roulette.Participants[userIndex+1:]...)
-
-	db.Save(&anime_roulette)
 	return DB_ANSWER_SUCCESS
 }
 
