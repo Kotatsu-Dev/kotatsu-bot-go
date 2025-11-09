@@ -1142,10 +1142,9 @@ func proccessStep_ITMO_EnterISU(ctx context.Context, b *bot.Bot, update *models.
 
 		db.DB_UPDATE_User(update_user_data)
 
-		params.Text = "Введи свои ФИО"
+		params.Text = config.T("request.enter_name")
 	} else {
-		params.Text = "Это не номер ИСУ!" + "\n" +
-			"Попробуй ещё раз или напиши в сообщения канала @anime_itmo (значок чата внизу канала), руководитель поможет тебе."
+		params.Text = config.T("request.not_isu_id")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -1164,7 +1163,7 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 	matched := fullNameRegexp.MatchString(update.Message.Text)
 
 	if !matched {
-		params.Text = "Неправильный формат ФИО, попробуй ещё раз в формате Фамилия Имя Отчество."
+		params.Text = config.T("request.incorrect_name_format")
 		_, err_msg := b.SendMessage(ctx, params)
 		if err_msg != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessStep_ITMO_EnterFullName", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
@@ -1197,18 +1196,16 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 		db_answer_code := db.DB_CREATE_Request(current_user.ID)
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
-			params.Text = "Отправила твою заявку руководителю клуба." + "\n" +
-				"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
+			params.Text = config.T("request.sent")
 
-			params_support.Text = "НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ" + "\n" + current_user.FullName
+			params_support.Text = config.TT("request.notification", current_user)
 			_, err_msg := b.SendMessage(ctx, params_support)
 			if err_msg != nil {
 				rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
 			}
 
 		default:
-			params.Text = "Упс, кажется, у меня ошибка." + "\n" +
-				"Напиши в сообщения канала @anime_itmo (значок чата внизу канала) и сообщи об ошибке."
+			params.Text = config.T("error.generic")
 		}
 
 		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
@@ -1225,7 +1222,7 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 
 			db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-			params.Text = "Я записала тебя на мероприятие «" + activity.Title + "»"
+			params.Text = config.TT("events.registered", activity)
 			params.ReplyMarkup = keyboards.ListEvents
 		}
 	}
@@ -1248,7 +1245,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 	matched := fullNameRegexp.MatchString(update.Message.Text)
 
 	if !matched {
-		params.Text = "Неправильный формат ФИО, попробуй ещё раз в формате Фамилия Имя Отчество."
+		params.Text = config.T("request.incorrect_name_format")
 		_, err_msg := b.SendMessage(ctx, params)
 		if err_msg != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessStep_ITMO_EnterFullName", "b.SendMessage", "Ошибка отправки сообщения", err_msg.Error())
@@ -1256,8 +1253,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	params.Text = "Введи свой номер мобильного телефона" + "\n" +
-		"Он необходим для оформления пропуска на территорию Университета ИТМО, в котором проходят мероприятия клуба"
+	params.Text = config.T("request.enter_phone_number")
 	params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
 
 	update_user_data := make(map[string]interface{})
@@ -1319,18 +1315,16 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 			db_answer_code := db.DB_CREATE_Request(current_user.ID)
 			switch db_answer_code {
 			case db.DB_ANSWER_SUCCESS:
-				params.Text = "Отправила твою заявку руководителю клуба." + "\n" +
-					"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
+				params.Text = config.T("request.sent")
 
-				params_support.Text = "НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ" + "\n" + current_user.FullName
+				params_support.Text = config.TT("request.notification", current_user)
 				_, err_msg := b.SendMessage(ctx, params_support)
 				if err_msg != nil {
 					rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
 				}
 
 			default:
-				params.Text = "Упс, кажется, у меня ошибка." + "\n" +
-					"Напиши в сообщения канала @anime_itmo (значок чата внизу канала) и сообщи об ошибке."
+				params.Text = config.T("error.generic")
 			}
 
 			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
@@ -1345,7 +1339,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 
 				db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-				params.Text = "Я записала тебя на мероприятие " + activity.Title
+				params.Text = config.TT("events.registered", activity)
 				params.ReplyMarkup = keyboards.ListEvents
 			}
 		}
@@ -1353,9 +1347,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 		db.DB_UPDATE_User(update_user_data)
 
 	} else {
-		params.Text = "Номер введён некорректно" + "\n" +
-			"Номер телефона должен иметь +7 или 8 в начале и 10 цифр после начала" + "\n" + "\n" +
-			"Введи номер телефона ещё раз"
+		params.Text = config.T("request.incorrect_phone_format")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -1396,18 +1388,16 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 	db_answer_code := db.DB_CREATE_Request(current_user.ID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		params_user.Text = "Отправила твою заявку руководителю клуба." + "\n" +
-			"Ожидай сообщение от меня, или если у нас появятся вопросы — от руководителя клуба."
+		params_user.Text = config.T("request.sent")
 
-		params_support.Text = "НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ" + "\n" + current_user.FullName
+		params_support.Text = config.TT("request.notification", current_user)
 		_, err_msg := b.SendMessage(ctx, params_support)
 		if err_msg != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
 		}
 
 	default:
-		params_user.Text = "Упс, кажется, у меня ошибка." + "\n" +
-			"Напиши в сообщения канала @anime_itmo (значок чата внизу канала) и сообщи об ошибке."
+		params_user.Text = config.T("error.generic")
 	}
 
 	params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
@@ -1443,16 +1433,14 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 
 			db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-			params.Text = "Я сохранила твой номер и записала тебя на мероприятие «" + activity.Title + "»"
+			params.Text = config.TT("events.saved_n_registered", activity)
 			params.ReplyMarkup = keyboards.ListEvents
 		}
 
 		db.DB_UPDATE_User(update_user_data)
 
 	} else {
-		params.Text = "Номер введён некорректно" + "\n" +
-			"Номер телефона должен иметь +7 или 8 в начале и 10 цифр после начала" + "\n" + "\n" +
-			"Введи номер телефона ещё раз"
+		params.Text = config.T("request.incorrect_phone_format")
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -1477,8 +1465,6 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		},
 	}
 
-	var user_isu_text string
-
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = update.Message.From.ID
 
@@ -1487,14 +1473,10 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		update_user_data["is_club_member"] = false
 		update_user_data["is_sent_request"] = false
 
-		if current_user.ISU == "" {
-			user_isu_text = "Не из ИТМО"
-		}
-
-		params_support.Text = "Пользователь " + current_user.FullName + " покинул наш клуб" + "\n" +
-			"ИСУ: " + user_isu_text + "\n" +
-			"TG URL: https://t.me/" + current_user.UserName + "\n" +
-			"Причина выхода не была указана"
+		params_support.Text = config.TT("leave_notification", &map[string]any{
+			"user":   current_user,
+			"reason": "",
+		})
 
 		params_user.Text = "Жаль, что ты уходишь :(\n" +
 			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
@@ -1516,14 +1498,10 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		update_user_data["is_club_member"] = false
 		update_user_data["is_sent_request"] = false
 
-		if current_user.ISU == "" {
-			user_isu_text = "Не из ИТМО"
-		}
-
-		params_support.Text = "Пользователь " + current_user.FullName + " покинул наш клуб" + "\n" +
-			"ИСУ: " + user_isu_text + "\n" +
-			"TG URL: https://t.me/" + current_user.UserName + "\n" +
-			"Указанная причина: " + update.Message.Text
+		params_support.Text = config.TT("leave_notification", &map[string]any{
+			"user":   current_user,
+			"reason": update.Message.Text,
+		})
 
 		params_user.Text = "Жаль, что ты уходишь :(\n" +
 			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
