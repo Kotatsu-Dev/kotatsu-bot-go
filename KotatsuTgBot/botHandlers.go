@@ -1478,9 +1478,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 			"reason": "",
 		})
 
-		params_user.Text = "Жаль, что ты уходишь :(\n" +
-			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
-			"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
+		params_user.Text = config.T("leave_response")
 		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 
 		db.DB_UPDATE_User(update_user_data)
@@ -1503,9 +1501,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 			"reason": update.Message.Text,
 		})
 
-		params_user.Text = "Жаль, что ты уходишь :(\n" +
-			"Я передам запрос руководителю, он удалит запись в ИСУ в течение 3 дней.\n" +
-			"Не забывай, что к нам можно приходить даже без членства в клубе — просто следи за анонсами встреч и не забывай на них записываться."
+		params_user.Text = config.T("leave_response")
 		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
 
 		db.DB_UPDATE_User(update_user_data)
@@ -1539,7 +1535,7 @@ func proccessStep_AnimeRoulette_EnterEnigmaticTitle(ctx context.Context, b *bot.
 	case db.DB_ANSWER_SUCCESS:
 		now := time.Now()
 		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
-			params.Text = "Ещё рано — я объявлю тему позже"
+			params.Text = config.T("roulette.no_theme")
 		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			for _, participant := range current_anime_roulette.Participants {
 				if current_user.UserTgID == participant.UserTgID {
@@ -1551,17 +1547,17 @@ func proccessStep_AnimeRoulette_EnterEnigmaticTitle(ctx context.Context, b *bot.
 
 			if is_participant {
 				db.DB_UPDATE_User(update_user_data)
-				params.Text = "Я записала твой тайтл. Интересно, кому он выпадет?"
+				params.Text = config.T("roulette.sent_title")
 
 			} else {
-				params.Text = "Ты не участвуешь в рулетке :("
+				params.Text = config.T("roulette.not_participant")
 			}
 		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
-			params.Text = "Сбор тайтлов уже закончился"
+			params.Text = config.T("roulette.ended")
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	update_user_data["step"] = config.STEP_DEFAULT
@@ -1601,14 +1597,14 @@ func proccessStep_AnimeRoulette_EnterLinkMyAnimeList(ctx context.Context, b *bot
 
 		if is_participant {
 			db.DB_UPDATE_User(update_user_data)
-			params.Text = "Спасибо, я сохранила твой список."
+			params.Text = config.T("roulette.sent_list")
 
 		} else {
-			params.Text = "Ты не участвуешь в рулетке :("
+			params.Text = config.T("roulette.not_participant")
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		params.Text = "Сейчас аниме-рулетка не проводится"
+		params.Text = config.T("roulette.inactive")
 	}
 
 	update_user_data["step"] = config.STEP_DEFAULT
@@ -1633,9 +1629,7 @@ func proccessText_Unknown(ctx context.Context, b *bot.Bot, update *models.Update
 		ParseMode: models.ParseModeHTML,
 	}
 
-	params.Text = "Я не знаю такую команду." + "\n" +
-		"Пожалуйста, используй команды из меню, я понимаю только их." + "\n" +
-		"Для выхода в главное меню напиши /start"
+	params.Text = config.T("unknown_command")
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -1729,12 +1723,12 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			update_user_data["step"] = config.STEP_ITMO_ENTER_ISU
 			db.DB_UPDATE_User(update_user_data)
 
-			params.Text = "Введи свой номер ИСУ"
+			params.Text = config.T("request.enter_isu_number")
 		} else {
 			update_user_data["step"] = config.STEP_NOITMO_ENTER_FULLNAME
 			db.DB_UPDATE_User(update_user_data)
 
-			params.Text = "Введи свои ФИО"
+			params.Text = config.T("request.enter_full_name")
 		}
 
 		_, err_msg := b.SendMessage(ctx, params)
@@ -1850,12 +1844,12 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			update_user_data["step"] = config.STEP_APPOINTMENT_ITMO_ENTER_ISU
 			db.DB_UPDATE_User(update_user_data)
 
-			params.Text = "Введи свой номер ИСУ"
+			params.Text = config.T("request.enter_isu_number")
 		} else {
 			update_user_data["step"] = config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME
 			db.DB_UPDATE_User(update_user_data)
 
-			params.Text = "Введи свои ФИО"
+			params.Text = config.T("request.enter_full_name")
 		}
 
 		_, err_msg := b.SendMessage(ctx, params)
@@ -1944,16 +1938,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 				params_photos.Media = media_group
 
-				params.Text = fmt.Sprintf("<b>%s</b>\n\n"+
-					"%s\n\n"+
-					"📅 <b>%s</b>\n"+
-					"🕒 <b>%s</b>\n"+
-					"📍 <b>%s</b>",
-					activity.Title,
-					activity.Description,
-					formattedDate,
-					formattedTime,
-					activity.Location)
+				params.Text = config.TT("events.format", &map[string]any{
+					"activity":      activity,
+					"formattedDate": formattedDate,
+					"formattedTime": formattedTime,
+				})
 
 				if is_participant {
 					params.ReplyMarkup = keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID))
@@ -1972,16 +1961,11 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				}
 			} else {
 
-				params.Text = fmt.Sprintf("<b>%s</b>\n\n"+
-					"%s\n\n"+
-					"📅 <b>%s</b>\n"+
-					"🕒 <b>%s</b>\n"+
-					"📍 <b>%s</b>",
-					activity.Title,
-					activity.Description,
-					formattedDate,
-					formattedTime,
-					activity.Location)
+				params.Text = config.TT("events.format", &map[string]any{
+					"activity":      activity,
+					"formattedDate": formattedDate,
+					"formattedTime": formattedTime,
+				})
 
 				if is_participant {
 					params.ReplyMarkup = keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID))
@@ -2042,9 +2026,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 					})
 				}
 			} else {
-				params.Text = fmt.Sprintf("В прошлый раз ты указывал(а) номер %s.\n"+
-					"В день мероприятия обязательно возьми телефон и паспорт с собой — с этого номера нужно позвонить на терминал для печати пропуска, а паспорт может попросить охрана.",
-					current_user.PhoneNumber)
+				params.Text = config.TT("events.phone_number", current_user.PhoneNumber)
 				params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 				params.ReplyMarkup = keyboards.CreateInlineKbd_RelevancePhoneNumber()
 
@@ -2057,7 +2039,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				})
 			}
 		} else {
-			params.Text = "Кажется, мы с тобой ещё не знакомы. Подскажи, ты учишься/работаешь в ИТМО?"
+			params.Text = config.T("request.unknown")
 
 			params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
 			params.ReplyMarkup = keyboards.CreateInlineKbd_Appointment()
@@ -2106,15 +2088,15 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			db_answer_code_remove := db.DB_UPDATE_Activity_REMOVE_Participant(uint(activity_id), current_user.ID)
 			switch db_answer_code_remove {
 			case db.DB_ANSWER_SUCCESS:
-				params.Text = "Хорошо, я отменила твою запись на «" + activity.Title + "»"
+				params.Text = config.TT("events.unregistered", activity)
 				params.ReplyMarkup = keyboards.ListEvents
 
 			case db.DB_ANSWER_OBJECT_NOT_FOUND:
-				params.Text = "Такого мероприятия нет!"
+				params.Text = config.T("events.non_existent")
 				params.ReplyMarkup = keyboards.ListEvents
 
 			case db.DB_ANSWER_OBJECT_EXISTS:
-				params.Text = "Но ведь ты и так не записан(а) на это мероприятие..."
+				params.Text = config.T("events.not_registered")
 				params.ReplyMarkup = keyboards.ListEvents
 
 			}
@@ -2147,7 +2129,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		if db_answer_code == db.DB_ANSWER_SUCCESS {
 			if data == "yes" {
 				db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
-				params.Text = "Я записала тебя на «" + activity.Title + "»"
+				params.Text = config.TT("events.registered", activity)
 				params.ReplyMarkup = keyboards.ListEvents
 				update_user_data["step"] = config.STEP_DEFAULT
 
@@ -2155,7 +2137,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				update_user_data["step"] = config.STEP_CHANGING_PHONE
 				db.DB_UPDATE_User(update_user_data)
 
-				params.Text = "Нажми «Отправить номер», чтобы поделиться со мной контактом"
+				params.Text = config.T("request.send_phone")
 				params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
 			}
 
