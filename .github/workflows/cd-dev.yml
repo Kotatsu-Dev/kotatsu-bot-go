@@ -32,7 +32,7 @@ jobs:
         with:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
-          password: ${{ secrets.password }}
+          key: ${{ secrets.ssh_key }}
           port: ${{ secrets.port }}
           source: KotatsuTgBot/kotatsutgbot,UI/
           target: "dist"
