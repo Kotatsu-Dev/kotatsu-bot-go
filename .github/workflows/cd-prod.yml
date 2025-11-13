@@ -32,7 +32,7 @@ jobs:
         with:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
-          password: ${{ secrets.password }}
+          key: ${{ secrets.ssh_key }}
           port: ${{ secrets.port }}
           source: KotatsuTgBot/kotatsutgbot,UI/
           target: "dist_prod"
@@ -42,7 +42,7 @@ jobs:
         with:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
-          password: ${{ secrets.password }}
+          key: ${{ secrets.ssh_key }}
           port: ${{ secrets.port }}
           script: 
             sudo systemctl stop prod_kotatsu_bot &&

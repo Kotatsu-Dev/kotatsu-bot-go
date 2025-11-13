@@ -42,7 +42,7 @@ jobs:
         with:
           host: ${{ secrets.host }}
           username: ${{ secrets.user }}
-          password: ${{ secrets.password }}
+          key: ${{ secrets.ssh_key }}
           port: ${{ secrets.port }}
           script: 
             sudo systemctl stop test_kotatsu_bot &&
