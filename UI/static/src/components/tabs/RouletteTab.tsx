@@ -15,13 +15,14 @@ import {
   Input,
   Portal,
   Stack,
+  Table,
   Tabs,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { toaster } from "../ui/toaster";
 import { Calendar } from "../Calendar";
-import { FaDownload } from "react-icons/fa";
+import { FaDownload, FaEye } from "react-icons/fa";
 import { Workbook } from "exceljs";
 
 const exportExcel = async (roulette: Roulette) => {
@@ -177,6 +178,50 @@ const RouletteComponent = (props: {
                 <FaDownload />
               </IconButton>
             </DownloadTrigger>
+            <Dialog.Root>
+              <Dialog.Trigger asChild>
+                <IconButton aria-label="Show signed up" variant={"outline"}>
+                  <FaEye />
+                </IconButton>
+              </Dialog.Trigger>
+              <Portal>
+                <Dialog.Backdrop />
+                <Dialog.Positioner colorPalette={"orange"}>
+                  <Dialog.Content>
+                    <Dialog.Header>
+                      <Dialog.Title>
+                        Signed up for roulette #{roulette.id}
+                      </Dialog.Title>
+                    </Dialog.Header>
+                    <Dialog.Body>
+                      <Table.Root>
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                            <Table.ColumnHeader>Title</Table.ColumnHeader>
+                            <Table.ColumnHeader>
+                              Link to list
+                            </Table.ColumnHeader>
+                          </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                          {(roulette.participants ?? []).map((user) => (
+                            <Table.Row key={user.id}>
+                              <Table.Cell>{`@${user.user_name}`}</Table.Cell>
+                              <Table.Cell>{user.enigmatic_title}</Table.Cell>
+                              <Table.Cell>{user.link_my_anime_list}</Table.Cell>
+                            </Table.Row>
+                          ))}
+                        </Table.Body>
+                      </Table.Root>
+                    </Dialog.Body>
+                    <Dialog.CloseTrigger asChild>
+                      <CloseButton size="sm" />
+                    </Dialog.CloseTrigger>
+                  </Dialog.Content>
+                </Dialog.Positioner>
+              </Portal>
+            </Dialog.Root>
             <Button colorPalette={"red"} disabled>
               Delete
             </Button>
