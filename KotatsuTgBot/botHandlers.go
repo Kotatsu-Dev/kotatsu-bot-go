@@ -1254,7 +1254,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	params.Text = config.T("request.enter_phone_number")
+	params.Text = config.T("request.enter_phone")
 	params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
 
 	update_user_data := make(map[string]interface{})
