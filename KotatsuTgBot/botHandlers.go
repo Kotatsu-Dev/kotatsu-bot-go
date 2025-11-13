@@ -40,6 +40,7 @@ import (
 )
 
 var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)`)
+var linkToListRegexp = regexp.MustCompile(`^((https://)?anilist\.co/user/[A-Za-z0-9]+(/)?|(https://)?myanimelist\.net/profile/[A-Za-z0-9]+|(https://)?shikimori.one/[^/]+)$`)
 
 // Удалить элемент массива
 func RemoveIndex(s []int64, index int) []int64 {
@@ -1590,15 +1591,19 @@ func proccessStep_AnimeRoulette_EnterLinkMyAnimeList(ctx context.Context, b *bot
 		for _, participant := range current_anime_roulette.Participants {
 			if current_user.UserTgID == participant.UserTgID {
 				is_participant = true
-				update_user_data["link_my_anime_list"] = update.Message.From.ID
 				break
 			}
 		}
 
 		if is_participant {
-			db.DB_UPDATE_User(update_user_data)
-			params.Text = config.T("roulette.sent_list")
-
+			link_to_list := update.Message.Text
+			if linkToListRegexp.MatchString(link_to_list) {
+				update_user_data["link_my_anime_list"] = link_to_list
+				db.DB_UPDATE_User(update_user_data)
+				params.Text = config.T("roulette.sent_list")
+			} else {
+				params.Text = config.T("roulette.incorrect_list_format")
+			}
 		} else {
 			params.Text = config.T("roulette.not_participant")
 		}
