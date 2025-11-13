@@ -6,10 +6,12 @@ import {
   CloseButton,
   Container,
   Dialog,
+  DownloadTrigger,
   Field,
   Fieldset,
   Flex,
   Heading,
+  IconButton,
   Input,
   Portal,
   Stack,
@@ -19,6 +21,29 @@ import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { toaster } from "../ui/toaster";
 import { Calendar } from "../Calendar";
+import { FaDownload } from "react-icons/fa";
+import { Workbook } from "exceljs";
+
+const exportExcel = async (roulette: Roulette) => {
+  const wb = new Workbook();
+  const sheet = wb.addWorksheet("СЗ");
+  sheet.addRow(["username", "title", "list"]);
+
+  for (const participant of roulette.participants ?? []) {
+    sheet.addRow([
+      `@${participant.user_name}`,
+      participant.enigmatic_title,
+      participant.link_my_anime_list,
+    ]);
+  }
+
+  const buff = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buff], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  return blob;
+};
 
 const RouletteComponent = (props: {
   defaultValue?: Roulette;
@@ -141,9 +166,21 @@ const RouletteComponent = (props: {
       </Card.Body>
       <Card.Footer>
         {roulette.id && (
-          <Button colorPalette={"red"} disabled>
-            Delete
-          </Button>
+          <>
+            <DownloadTrigger
+              data={() => exportExcel(roulette as Roulette)}
+              fileName={`Roulette-${roulette.id!}.xlsx`}
+              mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              asChild
+            >
+              <IconButton aria-label="Download signed up" variant={"outline"}>
+                <FaDownload />
+              </IconButton>
+            </DownloadTrigger>
+            <Button colorPalette={"red"} disabled>
+              Delete
+            </Button>
+          </>
         )}
         <Button colorPalette={"green"} onClick={save}>
           Save

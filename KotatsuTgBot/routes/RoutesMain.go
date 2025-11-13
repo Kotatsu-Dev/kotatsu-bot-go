@@ -20,7 +20,6 @@ import (
 	"io"
 	"os"
 	"rr/kotatsutgbot/config"
-	"rr/kotatsutgbot/middleware"
 
 	// "../modules/rr_randstr"
 
@@ -97,7 +96,7 @@ func RunServer() {
 
 	// Группа API
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	// api.Use(middleware.AuthMiddleware())
 	{
 
 		users := api.Group("/users")
