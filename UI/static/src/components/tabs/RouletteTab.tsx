@@ -31,10 +31,18 @@ const exportExcel = async (roulette: Roulette) => {
   sheet.addRow(["username", "title", "list"]);
 
   for (const participant of roulette.participants ?? []) {
+    let link = participant.link_my_anime_list;
+    if (link.includes("shikimori.one")) {
+      link += "/list/anime";
+    } else if (link.includes("anilist.co")) {
+      link += "/animelist";
+    } else if (link.includes("myanimelist.net")) {
+      link = link.replace("/profile/", "/animelist/");
+    }
     sheet.addRow([
       `@${participant.user_name}`,
       participant.enigmatic_title,
-      participant.link_my_anime_list,
+      link,
     ]);
   }
 
