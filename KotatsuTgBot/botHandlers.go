@@ -1143,7 +1143,7 @@ func proccessStep_ITMO_EnterISU(ctx context.Context, b *bot.Bot, update *models.
 
 		db.DB_UPDATE_User(update_user_data)
 
-		params.Text = config.T("request.enter_name")
+		params.Text = config.T("request.enter_full_name")
 	} else {
 		params.Text = config.T("request.not_isu_id")
 	}
