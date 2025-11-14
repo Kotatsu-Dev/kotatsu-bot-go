@@ -131,7 +131,7 @@ incorrect_list_format = """
 К сожалению такой список не поддерживается, либо он отправлен в неправильном формате.
 
 Поддерживаются ссылки вида:
-* https://shikimoiri.one/Kotatsu-chan
+* https://shikimori.one/Kotatsu-chan
 * https://anilist.co/user/Kotatsu-chan/
 * https://myanimelist.net/profile/Kotatsu-chan"""
 your_list = """
