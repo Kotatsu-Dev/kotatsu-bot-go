@@ -12,11 +12,11 @@ import {
   Flex,
   Heading,
   IconButton,
-  Input,
   Portal,
   Stack,
   Table,
   Tabs,
+  Textarea,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
@@ -160,7 +160,7 @@ const RouletteComponent = (props: {
             </Field.Root>
             <Field.Root>
               <Field.Label>Theme</Field.Label>
-              <Input
+              <Textarea
                 onChange={(e) =>
                   setRoulette((roulette) => ({
                     ...roulette,
