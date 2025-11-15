@@ -122,7 +122,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
             <DataList.ItemLabel>Username</DataList.ItemLabel>
             <DataList.ItemValue>
               {user.user_name.length > 0 ? (
-                <Link href={`https://t.me/${user.user_name}`}>
+                <Link target="_blank" href={`https://t.me/${user.user_name}`}>
                   @{user.user_name}
                 </Link>
               ) : (

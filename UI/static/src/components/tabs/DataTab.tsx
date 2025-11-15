@@ -273,7 +273,7 @@ export const DataTab = () => {
                     {users.map((user) => (
                       <Table.Row key={user.id}>
                         <Table.Cell>
-                          <Link href={`https://t.me/${user.user_name}`}>
+                          <Link target="_blank" href={`https://t.me/${user.user_name}`}>
                             @{user.user_name}
                           </Link>
                         </Table.Cell>

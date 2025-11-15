@@ -53,8 +53,7 @@ func check_roulette(b *bot.Bot) {
 			for _, member := range roulette.Participants {
 				params := &bot.SendMessageParams{
 					ChatID: member.UserTgID,
-					Text: "[РУЛЕТКА]" + "\n" +
-						"Рулетка завершилась!",
+					Text:   config.T("roulette.messages.ended"),
 				}
 
 				b.SendMessage(context.TODO(), params)
@@ -68,9 +67,7 @@ func check_roulette(b *bot.Bot) {
 		for _, member := range roulette.Participants {
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
-				Text: "[РУЛЕТКА]" + "\n" +
-					"Завершилась регистрация на рулетку. Теперь необходимо загадать тайтл на тему:" + "\n" +
-					roulette.Theme,
+				Text:   config.TT("roulette.messages.registration_ended", roulette),
 			}
 
 			b.SendMessage(context.TODO(), params)
@@ -97,9 +94,7 @@ func check_roulette(b *bot.Bot) {
 			next := roulette.Participants[distr[(j+1)%len(distr)]]
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
-				Text: "[РУЛЕТКА]" + "\n" +
-					"Завершился сбор названий. Теперь вам необходимо посмотреть тайтл:" + "\n" +
-					next.EnigmaticTitle,
+				Text:   config.TT("roulette.messages.selection_ended", next),
 			}
 
 			b.SendMessage(context.TODO(), params)

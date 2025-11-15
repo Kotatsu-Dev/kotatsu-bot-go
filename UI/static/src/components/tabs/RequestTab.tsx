@@ -155,7 +155,7 @@ export const RequestTab = () => {
                           <DataList.Item>
                             <DataList.ItemLabel>Username</DataList.ItemLabel>
                             <DataList.ItemValue>
-                              <Link href={`https://t.me/${user.user_name}`}>
+                              <Link target="_blank" href={`https://t.me/${user.user_name}`}>
                                 @{user.user_name}
                               </Link>
                             </DataList.ItemValue>

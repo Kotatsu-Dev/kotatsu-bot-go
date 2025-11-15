@@ -6,19 +6,53 @@ import {
   CloseButton,
   Container,
   Dialog,
+  DownloadTrigger,
   Field,
   Fieldset,
   Flex,
   Heading,
-  Input,
+  IconButton,
   Portal,
   Stack,
+  Table,
   Tabs,
+  Textarea,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { toaster } from "../ui/toaster";
 import { Calendar } from "../Calendar";
+import { FaDownload, FaEye } from "react-icons/fa";
+import { Workbook } from "exceljs";
+
+const exportExcel = async (roulette: Roulette) => {
+  const wb = new Workbook();
+  const sheet = wb.addWorksheet("СЗ");
+  sheet.addRow(["username", "title", "list"]);
+
+  for (const participant of roulette.participants ?? []) {
+    let link = participant.link_my_anime_list;
+    if (link.includes("shikimori.one")) {
+      link += "/list/anime";
+    } else if (link.includes("anilist.co")) {
+      link += "/animelist";
+    } else if (link.includes("myanimelist.net")) {
+      link = link.replace("/profile/", "/animelist/");
+    }
+    sheet.addRow([
+      `@${participant.user_name}`,
+      participant.enigmatic_title,
+      link,
+    ]);
+  }
+
+  const buff = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buff], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  return blob;
+};
 
 const RouletteComponent = (props: {
   defaultValue?: Roulette;
@@ -126,7 +160,7 @@ const RouletteComponent = (props: {
             </Field.Root>
             <Field.Root>
               <Field.Label>Theme</Field.Label>
-              <Input
+              <Textarea
                 onChange={(e) =>
                   setRoulette((roulette) => ({
                     ...roulette,
@@ -141,9 +175,65 @@ const RouletteComponent = (props: {
       </Card.Body>
       <Card.Footer>
         {roulette.id && (
-          <Button colorPalette={"red"} disabled>
-            Delete
-          </Button>
+          <>
+            <DownloadTrigger
+              data={() => exportExcel(roulette as Roulette)}
+              fileName={`Roulette-${roulette.id!}.xlsx`}
+              mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              asChild
+            >
+              <IconButton aria-label="Download signed up" variant={"outline"}>
+                <FaDownload />
+              </IconButton>
+            </DownloadTrigger>
+            <Dialog.Root>
+              <Dialog.Trigger asChild>
+                <IconButton aria-label="Show signed up" variant={"outline"}>
+                  <FaEye />
+                </IconButton>
+              </Dialog.Trigger>
+              <Portal>
+                <Dialog.Backdrop />
+                <Dialog.Positioner colorPalette={"orange"}>
+                  <Dialog.Content>
+                    <Dialog.Header>
+                      <Dialog.Title>
+                        Signed up for roulette #{roulette.id}
+                      </Dialog.Title>
+                    </Dialog.Header>
+                    <Dialog.Body>
+                      <Table.Root>
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                            <Table.ColumnHeader>Title</Table.ColumnHeader>
+                            <Table.ColumnHeader>
+                              Link to list
+                            </Table.ColumnHeader>
+                          </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                          {(roulette.participants ?? []).map((user) => (
+                            <Table.Row key={user.id}>
+                              <Table.Cell>{`@${user.user_name}`}</Table.Cell>
+                              <Table.Cell>{user.enigmatic_title}</Table.Cell>
+                              <Table.Cell>{user.link_my_anime_list}</Table.Cell>
+                            </Table.Row>
+                          ))}
+                        </Table.Body>
+                      </Table.Root>
+                    </Dialog.Body>
+                    <Dialog.CloseTrigger asChild>
+                      <CloseButton size="sm" />
+                    </Dialog.CloseTrigger>
+                  </Dialog.Content>
+                </Dialog.Positioner>
+              </Portal>
+            </Dialog.Root>
+            <Button colorPalette={"red"} disabled>
+              Delete
+            </Button>
+          </>
         )}
         <Button colorPalette={"green"} onClick={save}>
           Save
