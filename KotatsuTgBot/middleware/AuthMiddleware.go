@@ -74,6 +74,7 @@ func CheckIsMember(userId int64) bool {
 		UserID: userId,
 	})
 
+	fmt.Println("userid", userId)
 	fmt.Println("user", user)
 	fmt.Println("err", err)
 	return err == nil
