@@ -91,10 +91,10 @@ func RunServer() {
 	r.GET("/login", Handler_Login)
 
 	// Основные пути
-	r.POST("/send-message-user", Handler_SendMessageUser)
-	r.POST("/send-message-user-from-support", Handler_SendMessageUserFromSupport)
+	// r.POST("/send-message-user", Handler_SendMessageUser)
+	// r.POST("/send-message-user-from-support", Handler_SendMessageUserFromSupport)
 	r.POST("/upload-file-calendar-activities", Handler_UploadFile_CalendarActivities)
-	r.DELETE("/all-db", Handler_DeleteObjects_All)
+	// r.DELETE("/all-db", Handler_DeleteObjects_All)
 	// r.GET("/get-result", Handler_GetWorkerStatus)
 
 	// Группа API
