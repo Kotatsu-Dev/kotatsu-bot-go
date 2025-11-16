@@ -82,10 +82,6 @@ func CheckIsMember(userId int64) bool {
 	if user.Type == models.ChatMemberTypeLeft || user.Type == models.ChatMemberTypeBanned || user.Type == models.ChatMemberTypeRestricted {
 		return false
 	}
-
-	fmt.Println("userid", userId)
-	fmt.Println("user", user)
-	fmt.Println("err", err)
 	return true
 }
 
