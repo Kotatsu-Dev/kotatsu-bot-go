@@ -788,7 +788,11 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 			}
 		}
 
-		params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
+		if current_anime_roulette.AnnounceDate.After(time.Now()) {
+			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
+		} else {
+			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
+		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
 		params.Text = config.T("roulette.inactive")
