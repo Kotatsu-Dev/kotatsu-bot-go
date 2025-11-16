@@ -69,10 +69,13 @@ func CheckIsMember(userId int64) bool {
 		return false
 	}
 
-	_, err = b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
+	user, err := b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
 		ChatID: config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		UserID: userId,
 	})
+
+	fmt.Println("user", user)
+	fmt.Println("err", err)
 	return err == nil
 }
 
