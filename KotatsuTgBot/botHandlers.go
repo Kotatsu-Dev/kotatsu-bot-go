@@ -788,7 +788,7 @@ func processText_AnimeRoulette(ctx context.Context, b *bot.Bot, update *models.U
 			}
 		}
 
-		if current_anime_roulette.AnnounceDate.Before(time.Now()) {
+		if current_anime_roulette.AnnounceDate.After(time.Now()) {
 			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteStart(is_participant)
 		} else {
 			params.ReplyMarkup = keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant)
