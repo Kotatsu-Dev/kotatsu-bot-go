@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 )
 
 func signData(data string) string {
@@ -69,11 +70,19 @@ func CheckIsMember(userId int64) bool {
 		return false
 	}
 
-	_, err = b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
+	user, err := b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
 		ChatID: config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		UserID: userId,
 	})
-	return err == nil
+
+	if err != nil {
+		return false
+	}
+
+	if user.Type == models.ChatMemberTypeLeft || user.Type == models.ChatMemberTypeBanned || user.Type == models.ChatMemberTypeRestricted {
+		return false
+	}
+	return true
 }
 
 func ParseAndVerifySessionCookie(cookieValue string) (userID int64, isValid bool) {
