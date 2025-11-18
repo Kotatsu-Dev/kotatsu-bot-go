@@ -135,7 +135,7 @@ var CommunicationManager = &models.ReplyKeyboardMarkup{
 var ListEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "🟡 Аниме рулетка"},
+			{Text: "🟡 Аниме-рулетка"},
 		},
 		{
 			{Text: "⬅ Вернуться в главное меню"},
@@ -421,7 +421,7 @@ func CreateInlineKbd_SubscribeActivity(activity_id int) *models.InlineKeyboardMa
 
 	row := []models.InlineKeyboardButton{
 		{
-			Text:         "✅ Записаться на мероприятие",
+			Text:         "✅ Запиши меня",
 			CallbackData: fmt.Sprintf("ACTIVITY_SUBSCRIBE::%d", activity_id),
 		},
 	}
@@ -440,7 +440,7 @@ func CreateInlineKbd_UnsubscribeActivity(activity_id int) *models.InlineKeyboard
 
 	row := []models.InlineKeyboardButton{
 		{
-			Text:         "❌ Отменить запись",
+			Text:         "❌ Отмени запись",
 			CallbackData: fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", activity_id),
 		},
 	}
