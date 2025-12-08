@@ -108,11 +108,11 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 				//{Text: news_letter_text},
 				{Text: "📝 Запись на мероприятия"},
 				// {Text: "🤝 Акции и партнёры"},
-				{Text: "📂 Мои мероприятия"},
 			},
 			{
 				//{Text: news_letter_text},
 				{Text: "🚪 Покинуть клуб"},
+				{Text: "📂 Мои мероприятия"},
 			},
 		},
 		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
