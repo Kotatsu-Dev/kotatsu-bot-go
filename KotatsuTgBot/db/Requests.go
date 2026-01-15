@@ -181,7 +181,9 @@ func DB_UPDATE_Choice_Request(update_json map[string]interface{}) (int, *User) {
 	if status, ok := update_json["status"].(int); ok {
 		switch status {
 		case 1:
+			tn := time.Now()
 			user.IsClubMember = true
+			user.ClubMemberSince = &tn
 			user.IsSentRequest = false
 			db.Save(&user)
 		case 2:

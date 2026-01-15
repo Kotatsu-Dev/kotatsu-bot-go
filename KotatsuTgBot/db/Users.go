@@ -18,19 +18,20 @@ type Gender string
 
 type User struct {
 	gorm.Model
-	Step                  int         `json:"step"`                                                                        // Текущий шаг
-	UserTgID              int64       `json:"user_tg_id"`                                                                  // ID пользователя в Телеграм
-	LastMessageID         int         `json:"last_message_id"`                                                             // ID последнего сообщения от бота
-	UserName              string      `json:"user_name"`                                                                   // Имя пользователя в Телеграм
-	FullTgName            string      `json:"full_tg_name"`                                                                // Полное имя пользователя в Телеграм
-	Gender                Gender      `json:"gender"`                                                                      // Пол пользователя
-	IsVisitedEvents       bool        `json:"is_visited_events"`                                                           // Посетил ли пользователь достаточное количество мероприятий
-	ISU                   string      `json:"isu"`                                                                         // ИСУ для ИТМО
-	FullName              string      `json:"full_name"`                                                                   // Имя пользователя
-	PhoneNumber           string      `json:"phone_number"`                                                                // Номер телефона пользователя
-	SecretCode            string      `json:"secret_code"`                                                                 // Секретный код пользователя
-	IsITMO                bool        `json:"is_itmo"`                                                                     // Студент ИТМО
-	IsClubMember          bool        `json:"is_club_member"`                                                              // Член клуба
+	Step                  int         `json:"step"`              // Текущий шаг
+	UserTgID              int64       `json:"user_tg_id"`        // ID пользователя в Телеграм
+	LastMessageID         int         `json:"last_message_id"`   // ID последнего сообщения от бота
+	UserName              string      `json:"user_name"`         // Имя пользователя в Телеграм
+	FullTgName            string      `json:"full_tg_name"`      // Полное имя пользователя в Телеграм
+	Gender                Gender      `json:"gender"`            // Пол пользователя
+	IsVisitedEvents       bool        `json:"is_visited_events"` // Посетил ли пользователь достаточное количество мероприятий
+	ISU                   string      `json:"isu"`               // ИСУ для ИТМО
+	FullName              string      `json:"full_name"`         // Имя пользователя
+	PhoneNumber           string      `json:"phone_number"`      // Номер телефона пользователя
+	SecretCode            string      `json:"secret_code"`       // Секретный код пользователя
+	IsITMO                bool        `json:"is_itmo"`           // Студент ИТМО
+	IsClubMember          bool        `json:"is_club_member"`    // Член клуба
+	ClubMemberSince       *time.Time  `json:"club_member_since"`
 	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                                                     // Подписка на рассылку
 	IsSentRequest         bool        `json:"is_sent_request"`                                                             // Отправлена ли заявка
 	IsFilledData          bool        `json:"is_filled_data"`                                                              // Заполнены ли данные?
@@ -64,6 +65,7 @@ type User_ReadJSON struct {
 	SecretCode            string            `json:"secret_code"`
 	IsITMO                bool              `json:"is_itmo"`
 	IsClubMember          bool              `json:"is_club_member"`
+	ClubMemberSince       *time.Time        `json:"club_member_since"`
 	IsSubscribeNewsletter bool              `json:"is_subscribe_newsletter"`
 	IsSentRequest         bool              `json:"is_sent_request"`
 	IsFilledData          bool              `json:"is_filled_data"`
@@ -94,6 +96,7 @@ func (user *User) ToRead() *User_ReadJSON {
 		SecretCode:            user.SecretCode,
 		IsITMO:                user.IsITMO,
 		IsClubMember:          user.IsClubMember,
+		ClubMemberSince:       user.ClubMemberSince,
 		IsSubscribeNewsletter: user.IsSubscribeNewsletter,
 		IsSentRequest:         user.IsSentRequest,
 		IsFilledData:          user.IsFilledData,
