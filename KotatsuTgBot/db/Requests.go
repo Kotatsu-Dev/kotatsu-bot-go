@@ -31,6 +31,16 @@ type Request_ReadJSON struct {
 	UserID    uint      `json:"user_id"`
 }
 
+func (request *Request) ToRead() *Request_ReadJSON {
+	return &Request_ReadJSON{
+		ID:        request.ID,
+		CreatedAt: request.CreatedAt,
+		Type:      request.Type,
+		Status:    request.Status,
+		UserID:    request.UserID,
+	}
+}
+
 // Добавить заявку
 func DB_CREATE_Request(user_id uint) int {
 
