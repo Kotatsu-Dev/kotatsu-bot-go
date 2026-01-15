@@ -46,6 +46,28 @@ type Activity_ReadJSON struct {
 	Status       bool      `json:"status"`
 }
 
+func (activity *Activity) ToRead() *Activity_ReadJSON {
+	return &Activity_ReadJSON{
+		ID:           activity.ID,
+		CreatedAt:    activity.CreatedAt,
+		Title:        activity.Title,
+		Participants: activity.Participants,
+		DateMeeting:  activity.DateMeeting,
+		Description:  activity.Description,
+		Location:     activity.Location,
+		PathsImages:  activity.PathsImages,
+		Status:       activity.Status,
+	}
+}
+
+func ActivityToReadSlice(activities []Activity) []Activity_ReadJSON {
+	res := make([]Activity_ReadJSON, len(activities))
+	for i, activity := range activities {
+		res[i] = *activity.ToRead()
+	}
+	return res
+}
+
 // Добавить мероприятие
 func DB_CREATE_Activity(activity_to_add *Activity_CreateJSON) int {
 
@@ -87,19 +109,7 @@ func DB_GET_Activity_BY_Title(title string) (int, *Activity_ReadJSON) {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	activity_read := Activity_ReadJSON{
-		ID:           activity.ID,
-		CreatedAt:    activity.CreatedAt,
-		Title:        activity.Title,
-		Participants: activity.Participants,
-		DateMeeting:  activity.DateMeeting,
-		Description:  activity.Description,
-		Location:     activity.Location,
-		PathsImages:  activity.PathsImages,
-		Status:       activity.Status,
-	}
-
-	return DB_ANSWER_SUCCESS, &activity_read
+	return DB_ANSWER_SUCCESS, activity.ToRead()
 }
 
 // Получить мероприятие по ID
@@ -116,19 +126,7 @@ func DB_GET_Activity_BY_ID(activity_id uint) (int, *Activity_ReadJSON) {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	activity_read := Activity_ReadJSON{
-		ID:           activity.ID,
-		CreatedAt:    activity.CreatedAt,
-		Title:        activity.Title,
-		Participants: activity.Participants,
-		DateMeeting:  activity.DateMeeting,
-		Description:  activity.Description,
-		Location:     activity.Location,
-		PathsImages:  activity.PathsImages,
-		Status:       activity.Status,
-	}
-
-	return DB_ANSWER_SUCCESS, &activity_read
+	return DB_ANSWER_SUCCESS, activity.ToRead()
 }
 
 // Получить список всех мероприятий
@@ -144,28 +142,7 @@ func DB_GET_Activities() []Activity_ReadJSON {
 	// Загружаем связанные сущности InvitedUsers
 	db.Preload("Participants").Find(&activities)
 
-	activities_list := make([]Activity_ReadJSON, 0)
-	if len(activities) <= 0 {
-		return activities_list
-	}
-
-	for _, activity := range activities {
-
-		current_activity := Activity_ReadJSON{
-			ID:           activity.ID,
-			CreatedAt:    activity.CreatedAt,
-			Title:        activity.Title,
-			Participants: activity.Participants,
-			DateMeeting:  activity.DateMeeting,
-			Description:  activity.Description,
-			Location:     activity.Location,
-			PathsImages:  activity.PathsImages,
-			Status:       activity.Status,
-		}
-		activities_list = append(activities_list, current_activity)
-	}
-
-	return activities_list
+	return ActivityToReadSlice(activities)
 }
 
 // Обновить данные мероприятия
