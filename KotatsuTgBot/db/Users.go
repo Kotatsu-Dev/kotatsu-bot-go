@@ -83,6 +83,8 @@ func (user *User) ToRead() *User_ReadJSON {
 	}
 
 	return &User_ReadJSON{
+		ID:                    user.ID,
+		CreatedAt:             user.CreatedAt,
 		Step:                  user.Step,
 		UserTgID:              user.UserTgID,
 		LastMessageID:         user.LastMessageID,
