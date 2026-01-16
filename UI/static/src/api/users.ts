@@ -16,6 +16,7 @@ export const User = z.object({
   secret_code: z.string(),
   is_itmo: z.boolean(),
   is_club_member: z.boolean(),
+  club_member_since: z.iso.datetime({ offset: true }).or(z.null()),
   is_subscribe_newsletter: z.boolean(),
   is_sent_request: z.boolean(),
   is_filled_data: z.boolean(),

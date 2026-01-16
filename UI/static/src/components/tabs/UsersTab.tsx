@@ -84,7 +84,10 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
               {user.is_club_member ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
-                  Member
+                  Member{" "}
+                  {user.club_member_since
+                    ? `(since ${user.club_member_since})`
+                    : null}
                 </Status.Root>
               ) : user.my_request ? (
                 <Status.Root colorPalette={"yellow"}>
