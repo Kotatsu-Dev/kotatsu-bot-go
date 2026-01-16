@@ -15,7 +15,7 @@ import {
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "../ui/toaster";
 import type { User } from "@/api/users";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
 import Fuse from "fuse.js";
@@ -86,7 +86,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
                   <Status.Indicator />
                   Member{" "}
                   {user.club_member_since
-                    ? `(since ${user.club_member_since})`
+                    ? `(since ${formatDate(user.club_member_since, 'dd-MM-yyyy')})`
                     : null}
                 </Status.Root>
               ) : user.my_request ? (
