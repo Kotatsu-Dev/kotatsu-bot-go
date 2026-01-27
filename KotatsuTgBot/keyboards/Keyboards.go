@@ -28,7 +28,7 @@ import (
 var Registration = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "🗃 Продолжить"},
+			{Text: config.T("keyboard.continue")},
 		},
 	},
 	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -38,8 +38,8 @@ var Registration = &models.ReplyKeyboardMarkup{
 var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "Повелитель демонов"},
-			{Text: "Девочка волшебница"},
+			{Text: config.T("keyboard.gender_male")},
+			{Text: config.T("keyboard.gender_female")},
 		},
 	},
 	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -49,8 +49,8 @@ var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
 var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "Да, я уже мандаринка"},
-			{Text: "Ещё нет :("},
+			{Text: config.T("keyboard.club_member")},
+			{Text: config.T("keyboard.not_club_member")},
 		},
 	},
 	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
@@ -80,8 +80,8 @@ func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboa
 	var keyboard = &models.ReplyKeyboardMarkup{
 		Keyboard: [][]models.KeyboardButton{
 			{
-				{Text: "⛩ Вступить в клуб"},
-				{Text: "📝 Запись на мероприятия"},
+				{Text: config.T("keyboard.join_club")},
+				{Text: config.T("keyboard.event_registration")},
 			},
 			/*/*{
 				{Text: news_letter_text},
@@ -106,13 +106,13 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 		Keyboard: [][]models.KeyboardButton{
 			{
 				//{Text: news_letter_text},
-				{Text: "📝 Запись на мероприятия"},
+				{Text: config.T("keyboard.event_registration")},
 				// {Text: "🤝 Акции и партнёры"},
 			},
 			{
 				//{Text: news_letter_text},
-				{Text: "🚪 Покинуть клуб"},
-				{Text: "📂 Мои мероприятия"},
+				{Text: config.T("keyboard.leave_club")},
+				{Text: config.T("keyboard.my_events")},
 			},
 		},
 		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -124,7 +124,7 @@ func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKey
 var CommunicationManager = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "⬅ Вернуться в главное меню"},
+			{Text: config.T("keyboard.to_main_menu")},
 		},
 	},
 	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -135,10 +135,10 @@ var CommunicationManager = &models.ReplyKeyboardMarkup{
 var ListEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "🟡 Аниме-рулетка"},
+			{Text: config.T("keyboard.anime_roulette")},
 		},
 		{
-			{Text: "⬅ Вернуться в главное меню"},
+			{Text: config.T("keyboard.to_main_menu")},
 		},
 	},
 	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -149,13 +149,13 @@ var ListEvents = &models.ReplyKeyboardMarkup{
 var SelectedEvent = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "❌ Отменить запись"},
+			{Text: config.T("keyboard.cancel_registration")},
 		},
 		{
-			{Text: "🟡 Аниме рулетка"},
+			{Text: config.T("keyboard.anime_roulette")},
 		},
 		{
-			{Text: "⬅ Вернуться к списку мероприятий"},
+			{Text: config.T("keyboard.to_events_list")},
 		},
 	},
 	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
@@ -171,14 +171,14 @@ func CreateKeyboard_AnimeRouletteStart(is_member bool) *models.ReplyKeyboardMark
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "🚪 Покинуть рулетку"},
+					{Text: config.T("keyboard.leave_roulette")},
 				},
 				{
-					{Text: "📋 Правила"},
-					{Text: "📚 Мой список"},
+					{Text: config.T("keyboard.roulette_rules")},
+					{Text: config.T("keyboard.roulette_list")},
 				},
 				{
-					{Text: "⬅ Вернуться в главное меню"},
+					{Text: config.T("keyboard.to_main_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -188,14 +188,14 @@ func CreateKeyboard_AnimeRouletteStart(is_member bool) *models.ReplyKeyboardMark
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "✅ Участвовать в рулетке"},
+					{Text: config.T("keyboard.participate_roulette")},
 				},
 				{
-					{Text: "📋 Правила"},
-					{Text: "📚 Мой список"},
+					{Text: config.T("keyboard.roulette_rules")},
+					{Text: config.T("keyboard.roulette_list")},
 				},
 				{
-					{Text: "⬅ Вернуться в главное меню"},
+					{Text: config.T("keyboard.to_main_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -215,15 +215,15 @@ func CreateKeyboard_AnimeRouletteMenu(is_member bool) *models.ReplyKeyboardMarku
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "❔ Загадать аниме"},
+					{Text: config.T("keyboard.send_title")},
 				},
 				{
-					{Text: "📋 Правила"},
-					{Text: "📔 Тема"},
-					{Text: "📚 Мой список"},
+					{Text: config.T("keyboard.roulette_rules")},
+					{Text: config.T("keyboard.roulette_theme")},
+					{Text: config.T("keyboard.roulette_list")},
 				},
 				{
-					{Text: "⬅ Вернуться в главное меню"},
+					{Text: config.T("keyboard.to_main_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -261,10 +261,10 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "Пропустить"},
+					{Text: config.T("keyboard.skip")},
 				},
 				{
-					{Text: "⬅ Вернуться в главное меню"},
+					{Text: config.T("keyboard.to_main_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -275,7 +275,7 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "⬅ Вернуться в меню рулетки"},
+					{Text: config.T("keyboard.to_roulette_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -286,7 +286,7 @@ func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
 		keyboard = &models.ReplyKeyboardMarkup{
 			Keyboard: [][]models.KeyboardButton{
 				{
-					{Text: "⬅ Вернуться в главное меню"},
+					{Text: config.T("keyboard.to_main_menu")},
 				},
 			},
 			ResizeKeyboard:  true,
@@ -354,31 +354,6 @@ func CreateInlineKbd_PartnersList() *models.InlineKeyboardMarkup {
 	//Создаем экземпляр структуры
 	inlineKeyboard := [][]models.InlineKeyboardButton{}
 
-	row_1 := []models.InlineKeyboardButton{
-		{
-			Text:         "☕️ Кафе «Тайяки»",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "cafeTaiyaki"),
-		},
-	}
-
-	row_2 := []models.InlineKeyboardButton{
-		{
-			Text:         "🌟 Фестиваль GemFest [11.11]",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "gemfest"),
-		},
-	}
-
-	row_back := []models.InlineKeyboardButton{
-		{
-			Text:         "◀️ Назад",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "back"),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row_1)
-	inlineKeyboard = append(inlineKeyboard, row_2)
-	inlineKeyboard = append(inlineKeyboard, row_back)
-
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: inlineKeyboard,
 	}
@@ -421,7 +396,7 @@ func CreateInlineKbd_SubscribeActivity(activity_id int) *models.InlineKeyboardMa
 
 	row := []models.InlineKeyboardButton{
 		{
-			Text:         "✅ Запиши меня",
+			Text:         config.T("keyboard.register_event"),
 			CallbackData: fmt.Sprintf("ACTIVITY_SUBSCRIBE::%d", activity_id),
 		},
 	}
@@ -440,7 +415,7 @@ func CreateInlineKbd_UnsubscribeActivity(activity_id int) *models.InlineKeyboard
 
 	row := []models.InlineKeyboardButton{
 		{
-			Text:         "❌ Отмени запись",
+			Text:         config.T("keyboard.cancel_registration"),
 			CallbackData: fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", activity_id),
 		},
 	}
@@ -459,14 +434,14 @@ func CreateInlineKbd_JoinClub() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Я студент/сотрудник/выпускник ИТМО",
+			Text:         config.T("keyboard.is_student"),
 			CallbackData: fmt.Sprintf("JOIN_CLUB::%s", "from_ITMO"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Я не из ИТМО",
+			Text:         config.T("keyboard.is_not_itmo"),
 			CallbackData: fmt.Sprintf("JOIN_CLUB::%s", "not_from_ITMO"),
 		},
 	}
@@ -486,14 +461,14 @@ func CreateInlineKbd_RelevancePhoneNumber() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Номер актуальный, паспорт возьму",
+			Text:         config.T("keyboard.actual_number"),
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "yes"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "У меня поменялся номер телефона",
+			Text:         config.T("keyboard.not_actual_number"),
 			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "no"),
 		},
 	}
@@ -513,14 +488,14 @@ func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
 
 	row_1 := []models.InlineKeyboardButton{
 		{
-			Text:         "Я студент/сотрудник/выпускник ИТМО",
+			Text:         config.T("keyboard.is_student"),
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "from_ITMO"),
 		},
 	}
 
 	row_2 := []models.InlineKeyboardButton{
 		{
-			Text:         "Я не из ИТМО",
+			Text:         config.T("keyboard.is_not_itmo"),
 			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "not_from_ITMO"),
 		},
 	}
@@ -538,12 +513,12 @@ func CreateKeyboard_RequestContact() *models.ReplyKeyboardMarkup {
 		Keyboard: [][]models.KeyboardButton{
 			{
 				{
-					Text:           "Отправить свой номер",
+					Text:           config.T("keyboard.send_my_number"),
 					RequestContact: true,
 				},
-				{Text: "Я не пользуюсь номером, к которому привязан Telegram"},
+				{Text: config.T("keyboard.not_my_number")},
 			}, {
-				{Text: "⬅ Вернуться в главное меню"},
+				{Text: config.T("keyboard.to_main_menu")},
 			},
 		},
 		ResizeKeyboard:  true,
