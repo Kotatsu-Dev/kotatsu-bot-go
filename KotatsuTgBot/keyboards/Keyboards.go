@@ -49,8 +49,8 @@ var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
 var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: config.T("keyboard.club_member")},
-			{Text: config.T("keyboard.not_club_member")},
+			{Text: config.T("keyboard.visited_enough")},
+			{Text: config.T("keyboard.not_visited_enough")},
 		},
 	},
 	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
@@ -60,8 +60,8 @@ var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
 var Keyboard_WasntAtEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
 		{
-			{Text: "Хорошо, заполню позже"},
-			{Text: "Хочу продолжить"},
+			{Text: config.T("keyboard.fill_back_later")},
+			{Text: config.T("keyboard.fill_now")},
 		},
 	},
 	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок

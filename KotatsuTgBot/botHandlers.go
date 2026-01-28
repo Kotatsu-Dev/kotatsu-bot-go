@@ -83,23 +83,23 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 					switch db_answer_code {
 					case db.DB_ANSWER_SUCCESS:
 						switch update.Message.Text {
-						case "Повелитель демонов":
+						case config.T("keyboard.gender_male"):
 							proccessText_SetGender(ctx, b, update, user, "male")
-						case "Девочка волшебница":
+						case config.T("keyboard.gender_female"):
 							proccessText_SetGender(ctx, b, update, user, "female")
 
-						case "Да, я уже мандаринка":
+						case config.T("keyboard.visited_enough"):
 							proccessText_WasAtEvents(ctx, b, update, user, true)
-						case "Ещё нет :(":
+						case config.T("keyboard.not_visited_enough"):
 							proccessText_WasAtEvents(ctx, b, update, user, false)
-						case "Хорошо, заполню позже":
+						case config.T("keyboard.fill_back_later"):
 							proccessText_WasntAtEvents(ctx, b, update, user, false)
-						case "Хочу продолжить":
+						case config.T("keyboard.fill_now"):
 							proccessText_WasntAtEvents(ctx, b, update, user, true)
-						case "⛩ Вступить в клуб":
+						case config.T("keyboard.join_club"):
 							proccessText_JoinClub(ctx, b, update, user)
 
-						case "📝 Запись на мероприятия":
+						case config.T("keyboard.event_registration"):
 							proccessText_SigningUpForActivity(ctx, b, update)
 
 						case "📰 Подписаться на рассылку":
@@ -117,55 +117,60 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 						case "☎️ Связь с руководителем клуба":
 							proccessText_ContactClubManager(ctx, b, update, user)
 
-						case "⬅ Вернуться в меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+						case config.T("keyboard.to_main_menu"):
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "🚪 Покинуть клуб":
+						case config.T("keyboard.leave_club"):
 							proccessText_LeaveClub(ctx, b, update, user)
 
+							// Dead entry
 						case "📅 Мероприятия":
 							proccessText_SigningUpForActivity(ctx, b, update)
 
+							// Dead entry
 						case "🤝 Акции и партнёры":
 							proccessText_Partners(ctx, b, update)
 
+							// Dead entry
 						case "🟡 Аниме рулетка":
 							processText_AnimeRoulette(ctx, b, update, user)
 
-						case "⬅ Вернуться в меню рулетки":
+						case config.T("keyboard.to_roulette_menu"):
 							processText_AnimeRoulette(ctx, b, update, user)
 
+							// Dead entry
 						case "⬅️Вернуться в главное меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "✅ Участвовать в рулетке":
+						case config.T("keyboard.participate_roulette"):
 							processText_AnimeRoulette_Participate(ctx, b, update, user)
 
-						case "🚪 Покинуть рулетку":
+						case config.T("keyboard.leave_roulette"):
 							processText_AnimeRoulette_CancelParticipate(ctx, b, update, user)
 
-						case "❔ Загадать аниме":
+						case config.T("keyboard.send_title"):
 							processText_AnimeRoulette_AnimeWish(ctx, b, update, user)
 
+							// Dead entry
 						case "🗞 Рассылка":
 							proccessText_InDevelopment(ctx, b, update)
 
-						case "📋 Правила":
+						case config.T("keyboard.roulette_rules"):
 							proccessText_AnimeRoulette_Rules(ctx, b, update)
 
-						case "📔 Тема":
+						case config.T("keyboard.roulette_theme"):
 							proccessText_AnimeRoulette_MainTheme(ctx, b, update)
 
-						case "📚 Мой список":
+						case config.T("keyboard.roulette_list"):
 							proccessText_AnimeRoulette_LinkMyList(ctx, b, update, user)
 
-						case "📂 Мои мероприятия":
+						case config.T("keyboard.my_events"):
 							proccessText_MyActivities(ctx, b, update, user)
 
-						case "⬅ Вернуться в главное меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+						case config.T("keyboard.to_main_menu"):
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "Я не пользуюсь номером, к которому привязан Telegram":
+						case config.T("keyboard.not_my_number"):
 							proccessText_NoPhoneNumber(ctx, b, update, user)
 
 						default:
@@ -238,7 +243,7 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 		ParseMode: models.ParseModeHTML,
 	}
 
-	if update.Message.Text == "🗃 Продолжить" {
+	if update.Message.Text == config.T("keyboard.continue") {
 		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 		db_answer_reg := regUser(update.Message.From.ID, full_tg_name, update.Message.From.Username)
 
@@ -285,7 +290,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 		ParseMode: models.ParseModeHTML,
 	}
 
-	if update.Message.Text == "🗃 Продолжить" {
+	if update.Message.Text == config.T("keyboard.continue") {
 		full_tg_name := update.CallbackQuery.From.FirstName + " " + update.CallbackQuery.From.LastName
 		db_answer_reg := regUser(update.CallbackQuery.From.ID, full_tg_name, update.CallbackQuery.From.Username)
 
@@ -689,7 +694,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 }
 
 // Вернуться в меню
-func proccessText_BackMeinMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
+func proccessText_BackMainMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.From.ID,
 		ParseMode: models.ParseModeHTML,
