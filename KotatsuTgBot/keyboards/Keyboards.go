@@ -134,9 +134,9 @@ var CommunicationManager = &models.ReplyKeyboardMarkup{
 // Клавиатура для главного меню участника клуба
 var ListEvents = &models.ReplyKeyboardMarkup{
 	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: config.T("keyboard.anime_roulette")},
-		},
+		// {
+		// 	{Text: config.T("keyboard.anime_roulette")},
+		// },
 		{
 			{Text: config.T("keyboard.to_main_menu")},
 		},
@@ -151,9 +151,9 @@ var SelectedEvent = &models.ReplyKeyboardMarkup{
 		{
 			{Text: config.T("keyboard.cancel_registration")},
 		},
-		{
-			{Text: config.T("keyboard.anime_roulette")},
-		},
+		// {
+		// 	{Text: config.T("keyboard.anime_roulette")},
+		// },
 		{
 			{Text: config.T("keyboard.to_events_list")},
 		},
