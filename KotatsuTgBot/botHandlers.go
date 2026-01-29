@@ -258,9 +258,9 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
 			if old_user.IsClubMember {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 			} else {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 			}
 
 		default:
@@ -297,7 +297,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 		switch db_answer_reg {
 		case db.DB_ANSWER_SUCCESS:
 			params.Text = config.T("main_menu")
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
 			params.Text = config.T("registered")
@@ -305,9 +305,9 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
 			if old_user.IsClubMember {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 			} else {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 			}
 
 		default:
@@ -342,9 +342,9 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 		params.Text = config.TT("welcome", update.Message.From)
 
 		if user.IsClubMember {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 		} else {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		}
 
 		_, err := b.SendMessage(ctx, params)
@@ -431,9 +431,9 @@ func proccessText_SetGender(ctx context.Context, b *bot.Bot, update *models.Upda
 	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -450,7 +450,7 @@ func proccessText_WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Up
 
 	if actually {
 		params.Text = config.T("request.is_itmo")
-		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		params.ReplyMarkup = keyboards.InlineKbd_JoinClub
 	} else {
 		params.Text = config.T("request.not_enough_visits")
 
@@ -476,14 +476,14 @@ func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.
 
 	if cont {
 		params.Text = config.T("request.is_itmo")
-		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		params.ReplyMarkup = keyboards.InlineKbd_JoinClub
 	} else {
 		params.Text = config.T("main_menu")
 
 		if current_user.IsClubMember {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 		} else {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		}
 	}
 
@@ -586,7 +586,7 @@ func proccessText_Partners(ctx context.Context, b *bot.Bot, update *models.Updat
 	}
 
 	params.Text = config.T("partners.list")
-	params.ReplyMarkup = keyboards.CreateInlineKbd_PartnersList()
+	params.ReplyMarkup = keyboards.InlineKbd_PartnersList
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -638,9 +638,9 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 
 	params.Text = config.T("subscription.on")
 	if user != nil && user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(true)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(true)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -662,9 +662,9 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 
 	params.Text = config.T("subscription.off")
 	if user != nil && user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(false)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -685,7 +685,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("feedback")
-	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
+	params.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -703,9 +703,9 @@ func proccessText_BackMainMenu(ctx context.Context, b *bot.Bot, update *models.U
 	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	update_user_data := make(map[string]interface{})
@@ -728,9 +728,9 @@ func proccessText_NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.
 	params.Text = config.T("request.no_phone_number")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	update_user_data := make(map[string]interface{})
@@ -757,7 +757,7 @@ func proccessText_LeaveClub(ctx context.Context, b *bot.Bot, update *models.Upda
 	db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("leave_reason")
-	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("skip")
+	params.ReplyMarkup = keyboards.Keyboard_Skip
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -939,7 +939,7 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 				db.DB_UPDATE_User(update_user_data)
 
 				params.Text = config.T("roulette.send_title")
-				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+				params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 			} else {
 				params.Text = config.T("roulette.not_participant")
 			}
@@ -988,12 +988,12 @@ func proccessText_AnimeRoulette_LinkMyList(ctx context.Context, b *bot.Bot, upda
 			} else {
 				params.Text = config.TT("roulette.your_list", current_user)
 
-				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+				params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 			}
 
 		} else {
 			params.Text = config.T("roulette.not_participant")
-			params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+			params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
@@ -1105,7 +1105,7 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 
 	params_user.Text = config.TT("feedback_sent", reference_number_str)
 
-	params_user.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
+	params_user.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 	user_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 	profileURL := fmt.Sprintf("https://t.me/%s", update.Message.From.Username)
@@ -1218,7 +1218,7 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 			params.Text = config.T("error.generic")
 		}
 
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	} else {
 		update_user_data["step"] = config.STEP_DEFAULT
@@ -1264,7 +1264,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 	}
 
 	params.Text = config.T("request.enter_phone")
-	params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
+	params.ReplyMarkup = keyboards.Keyboard_RequestContact
 
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = current_user.UserTgID
@@ -1302,7 +1302,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 
 	if phone_number != "" {
 		update_user_data["phone_number"] = phone_number
-		params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("")
+		params.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 		if action == "join_club" {
 			params_support := &bot.SendMessageParams{
@@ -1337,7 +1337,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 				params.Text = config.T("error.generic")
 			}
 
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		} else {
 			update_user_data["step"] = config.STEP_DEFAULT
 			update_user_data["is_itmo"] = false
@@ -1410,7 +1410,7 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 		params_user.Text = config.T("error.generic")
 	}
 
-	params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+	params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	_, err_msg := b.SendMessage(ctx, params_user)
 	if err_msg != nil {
@@ -1489,7 +1489,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		})
 
 		params_user.Text = config.T("leave_response")
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		db.DB_UPDATE_User(update_user_data)
 
@@ -1500,7 +1500,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 
 	case "⬅ Вернуться в главное меню":
 		params_user.Text = "Главное меню"
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	default:
 		update_user_data["is_club_member"] = false
@@ -1512,7 +1512,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		})
 
 		params_user.Text = config.T("leave_response")
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		db.DB_UPDATE_User(update_user_data)
 
@@ -2041,8 +2041,8 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				}
 			} else {
 				params.Text = config.TT("events.phone_number", current_user.PhoneNumber)
-				params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
-				params.ReplyMarkup = keyboards.CreateInlineKbd_RelevancePhoneNumber()
+				params_load.ReplyMarkup = keyboards.Keyboard_ToMainMenu
+				params.ReplyMarkup = keyboards.InlineKbd_RelevancePhoneNumber
 
 				fmt.Println(activity_id)
 
@@ -2055,8 +2055,8 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		} else {
 			params.Text = config.T("request.unknown")
 
-			params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
-			params.ReplyMarkup = keyboards.CreateInlineKbd_Appointment()
+			params_load.ReplyMarkup = keyboards.Keyboard_ToMainMenu
+			params.ReplyMarkup = keyboards.InlineKbd_Appointment
 
 			db.DB_UPDATE_User(map[string]interface{}{
 				"user_tg_id":       current_user.UserTgID,
@@ -2152,7 +2152,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db.DB_UPDATE_User(update_user_data)
 
 				params.Text = config.T("request.send_phone")
-				params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
+				params.ReplyMarkup = keyboards.Keyboard_RequestContact
 			}
 
 			_, err_msg := b.SendMessage(ctx, params)
