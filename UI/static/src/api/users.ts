@@ -10,6 +10,7 @@ export const User = z.object({
   last_message_id: z.int(),
   user_name: z.string(),
   full_tg_name: z.string(),
+  gender: z.string().or(z.null()),
   isu: z.string(),
   full_name: z.string(),
   phone_number: z.string(),
@@ -40,6 +41,21 @@ export const createUsersApi = ($: AxiosInstance) => {
     }) {
       await $.put("/users/club-member", {
         user_tg_id: props.user_tg_id.toString(),
+        is_club_member: props.is_club_member,
+      });
+    },
+    async update(props: {
+      user_tg_id: number;
+      gender?: string;
+      full_name?: string;
+      phone_number?: string;
+      is_club_member?: boolean;
+    }) {
+      await $.put("/users/", {
+        user_tg_id: props.user_tg_id,
+        gender: props.gender,
+        full_name: props.full_name,
+        phone_number: props.phone_number,
         is_club_member: props.is_club_member,
       });
     },

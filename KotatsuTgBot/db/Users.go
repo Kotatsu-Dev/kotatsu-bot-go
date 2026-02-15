@@ -202,12 +202,15 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 
 	var user User
 	user_tg_id, ok := update_json["user_tg_id"].(int64)
-	if ok {
-		db.Where("user_tg_id = ?", user_tg_id).First(&user)
-		if user.ID == 0 {
+	if !ok {
+		_user_tg_id, ok := update_json["user_tg_id"].(float64)
+		if !ok {
 			return DB_ANSWER_OBJECT_NOT_FOUND, nil
 		}
-	} else {
+		user_tg_id = int64(_user_tg_id)
+	}
+	db.Where("user_tg_id = ?", user_tg_id).First(&user)
+	if user.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
