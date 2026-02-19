@@ -33,11 +33,22 @@ type Inputs = {
   phone_number: string;
   is_club_member: boolean;
   gender: string;
+  itmo_status: string;
 };
 
 const genders = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
+  { value: "", label: "Unknown" },
+];
+
+const statuses = [
+  { value: "guest", label: "Guest" },
+  { value: "student", label: "Student" },
+  { value: "graduate", label: "Graduate" },
+  { value: "employee", label: "Employee" },
+  { value: "student_employee", label: "Student and employee" },
+  { value: "graduate_employee", label: "Graduate and employee" },
   { value: "", label: "Unknown" },
 ];
 
@@ -50,6 +61,7 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
       phone_number: props.value.phone_number,
       is_club_member: props.value.is_club_member,
       gender: props.value.gender ?? "",
+      itmo_status: props.value.itmo_status ?? "",
     },
   });
 
@@ -92,75 +104,69 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
                   </Field.Root>
                   <Field.Root>
                     <Field.Label>ITMO status</Field.Label>
-                    <RadioGroup.Root>
-                      <Stack>
-                        <RadioGroup.Item value={"guest"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Guest</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                        <RadioGroup.Item value={"student"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Student</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                        <RadioGroup.Item value={"employee"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Employee</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                        <RadioGroup.Item value={"employee"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Graduate</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                        <RadioGroup.Item value={"employee"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Student and employee</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                        <RadioGroup.Item value={"employee"}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>Graduate and employee</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                      </Stack>
-                    </RadioGroup.Root>
+                    <Controller
+                      name="itmo_status"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup.Root
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={({ value }) => {
+                            field.onChange(value);
+                          }}
+                        >
+                          <Stack>
+                            {statuses.map((status) => (
+                              <RadioGroup.Item
+                                key={status.value}
+                                value={status.value}
+                              >
+                                <RadioGroup.ItemHiddenInput
+                                  onBlur={field.onBlur}
+                                />
+                                <RadioGroup.ItemIndicator />
+                                <RadioGroup.ItemText>
+                                  {status.label}
+                                </RadioGroup.ItemText>
+                              </RadioGroup.Item>
+                            ))}
+                          </Stack>
+                        </RadioGroup.Root>
+                      )}
+                    />
                   </Field.Root>
                   <Field.Root>
                     <Field.Label>Gender</Field.Label>
-                    <RadioGroup.Root>
-                      <Controller
-                        name="gender"
-                        control={control}
-                        render={({ field }) => (
-                          <RadioGroup.Root
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={({ value }) => {
-                              field.onChange(value);
-                            }}
-                          >
-                            <Stack>
-                              {genders.map((gender) => (
-                                <RadioGroup.Item
-                                  key={gender.value}
-                                  value={gender.value}
-                                >
-                                  <RadioGroup.ItemHiddenInput
-                                    onBlur={field.onBlur}
-                                  />
-                                  <RadioGroup.ItemIndicator />
-                                  <RadioGroup.ItemText>
-                                    {gender.label}
-                                  </RadioGroup.ItemText>
-                                </RadioGroup.Item>
-                              ))}
-                            </Stack>
-                          </RadioGroup.Root>
-                        )}
-                      />
-                    </RadioGroup.Root>
+                    <Controller
+                      name="gender"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup.Root
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={({ value }) => {
+                            field.onChange(value);
+                          }}
+                        >
+                          <Stack>
+                            {genders.map((gender) => (
+                              <RadioGroup.Item
+                                key={gender.value}
+                                value={gender.value}
+                              >
+                                <RadioGroup.ItemHiddenInput
+                                  onBlur={field.onBlur}
+                                />
+                                <RadioGroup.ItemIndicator />
+                                <RadioGroup.ItemText>
+                                  {gender.label}
+                                </RadioGroup.ItemText>
+                              </RadioGroup.Item>
+                            ))}
+                          </Stack>
+                        </RadioGroup.Root>
+                      )}
+                    />
                   </Field.Root>
                   <Field.Root>
                     <Field.Label>Status</Field.Label>
@@ -349,6 +355,19 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
                 <Status.Root colorPalette={"red"}>
                   <Status.Indicator />
                   No
+                </Status.Root>
+              )}
+            </DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
+            <DataList.ItemLabel>ITMO status</DataList.ItemLabel>
+            <DataList.ItemValue>
+              {user.itmo_status ? (
+                statuses.find((v) => v.value == user.itmo_status)?.label
+              ) : (
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  Unknown
                 </Status.Root>
               )}
             </DataList.ItemValue>

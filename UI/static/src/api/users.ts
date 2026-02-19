@@ -10,12 +10,23 @@ export const User = z.object({
   last_message_id: z.int(),
   user_name: z.string(),
   full_tg_name: z.string(),
-  gender: z.string().or(z.null()),
+  gender: z.enum(["male", "female", ""]).or(z.null()),
   isu: z.string(),
   full_name: z.string(),
   phone_number: z.string(),
   secret_code: z.string(),
   is_itmo: z.boolean(),
+  itmo_status: z
+    .enum([
+      "guest",
+      "student",
+      "graduate",
+      "employee",
+      "graduate_employee",
+      "student_employee",
+      "",
+    ])
+    .or(z.null()),
   is_club_member: z.boolean(),
   club_member_since: z.iso.datetime({ offset: true }).or(z.null()),
   is_subscribe_newsletter: z.boolean(),
@@ -50,6 +61,7 @@ export const createUsersApi = ($: AxiosInstance) => {
       full_name?: string;
       phone_number?: string;
       is_club_member?: boolean;
+      itmo_status?: string;
     }) {
       await $.put("/users/", {
         user_tg_id: props.user_tg_id,
@@ -57,6 +69,7 @@ export const createUsersApi = ($: AxiosInstance) => {
         full_name: props.full_name,
         phone_number: props.phone_number,
         is_club_member: props.is_club_member,
+        itmo_status: props.itmo_status,
       });
     },
     async wipe() {

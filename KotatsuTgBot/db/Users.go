@@ -16,6 +16,23 @@ import (
 
 type Gender string
 
+const (
+	Male    Gender = "male"
+	Female  Gender = "female"
+	Unknown Gender = ""
+)
+
+type ITMOStatus string
+
+const (
+	Guest            ITMOStatus = "guest"
+	Student          ITMOStatus = "student"
+	Graduate         ITMOStatus = "graduate"
+	Employee         ITMOStatus = "employee"
+	GraduateEmployee ITMOStatus = "graduate_emplyee"
+	StudentEmployee  ITMOStatus = "student_emplyee"
+)
+
 type User struct {
 	gorm.Model
 	Step                  int         `json:"step"`              // Текущий шаг
@@ -30,7 +47,8 @@ type User struct {
 	PhoneNumber           string      `json:"phone_number"`      // Номер телефона пользователя
 	SecretCode            string      `json:"secret_code"`       // Секретный код пользователя
 	IsITMO                bool        `json:"is_itmo"`           // Студент ИТМО
-	IsClubMember          bool        `json:"is_club_member"`    // Член клуба
+	ITMOStatus            ITMOStatus  `json:"itmo_status"`
+	IsClubMember          bool        `json:"is_club_member"` // Член клуба
 	ClubMemberSince       *time.Time  `json:"club_member_since"`
 	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                                                     // Подписка на рассылку
 	IsSentRequest         bool        `json:"is_sent_request"`                                                             // Отправлена ли заявка
@@ -64,6 +82,7 @@ type User_ReadJSON struct {
 	PhoneNumber           string            `json:"phone_number"`
 	SecretCode            string            `json:"secret_code"`
 	IsITMO                bool              `json:"is_itmo"`
+	ITMOStatus            ITMOStatus        `json:"itmo_status"`
 	IsClubMember          bool              `json:"is_club_member"`
 	ClubMemberSince       *time.Time        `json:"club_member_since"`
 	IsSubscribeNewsletter bool              `json:"is_subscribe_newsletter"`
@@ -97,6 +116,7 @@ func (user *User) ToRead() *User_ReadJSON {
 		PhoneNumber:           user.PhoneNumber,
 		SecretCode:            user.SecretCode,
 		IsITMO:                user.IsITMO,
+		ITMOStatus:            user.ITMOStatus,
 		IsClubMember:          user.IsClubMember,
 		ClubMemberSince:       user.ClubMemberSince,
 		IsSubscribeNewsletter: user.IsSubscribeNewsletter,
@@ -265,6 +285,13 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 		case "is_itmo":
 			if v, ok := value.(bool); ok && v != user.IsITMO {
 				user.IsITMO = v
+			}
+
+		case "itmo_status":
+			if v, ok := value.(ITMOStatus); ok && v != user.ITMOStatus {
+				user.ITMOStatus = v
+			} else if v, ok := value.(string); ok && ITMOStatus(v) != user.ITMOStatus {
+				user.ITMOStatus = ITMOStatus(v)
 			}
 
 		case "is_club_member":
