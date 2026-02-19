@@ -1733,14 +1733,47 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		parts = strings.Split(update.CallbackQuery.Data, "::")
 		data = parts[1]
 
-		if data == "from_ITMO" {
-			update_user_data["step"] = config.STEP_ITMO_ENTER_ISU
-			db.DB_UPDATE_User(update_user_data)
+		switch data {
+		case "from_ITMO_student":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Student,
+			})
 
 			params.Text = config.T("request.enter_isu_number")
-		} else {
-			update_user_data["step"] = config.STEP_NOITMO_ENTER_FULLNAME
-			db.DB_UPDATE_User(update_user_data)
+		case "from_ITMO_graduate":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Graduate,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Employee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_student_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.StudentEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_graduate_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.GraduateEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		default:
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_NOITMO_ENTER_FULLNAME,
+				"itmo_status": db.Guest,
+			})
 
 			params.Text = config.T("request.enter_full_name")
 		}
@@ -1854,14 +1887,47 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		parts = strings.Split(update.CallbackQuery.Data, "::")
 		data = parts[1]
 
-		if data == "from_ITMO" {
-			update_user_data["step"] = config.STEP_APPOINTMENT_ITMO_ENTER_ISU
-			db.DB_UPDATE_User(update_user_data)
+		switch data {
+		case "from_ITMO_student":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Student,
+			})
 
 			params.Text = config.T("request.enter_isu_number")
-		} else {
-			update_user_data["step"] = config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME
-			db.DB_UPDATE_User(update_user_data)
+		case "from_ITMO_graduate":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Graduate,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Employee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_student_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.StudentEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_graduate_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.GraduateEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		default:
+			db.DB_UPDATE_User(map[string]any{
+				"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
+				"itmo_status": db.Guest,
+			})
 
 			params.Text = config.T("request.enter_full_name")
 		}

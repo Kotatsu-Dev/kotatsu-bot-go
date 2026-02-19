@@ -181,7 +181,15 @@ func CreateInlineKbd_UnsubscribeActivity(activity_id int) *models.InlineKeyboard
 }
 
 var InlineKbd_JoinClub = DefaultInline().
-	DataT("keyboard.is_student", "JOIN_CLUB::from_ITMO").
+	DataT("keyboard.is_student", "JOIN_CLUB::from_ITMO_student").
+	Row().
+	DataT("keyboard.is_graduate", "JOIN_CLUB::from_ITMO_graduate").
+	Row().
+	DataT("keyboard.is_employee", "JOIN_CLUB::from_ITMO_employee").
+	Row().
+	DataT("keyboard.is_student_employee", "JOIN_CLUB::from_ITMO_student_employee").
+	Row().
+	DataT("keyboard.is_graduate_employee", "JOIN_CLUB::from_ITMO_graduate_employee").
 	Row().
 	DataT("keyboard.is_not_itmo", "JOIN_CLUB::not_from_ITMO").
 	Build()
