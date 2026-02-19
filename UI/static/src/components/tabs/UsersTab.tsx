@@ -109,6 +109,21 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
                           <RadioGroup.ItemIndicator />
                           <RadioGroup.ItemText>Employee</RadioGroup.ItemText>
                         </RadioGroup.Item>
+                        <RadioGroup.Item value={"employee"}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Graduate</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value={"employee"}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Student and employee</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value={"employee"}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Graduate and employee</RadioGroup.ItemText>
+                        </RadioGroup.Item>
                       </Stack>
                     </RadioGroup.Root>
                   </Field.Root>
