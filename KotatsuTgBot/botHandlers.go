@@ -385,11 +385,6 @@ func BotHandler_Command_Login(ctx context.Context, b *bot.Bot, update *models.Up
 // Вступление в клуб
 func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 
-	params_load := &bot.SendMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		ParseMode: models.ParseModeHTML,
-	}
-
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.Chat.ID,
 		ParseMode: models.ParseModeHTML,
@@ -401,14 +396,8 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 	} else {
 		params.Text = config.T("request.rules")
 		params.ParseMode = models.ParseModeHTML
-		params_load.ReplyMarkup = keyboards.CommunicationManager
 		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 		params.ReplyMarkup = keyboards.Keyboard_WasAtEvents
-
-		_, err_msg_load := b.SendMessage(ctx, params_load)
-		if err_msg_load != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage(params_load)", "Ошибка отправки сообщения", err_msg_load.Error())
-		}
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -1736,6 +1725,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		switch data {
 		case "from_ITMO_student":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_ITMO_ENTER_ISU,
 				"itmo_status": db.Student,
 			})
@@ -1743,6 +1733,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_graduate":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_ITMO_ENTER_ISU,
 				"itmo_status": db.Graduate,
 			})
@@ -1750,6 +1741,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_ITMO_ENTER_ISU,
 				"itmo_status": db.Employee,
 			})
@@ -1757,6 +1749,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_student_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_ITMO_ENTER_ISU,
 				"itmo_status": db.StudentEmployee,
 			})
@@ -1764,6 +1757,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_graduate_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_ITMO_ENTER_ISU,
 				"itmo_status": db.GraduateEmployee,
 			})
@@ -1771,6 +1765,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		default:
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_NOITMO_ENTER_FULLNAME,
 				"itmo_status": db.Guest,
 			})
@@ -1890,6 +1885,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		switch data {
 		case "from_ITMO_student":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 				"itmo_status": db.Student,
 			})
@@ -1897,6 +1893,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_graduate":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 				"itmo_status": db.Graduate,
 			})
@@ -1904,6 +1901,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 				"itmo_status": db.Employee,
 			})
@@ -1911,6 +1909,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_student_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 				"itmo_status": db.StudentEmployee,
 			})
@@ -1918,6 +1917,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		case "from_ITMO_graduate_employee":
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 				"itmo_status": db.GraduateEmployee,
 			})
@@ -1925,6 +1925,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 			params.Text = config.T("request.enter_isu_number")
 		default:
 			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
 				"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
 				"itmo_status": db.Guest,
 			})
