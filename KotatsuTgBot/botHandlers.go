@@ -39,7 +39,7 @@ import (
 	"strings"
 )
 
-var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)`)
+var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s(([А-Яа-яЁё]+)\s)?([А-Яа-яЁё]+)`)
 var linkToListRegexp = regexp.MustCompile(`^((https://)?anilist\.co/user/[A-Za-z0-9]+(/)?|(https://)?myanimelist\.net/profile/[A-Za-z0-9]+|(https://)?shikimori.one/[^/]+)$`)
 
 // Удалить элемент массива
