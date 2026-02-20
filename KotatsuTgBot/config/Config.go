@@ -37,6 +37,8 @@ type Config struct {
 
 	AUTH_SECRET string
 	ROULETTES   bool
+
+	IGNORE_AUTH bool
 }
 
 var config *Config = nil

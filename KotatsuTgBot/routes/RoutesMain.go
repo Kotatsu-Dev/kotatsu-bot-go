@@ -99,7 +99,9 @@ func RunServer() {
 
 	// Группа API
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	if !config.GetConfig().IGNORE_AUTH {
+		api.Use(middleware.AuthMiddleware())
+	}
 	{
 
 		users := api.Group("/users")
