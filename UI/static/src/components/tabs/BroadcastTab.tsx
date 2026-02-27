@@ -39,7 +39,7 @@ const itmoStatus = createListCollection({
 export const BroadcastTab = () => {
   const api = useAPI();
   const { contains } = useFilter({ sensitivity: "base" });
-  
+
   type BroadcastFormValues = {
     events: number[];
     users: number[];
@@ -49,28 +49,29 @@ export const BroadcastTab = () => {
     message: string;
   };
 
-  const { control, handleSubmit, register, reset } = useForm<BroadcastFormValues>({
-    defaultValues: {
-      events: [],
-      users: [],
-      roulettes: [],
-      club_member_status: [],
-      itmo_status: [],
-      message: "",
-    },
-  });
+  const { control, handleSubmit, register, reset } =
+    useForm<BroadcastFormValues>({
+      defaultValues: {
+        events: [],
+        users: [],
+        roulettes: [],
+        club_member_status: [],
+        itmo_status: [],
+        message: "",
+      },
+    });
 
   const onSubmit = async (data: BroadcastFormValues) => {
     try {
       await api.broadcast.sendBroadcast({
-          events: data.events,
-          users: data.users,
-          roulettes: data.roulettes,
-          club_member_status: transformClubMemberStatus(data.club_member_status),
-          itmo_status: data.itmo_status,
-          message: data.message,
-        });
-      
+        events: data.events,
+        users: data.users,
+        roulettes: data.roulettes,
+        club_member_status: transformClubMemberStatus(data.club_member_status),
+        itmo_status: data.itmo_status,
+        message: data.message,
+      });
+
       toaster.success({
         title: "Broadcast sent successfully",
       });
@@ -85,37 +86,50 @@ export const BroadcastTab = () => {
   const transformClubMemberStatus = (statusArray: string[]): boolean | null => {
     const isClubMember = statusArray.includes("club_member");
     const isNotClubMember = statusArray.includes("not_club_member");
-    
+
     if (isClubMember && !isNotClubMember) {
       return true;
     }
-    
+
     if (!isClubMember && isNotClubMember) {
       return false;
     }
-    
+
     return null;
   };
 
-  const { collection: events, filter: filterEvents, set: setEvents } = useListCollection<{label:string, value:number}>({
+  const {
+    collection: events,
+    filter: filterEvents,
+    set: setEvents,
+  } = useListCollection<{ label: string; value: number }>({
     initialItems: [],
     filter: contains,
   });
 
-  const { collection: users, filter: filterUsers, set: setUsers } = useListCollection<{label:string, value:number}>({
+  const {
+    collection: users,
+    filter: filterUsers,
+    set: setUsers,
+  } = useListCollection<{ label: string; value: number }>({
     initialItems: [],
     filter: contains,
   });
 
-  const { collection: roulettes, filter: filterRoulettes, set: setRoulettes } = useListCollection<{label:string, value:number}>({
+  const {
+    collection: roulettes,
+    filter: filterRoulettes,
+    set: setRoulettes,
+  } = useListCollection<{ label: string; value: number }>({
     initialItems: [],
     filter: contains,
   });
 
   const loadEvents = async () => {
     const allEvents = await api.activities.getAll();
+    const sortedEvents = allEvents.sort((a, b) => b.id - a.id);
     setEvents(
-      allEvents.map((event) => ({
+      sortedEvents.map((event) => ({
         label: event.title,
         value: event.id,
       })),
@@ -127,7 +141,7 @@ export const BroadcastTab = () => {
     setUsers(
       allUsers.map((user) => {
         const parts = [];
-        
+
         if (user.full_name && user.full_name.trim()) {
           parts.push(user.full_name);
         }
@@ -135,11 +149,11 @@ export const BroadcastTab = () => {
         if (user.user_name && user.user_name.trim()) {
           parts.push(`@${user.user_name}`);
         }
-        
+
         parts.push(`(${user.user_tg_id})`);
-        
+
         return {
-          label: parts.join(' '),
+          label: parts.join(" "),
           value: user.id,
         };
       }),
