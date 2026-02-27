@@ -364,3 +364,50 @@ func DB_DELETE_Users() int {
 		return DB_ANSWER_SUCCESS
 	}
 }
+
+// Структура для параметров поиска пользователей
+type UserSearchParams struct {
+	Events           []int64  `json:"events"`
+	Users            []int64  `json:"users"`
+	Roulettes        []int64  `json:"roulettes"`
+	ClubMemberStatus *bool    `json:"club_member_status"`
+	ItmoStatus       []string `json:"itmo_status"`
+}
+
+// Поиск пользователей с фильтрацией на стороне БД
+func DB_User_Search(params UserSearchParams) []User_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var users []User
+
+	query := db.Preload(clause.Associations)
+
+	if params.ClubMemberStatus != nil {
+		query = query.Where("is_club_member = ?", *params.ClubMemberStatus)
+	}
+
+	if len(params.ItmoStatus) > 0 {
+		query = query.Where("itmo_status IN ?", params.ItmoStatus)
+	}
+
+	if len(params.Users) > 0 {
+		query = query.Where("id IN ?", params.Users)
+	}
+
+	if len(params.Events) > 0 {
+		query = query.Joins("JOIN user_activities ON users.id = user_activities.user_id").
+			Where("user_activities.activity_id IN ?", params.Events).
+			Group("users.id")
+	}
+
+	if len(params.Roulettes) > 0 {
+		query = query.Where("anime_roulette_id IN ?", params.Roulettes)
+	}
+
+	query.Find(&users)
+
+	return UserToReadSlice(users)
+}

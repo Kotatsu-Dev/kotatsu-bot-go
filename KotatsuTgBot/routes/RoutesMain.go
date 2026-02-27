@@ -129,6 +129,11 @@ func RunServer() {
 			anime_roulettes.PUT("/", Handler_API_AnimeRoulettes_UpdateObject)
 			anime_roulettes.DELETE("/", Handler_API_AnimeRoulettes_DeleteObject_ALL)
 		}
+
+		broadcast := api.Group("/broadcast")
+		{
+			broadcast.POST("/", Handler_API_SendBroadcast)
+		}
 	}
 
 	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {

@@ -1,4 +1,4 @@
-import { useAPI } from "../../api/api";
+import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Combobox,
@@ -14,7 +14,8 @@ import {
   useListCollection,
 } from "@chakra-ui/react";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { toaster } from "../ui/toaster";
 
 const clubMemberStatus = createListCollection({
   items: [
@@ -31,6 +32,7 @@ const itmoStatus = createListCollection({
     { label: "Employee", value: "employee" },
     { label: "Student and employee", value: "student_employee" },
     { label: "Graduate and employee", value: "graduate_employee" },
+    { label: "Unknown", value: "" },
   ],
 });
 
@@ -42,12 +44,12 @@ export const BroadcastTab = () => {
     events: number[];
     users: number[];
     roulettes: number[];
-    club_member_status: number[];
-    itmo_status: number[];
+    club_member_status: string[];
+    itmo_status: string[];
     message: string;
   };
 
-  const { control, handleSubmit, register } = useForm<BroadcastFormValues>({
+  const { control, handleSubmit, register, reset } = useForm<BroadcastFormValues>({
     defaultValues: {
       events: [],
       users: [],
@@ -58,8 +60,41 @@ export const BroadcastTab = () => {
     },
   });
 
-  const onSubmit = (data: BroadcastFormValues) => {
-    console.log("Form submission data:", data);
+  const onSubmit = async (data: BroadcastFormValues) => {
+    try {
+      await api.broadcast.sendBroadcast({
+          events: data.events,
+          users: data.users,
+          roulettes: data.roulettes,
+          club_member_status: transformClubMemberStatus(data.club_member_status),
+          itmo_status: data.itmo_status,
+          message: data.message,
+        });
+      
+      toaster.success({
+        title: "Broadcast sent successfully",
+      });
+
+      reset();
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  // Transform club member status from string array to boolean or null
+  const transformClubMemberStatus = (statusArray: string[]): boolean | null => {
+    const isClubMember = statusArray.includes("club_member");
+    const isNotClubMember = statusArray.includes("not_club_member");
+    
+    if (isClubMember && !isNotClubMember) {
+      return true;
+    }
+    
+    if (!isClubMember && isNotClubMember) {
+      return false;
+    }
+    
+    return null;
   };
 
   const { collection: events, filter: filterEvents, set: setEvents } = useListCollection<{label:string, value:number}>({
