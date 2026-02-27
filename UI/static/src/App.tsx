@@ -25,11 +25,13 @@ import { RouletteTab } from "./components/tabs/RouletteTab";
 import { useState } from "react";
 import {
   FaBars,
+  FaBullhorn,
   FaCalendarPlus,
   FaFileExport,
   FaUsers,
 } from "react-icons/fa";
 import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
+import { BroadcastTab } from "./components/tabs/BroadcastTab";
 
 const tabs = [
   // {
@@ -76,6 +78,11 @@ const tabs = [
   //   value: "deletion",
   //   title: "Deletion",
   // },
+  {
+    icon: <FaBullhorn />,
+    value: "broadcast",
+    title: "Broadcast",
+  },
 ];
 
 function App() {
@@ -171,6 +178,9 @@ function App() {
           </Tabs.Content>
           <Tabs.Content value="deletion">
             <DeletionTab />
+          </Tabs.Content>
+          <Tabs.Content value="broadcast">
+            <BroadcastTab />
           </Tabs.Content>
         </Tabs.Root>
         <Toaster />

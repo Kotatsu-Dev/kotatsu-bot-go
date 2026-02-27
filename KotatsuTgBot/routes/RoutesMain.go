@@ -15,23 +15,16 @@
 package routes
 
 import (
-	//Внутренние пакеты проекта
-
+	"fmt"
 	"io"
 	"os"
-	"rr/kotatsutgbot/config"
-	"rr/kotatsutgbot/middleware"
-
-	// "../modules/rr_randstr"
-
-	//Сторонние библиотеки
-
-	//Системные пакеты
-	"fmt"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+
+	"rr/kotatsutgbot/config"
+	"rr/kotatsutgbot/middleware"
 )
 
 // ----------------------------------------------
