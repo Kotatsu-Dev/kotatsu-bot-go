@@ -1,4 +1,13 @@
 import type { AxiosInstance } from "axios";
+import z from "zod";
+import { User } from "./users";
+
+export const BroadcastResult = z.object({
+  user: User,
+  success: z.boolean(),
+  error_message: z.string(),
+});
+export type BroadcastResult = z.infer<typeof BroadcastResult>;
 
 export interface SendBroadcastRequest {
   events: number[];
@@ -15,7 +24,8 @@ export const createBroadcastApi = ($: AxiosInstance, root: string) => {
       await $.postForm(`${root}/send-message-user`, props);
     },
     async sendBroadcast(props: SendBroadcastRequest) {
-      await $.post(`${root}/api/broadcast/`, props);
+      const res = await $.post(`${root}/api/broadcast/`, props);
+      return BroadcastResult.array().parse(res.data.data.results);
     },
   };
 };

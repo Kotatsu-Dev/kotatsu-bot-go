@@ -289,6 +289,13 @@ type SendBroadcast struct {
 	Message          string   `json:"message"`
 }
 
+// BroadcastResult tracks the success/failure status for each user in a broadcast
+type BroadcastResult struct {
+	User         db.User_ReadJSON `json:"user"`
+	Success      bool             `json:"success"`
+	ErrorMessage string           `json:"error_message"`
+}
+
 func Handler_API_SendBroadcast(c *gin.Context) {
 	json_data := new(SendBroadcast)
 	err_json_bin := c.ShouldBindJSON(&json_data)
@@ -325,9 +332,10 @@ func Handler_API_SendBroadcast(c *gin.Context) {
 		return
 	}
 
-	is_send_broadcast := false
-
 	if len(filtered_users) > 0 {
+		// Create a slice to store results for each user
+		results := make([]BroadcastResult, 0, len(filtered_users))
+
 		for _, current_user := range filtered_users {
 			params := &bot.SendMessageParams{
 				ChatID:    current_user.UserTgID,
@@ -338,14 +346,26 @@ func Handler_API_SendBroadcast(c *gin.Context) {
 			_, err_send := b.SendMessage(ctx, params)
 			if err_send != nil {
 				rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "bot.SendMessage", "Ошибка отправки сообщения пользователю", err_send.Error())
-				continue
+				// Record failure for this user
+				results = append(results, BroadcastResult{
+					User:         current_user,
+					Success:      false,
+					ErrorMessage: err_send.Error(),
+				})
+			} else {
+				// Record success for this user
+				results = append(results, BroadcastResult{
+					User:         current_user,
+					Success:      true,
+					ErrorMessage: "",
+				})
 			}
-			is_send_broadcast = true
 		}
-	}
 
-	if is_send_broadcast {
-		Answer_OK(c)
+		// Return detailed results for all users
+		Answer_SendObject(c, gin.H{
+			"results": results,
+		})
 	} else {
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 	}
