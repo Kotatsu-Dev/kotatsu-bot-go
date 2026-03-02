@@ -1,9 +1,11 @@
 import { handleError, useAPI } from "../../api/api";
 import {
   Button,
+  CloseButton,
   Combobox,
   Container,
   createListCollection,
+  Dialog,
   Field,
   Fieldset,
   Heading,
@@ -12,9 +14,11 @@ import {
   Textarea,
   useFilter,
   useListCollection,
+  Table,
+  Status,
 } from "@chakra-ui/react";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toaster } from "../ui/toaster";
 
 const clubMemberStatus = createListCollection({
@@ -40,6 +44,10 @@ export const BroadcastTab = () => {
   const api = useAPI();
   const { contains } = useFilter({ sensitivity: "base" });
 
+  // State for managing broadcast results and dialog visibility
+  const [broadcastResults, setBroadcastResults] = useState<any[]>([]);
+  const [resultsOpen, setResultsOpen] = useState(false);
+
   type BroadcastFormValues = {
     events: number[];
     users: number[];
@@ -63,7 +71,7 @@ export const BroadcastTab = () => {
 
   const onSubmit = async (data: BroadcastFormValues) => {
     try {
-      await api.broadcast.sendBroadcast({
+      const results = await api.broadcast.sendBroadcast({
         events: data.events,
         users: data.users,
         roulettes: data.roulettes,
@@ -71,6 +79,9 @@ export const BroadcastTab = () => {
         itmo_status: data.itmo_status,
         message: data.message,
       });
+
+      setBroadcastResults(results);
+      setResultsOpen(true);
 
       toaster.success({
         title: "Broadcast sent successfully",
@@ -82,7 +93,6 @@ export const BroadcastTab = () => {
     }
   };
 
-  // Transform club member status from string array to boolean or null
   const transformClubMemberStatus = (statusArray: string[]): boolean | null => {
     const isClubMember = statusArray.includes("club_member");
     const isNotClubMember = statusArray.includes("not_club_member");
@@ -346,6 +356,62 @@ export const BroadcastTab = () => {
           <Button type="submit">Submit</Button>
         </Fieldset.Content>
       </Fieldset.Root>
+      <Dialog.Root
+        open={resultsOpen}
+        onOpenChange={() => setResultsOpen(false)}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Broadcast results</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Table.Root>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeader>Status</Table.ColumnHeader>
+                      <Table.ColumnHeader>User</Table.ColumnHeader>
+                      <Table.ColumnHeader>Error</Table.ColumnHeader>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {broadcastResults.map((result, index) => (
+                      <Table.Row key={index}>
+                        <Table.Cell>
+                          <Status.Root
+                            colorPalette={result.success ? "green" : "red"}
+                          >
+                            <Status.Indicator />
+                          </Status.Root>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {result.user.user_name
+                            ? `@${result.user.user_name}`
+                            : ""}{" "}
+                          ({result.user.user_tg_id})
+                        </Table.Cell>
+                        <Table.Cell>
+                          {result.success ? "" : result.error_message}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Dialog.ActionTrigger asChild>
+                  <Button variant="outline">Close</Button>
+                </Dialog.ActionTrigger>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Container>
   );
 };
