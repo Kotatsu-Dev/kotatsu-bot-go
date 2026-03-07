@@ -328,45 +328,40 @@ func Handler_API_SendBroadcast(c *gin.Context) {
 
 	filtered_users := db.DB_User_Search(search_params)
 	if len(filtered_users) == 0 {
-		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
+		Answer_NotFound(c, ANSWER_NO_USERS_FOUND().Code, ANSWER_NO_USERS_FOUND().Message)
 		return
 	}
 
-	if len(filtered_users) > 0 {
-		// Create a slice to store results for each user
-		results := make([]BroadcastResult, 0, len(filtered_users))
+	results := make([]BroadcastResult, 0, len(filtered_users))
 
-		for _, current_user := range filtered_users {
-			params := &bot.SendMessageParams{
-				ChatID:    current_user.UserTgID,
-				ParseMode: models.ParseModeHTML,
-				Text:      config.TT("broadcast", json_data.Message),
-			}
-
-			_, err_send := b.SendMessage(ctx, params)
-			if err_send != nil {
-				rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "bot.SendMessage", "Ошибка отправки сообщения пользователю", err_send.Error())
-				// Record failure for this user
-				results = append(results, BroadcastResult{
-					User:         current_user,
-					Success:      false,
-					ErrorMessage: err_send.Error(),
-				})
-			} else {
-				// Record success for this user
-				results = append(results, BroadcastResult{
-					User:         current_user,
-					Success:      true,
-					ErrorMessage: "",
-				})
-			}
+	for _, current_user := range filtered_users {
+		params := &bot.SendMessageParams{
+			ChatID:    current_user.UserTgID,
+			ParseMode: models.ParseModeHTML,
+			Text:      config.TT("broadcast", json_data.Message),
 		}
 
-		// Return detailed results for all users
-		Answer_SendObject(c, gin.H{
-			"results": results,
-		})
-	} else {
-		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
+		_, err_send := b.SendMessage(ctx, params)
+		if err_send != nil {
+			rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "bot.SendMessage", "Ошибка отправки сообщения пользователю", err_send.Error())
+			// Record failure for this user
+			results = append(results, BroadcastResult{
+				User:         current_user,
+				Success:      false,
+				ErrorMessage: err_send.Error(),
+			})
+		} else {
+			// Record success for this user
+			results = append(results, BroadcastResult{
+				User:         current_user,
+				Success:      true,
+				ErrorMessage: "",
+			})
+		}
 	}
+
+	// Return detailed results for all users
+	Answer_SendObject(c, gin.H{
+		"results": results,
+	})
 }

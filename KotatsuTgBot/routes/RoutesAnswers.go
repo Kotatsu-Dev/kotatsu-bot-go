@@ -205,6 +205,13 @@ func ANSWER_GENERAL_DB_ERROR() EngineAnswer {
 	}
 }
 
+func ANSWER_NO_USERS_FOUND() EngineAnswer {
+	return EngineAnswer{
+		Code:    513,
+		Message: "No users found for given filters",
+	}
+}
+
 //
 //
 // DB
