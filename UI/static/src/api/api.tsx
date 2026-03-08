@@ -10,6 +10,13 @@ import { createRoulettesApi } from "./roulettes";
 import { toaster } from "../components/ui/toaster";
 import z, { ZodError } from "zod";
 
+const ErrorData = z.object({
+  status: z.object({
+    code: z.int(),
+    message: z.string(),
+  }),
+});
+
 const createApi = (_ctx: null) => {
   const base = import.meta.env.PROD
     ? new URL("/", location.toString()).toString().slice(0, -1)
@@ -48,11 +55,26 @@ export const handleError = (e: unknown) => {
     toaster.error({
       description: `Error parsing data:\n${z.prettifyError(e)}`,
     });
+    return;
   }
 
   if (e instanceof AxiosError) {
+    if (e.response && e.response.data) {
+      const data = ErrorData.safeParse(e.response.data);
+      if (data.success) {
+        toaster.error({
+          description: `Error: ${data.data.status.message}`,
+        });
+        return;
+      }
+    }
     toaster.error({
-      description: `HTTP Error`,
+      description: `HTTP Error ${e.code ?? ""}`,
     });
+    return;
   }
+
+  toaster.error({
+    description: `Unknown error`,
+  });
 };

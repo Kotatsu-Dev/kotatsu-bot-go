@@ -16,21 +16,40 @@ import (
 
 type Gender string
 
+const (
+	Male    Gender = "male"
+	Female  Gender = "female"
+	Unknown Gender = ""
+)
+
+type ITMOStatus string
+
+const (
+	Guest            ITMOStatus = "guest"
+	Student          ITMOStatus = "student"
+	Graduate         ITMOStatus = "graduate"
+	Employee         ITMOStatus = "employee"
+	GraduateEmployee ITMOStatus = "graduate_emplyee"
+	StudentEmployee  ITMOStatus = "student_emplyee"
+)
+
 type User struct {
 	gorm.Model
-	Step                  int         `json:"step"`                                                                        // Текущий шаг
-	UserTgID              int64       `json:"user_tg_id"`                                                                  // ID пользователя в Телеграм
-	LastMessageID         int         `json:"last_message_id"`                                                             // ID последнего сообщения от бота
-	UserName              string      `json:"user_name"`                                                                   // Имя пользователя в Телеграм
-	FullTgName            string      `json:"full_tg_name"`                                                                // Полное имя пользователя в Телеграм
-	Gender                Gender      `json:"gender"`                                                                      // Пол пользователя
-	IsVisitedEvents       bool        `json:"is_visited_events"`                                                           // Посетил ли пользователь достаточное количество мероприятий
-	ISU                   string      `json:"isu"`                                                                         // ИСУ для ИТМО
-	FullName              string      `json:"full_name"`                                                                   // Имя пользователя
-	PhoneNumber           string      `json:"phone_number"`                                                                // Номер телефона пользователя
-	SecretCode            string      `json:"secret_code"`                                                                 // Секретный код пользователя
-	IsITMO                bool        `json:"is_itmo"`                                                                     // Студент ИТМО
-	IsClubMember          bool        `json:"is_club_member"`                                                              // Член клуба
+	Step                  int         `json:"step"`              // Текущий шаг
+	UserTgID              int64       `json:"user_tg_id"`        // ID пользователя в Телеграм
+	LastMessageID         int         `json:"last_message_id"`   // ID последнего сообщения от бота
+	UserName              string      `json:"user_name"`         // Имя пользователя в Телеграм
+	FullTgName            string      `json:"full_tg_name"`      // Полное имя пользователя в Телеграм
+	Gender                Gender      `json:"gender"`            // Пол пользователя
+	IsVisitedEvents       bool        `json:"is_visited_events"` // Посетил ли пользователь достаточное количество мероприятий
+	ISU                   string      `json:"isu"`               // ИСУ для ИТМО
+	FullName              string      `json:"full_name"`         // Имя пользователя
+	PhoneNumber           string      `json:"phone_number"`      // Номер телефона пользователя
+	SecretCode            string      `json:"secret_code"`       // Секретный код пользователя
+	IsITMO                bool        `json:"is_itmo"`           // Студент ИТМО
+	ITMOStatus            ITMOStatus  `json:"itmo_status"`
+	IsClubMember          bool        `json:"is_club_member"` // Член клуба
+	ClubMemberSince       *time.Time  `json:"club_member_since"`
 	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                                                     // Подписка на рассылку
 	IsSentRequest         bool        `json:"is_sent_request"`                                                             // Отправлена ли заявка
 	IsFilledData          bool        `json:"is_filled_data"`                                                              // Заполнены ли данные?
@@ -63,7 +82,9 @@ type User_ReadJSON struct {
 	PhoneNumber           string            `json:"phone_number"`
 	SecretCode            string            `json:"secret_code"`
 	IsITMO                bool              `json:"is_itmo"`
+	ITMOStatus            ITMOStatus        `json:"itmo_status"`
 	IsClubMember          bool              `json:"is_club_member"`
+	ClubMemberSince       *time.Time        `json:"club_member_since"`
 	IsSubscribeNewsletter bool              `json:"is_subscribe_newsletter"`
 	IsSentRequest         bool              `json:"is_sent_request"`
 	IsFilledData          bool              `json:"is_filled_data"`
@@ -72,6 +93,49 @@ type User_ReadJSON struct {
 	LinkMyAnimeList       string            `json:"link_my_anime_list"`
 	MyRequest             *Request_ReadJSON `json:"my_request"`
 	EnigmaticTitle        string            `json:"enigmatic_title"`
+}
+
+func (user *User) ToRead() *User_ReadJSON {
+	var request *Request_ReadJSON
+	if user.MyRequest != nil {
+		request = user.MyRequest.ToRead()
+	}
+
+	return &User_ReadJSON{
+		ID:                    user.ID,
+		CreatedAt:             user.CreatedAt,
+		Step:                  user.Step,
+		UserTgID:              user.UserTgID,
+		LastMessageID:         user.LastMessageID,
+		UserName:              user.UserName,
+		FullTgName:            user.FullTgName,
+		Gender:                user.Gender,
+		IsVisitedEvents:       user.IsVisitedEvents,
+		ISU:                   user.ISU,
+		FullName:              user.FullName,
+		PhoneNumber:           user.PhoneNumber,
+		SecretCode:            user.SecretCode,
+		IsITMO:                user.IsITMO,
+		ITMOStatus:            user.ITMOStatus,
+		IsClubMember:          user.IsClubMember,
+		ClubMemberSince:       user.ClubMemberSince,
+		IsSubscribeNewsletter: user.IsSubscribeNewsletter,
+		IsSentRequest:         user.IsSentRequest,
+		IsFilledData:          user.IsFilledData,
+		TempActivityID:        user.TempActivityID,
+		MyActivities:          user.MyActivities,
+		LinkMyAnimeList:       user.LinkMyAnimeList,
+		MyRequest:             request,
+		EnigmaticTitle:        user.EnigmaticTitle,
+	}
+}
+
+func UserToReadSlice(users []User) []User_ReadJSON {
+	res := make([]User_ReadJSON, len(users))
+	for i, user := range users {
+		res[i] = *user.ToRead()
+	}
+	return res
 }
 
 // Добавить пользователя
@@ -116,32 +180,7 @@ func DB_GET_User_BY_UserTgID(user_tg_id int64) (int, *User_ReadJSON) {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	user_read := User_ReadJSON{
-		ID:                    user.ID,
-		CreatedAt:             user.CreatedAt,
-		Step:                  user.Step,
-		UserTgID:              user.UserTgID,
-		Gender:                user.Gender,
-		IsVisitedEvents:       user.IsVisitedEvents,
-		LastMessageID:         user.LastMessageID,
-		UserName:              user.UserName,
-		FullTgName:            user.FullTgName,
-		ISU:                   user.ISU,
-		FullName:              user.FullName,
-		PhoneNumber:           user.PhoneNumber,
-		SecretCode:            user.SecretCode,
-		IsITMO:                user.IsITMO,
-		IsClubMember:          user.IsClubMember,
-		IsSubscribeNewsletter: user.IsSubscribeNewsletter,
-		IsSentRequest:         user.IsSentRequest,
-		IsFilledData:          user.IsFilledData,
-		TempActivityID:        user.TempActivityID,
-		MyActivities:          user.MyActivities,
-		LinkMyAnimeList:       user.LinkMyAnimeList,
-		EnigmaticTitle:        user.EnigmaticTitle,
-	}
-
-	return DB_ANSWER_SUCCESS, &user_read
+	return DB_ANSWER_SUCCESS, user.ToRead()
 }
 
 func DB_GET_Users_BY_Step(step int) []User_ReadJSON {
@@ -154,36 +193,7 @@ func DB_GET_Users_BY_Step(step int) []User_ReadJSON {
 	var users []User
 	db.Preload("MyRequest").Preload("MyActivities").Where("step = ?", step).Find(&users)
 
-	users_read := make([]User_ReadJSON, len(users))
-
-	for i, user := range users {
-		users_read[i] = User_ReadJSON{
-			ID:                    user.ID,
-			CreatedAt:             user.CreatedAt,
-			Step:                  user.Step,
-			UserTgID:              user.UserTgID,
-			Gender:                user.Gender,
-			IsVisitedEvents:       user.IsVisitedEvents,
-			LastMessageID:         user.LastMessageID,
-			UserName:              user.UserName,
-			FullTgName:            user.FullTgName,
-			ISU:                   user.ISU,
-			FullName:              user.FullName,
-			PhoneNumber:           user.PhoneNumber,
-			SecretCode:            user.SecretCode,
-			IsITMO:                user.IsITMO,
-			IsClubMember:          user.IsClubMember,
-			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
-			IsSentRequest:         user.IsSentRequest,
-			IsFilledData:          user.IsFilledData,
-			TempActivityID:        user.TempActivityID,
-			MyActivities:          user.MyActivities,
-			LinkMyAnimeList:       user.LinkMyAnimeList,
-			EnigmaticTitle:        user.EnigmaticTitle,
-		}
-	}
-
-	return users_read
+	return UserToReadSlice(users)
 }
 
 // Получить список всех пользователей
@@ -199,50 +209,7 @@ func DB_GET_Users() []User_ReadJSON {
 	// Загружаем связанные сущности MyActivities
 	db.Preload(clause.Associations).Find(&users)
 
-	users_list := make([]User_ReadJSON, 0)
-	if len(users) <= 0 {
-		return users_list
-	}
-
-	for _, user := range users {
-		var request *Request_ReadJSON
-		if user.MyRequest != nil {
-			request = &Request_ReadJSON{
-				ID:        user.MyRequest.ID,
-				CreatedAt: user.MyRequest.CreatedAt,
-				Type:      user.MyRequest.Type,
-				Status:    user.MyRequest.Status,
-				UserID:    user.MyRequest.UserID,
-			}
-		}
-
-		current_user := User_ReadJSON{
-			ID:                    user.ID,
-			CreatedAt:             user.CreatedAt,
-			Step:                  user.Step,
-			UserTgID:              user.UserTgID,
-			LastMessageID:         user.LastMessageID,
-			UserName:              user.UserName,
-			FullTgName:            user.FullTgName,
-			ISU:                   user.ISU,
-			FullName:              user.FullName,
-			PhoneNumber:           user.PhoneNumber,
-			SecretCode:            user.SecretCode,
-			IsITMO:                user.IsITMO,
-			IsClubMember:          user.IsClubMember,
-			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
-			IsSentRequest:         user.IsSentRequest,
-			IsFilledData:          user.IsFilledData,
-			TempActivityID:        user.TempActivityID,
-			MyActivities:          user.MyActivities,
-			MyRequest:             request,
-			LinkMyAnimeList:       user.LinkMyAnimeList,
-			EnigmaticTitle:        user.EnigmaticTitle,
-		}
-		users_list = append(users_list, current_user)
-	}
-
-	return users_list
+	return UserToReadSlice(users)
 }
 
 // Обновляем пользователя
@@ -255,12 +222,15 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 
 	var user User
 	user_tg_id, ok := update_json["user_tg_id"].(int64)
-	if ok {
-		db.Where("user_tg_id = ?", user_tg_id).First(&user)
-		if user.ID == 0 {
+	if !ok {
+		_user_tg_id, ok := update_json["user_tg_id"].(float64)
+		if !ok {
 			return DB_ANSWER_OBJECT_NOT_FOUND, nil
 		}
-	} else {
+		user_tg_id = int64(_user_tg_id)
+	}
+	db.Where("user_tg_id = ?", user_tg_id).First(&user)
+	if user.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
@@ -315,6 +285,13 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 		case "is_itmo":
 			if v, ok := value.(bool); ok && v != user.IsITMO {
 				user.IsITMO = v
+			}
+
+		case "itmo_status":
+			if v, ok := value.(ITMOStatus); ok && v != user.ITMOStatus {
+				user.ITMOStatus = v
+			} else if v, ok := value.(string); ok && ITMOStatus(v) != user.ITMOStatus {
+				user.ITMOStatus = ITMOStatus(v)
 			}
 
 		case "is_club_member":
@@ -386,4 +363,51 @@ func DB_DELETE_Users() int {
 	} else {
 		return DB_ANSWER_SUCCESS
 	}
+}
+
+// Структура для параметров поиска пользователей
+type UserSearchParams struct {
+	Events           []int64  `json:"events"`
+	Users            []int64  `json:"users"`
+	Roulettes        []int64  `json:"roulettes"`
+	ClubMemberStatus *bool    `json:"club_member_status"`
+	ItmoStatus       []string `json:"itmo_status"`
+}
+
+// Поиск пользователей с фильтрацией на стороне БД
+func DB_User_Search(params UserSearchParams) []User_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var users []User
+
+	query := db.Preload(clause.Associations)
+
+	if params.ClubMemberStatus != nil {
+		query = query.Where("is_club_member = ?", *params.ClubMemberStatus)
+	}
+
+	if len(params.ItmoStatus) > 0 {
+		query = query.Where("itmo_status IN ?", params.ItmoStatus)
+	}
+
+	if len(params.Users) > 0 {
+		query = query.Where("id IN ?", params.Users)
+	}
+
+	if len(params.Events) > 0 {
+		query = query.Joins("JOIN user_activities ON users.id = user_activities.user_id").
+			Where("user_activities.activity_id IN ?", params.Events).
+			Group("users.id")
+	}
+
+	if len(params.Roulettes) > 0 {
+		query = query.Where("anime_roulette_id IN ?", params.Roulettes)
+	}
+
+	query.Find(&users)
+
+	return UserToReadSlice(users)
 }

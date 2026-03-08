@@ -2,12 +2,19 @@ import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
+  Checkbox,
+  CloseButton,
   Container,
   DataList,
+  Dialog,
+  Field,
+  Fieldset,
+  Group,
   Heading,
   Input,
   Link,
-  SimpleGrid,
+  Portal,
+  RadioGroup,
   Stack,
   Status,
   Tabs,
@@ -15,10 +22,197 @@ import {
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "../ui/toaster";
 import type { User } from "@/api/users";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
 import Fuse from "fuse.js";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+
+type Inputs = {
+  full_name: string;
+  phone_number: string;
+  is_club_member: boolean;
+  gender: string;
+  itmo_status: string;
+};
+
+const genders = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "", label: "Unknown" },
+];
+
+const statuses = [
+  { value: "guest", label: "Guest" },
+  { value: "student", label: "Student" },
+  { value: "graduate", label: "Graduate" },
+  { value: "employee", label: "Employee" },
+  { value: "student_employee", label: "Student and employee" },
+  { value: "graduate_employee", label: "Graduate and employee" },
+  { value: "", label: "Unknown" },
+];
+
+const UserEditDialog = (props: { value: User; reload: () => void }) => {
+  const api = useAPI();
+  const [open, setOpen] = useState(false);
+  const { register, handleSubmit, control } = useForm<Inputs>({
+    defaultValues: {
+      full_name: props.value.full_name,
+      phone_number: props.value.phone_number,
+      is_club_member: props.value.is_club_member,
+      gender: props.value.gender ?? "",
+      itmo_status: props.value.itmo_status ?? "",
+    },
+  });
+
+  const editUser: SubmitHandler<Inputs> = async (data, event) => {
+    try {
+      await api.users.update({ ...data, user_tg_id: props.value.user_tg_id });
+      toaster.success({
+        description: "Event successfully created!",
+      });
+      console.log(data);
+      setOpen(false);
+      props.reload();
+    } catch (e) {
+      handleError(e);
+      event?.stopPropagation();
+    }
+  };
+  return (
+    <Dialog.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
+      <Dialog.Trigger asChild>
+        <Button colorPalette={"green"}>Edit</Button>
+      </Dialog.Trigger>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner colorPalette={"orange"}>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Edit user</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body as={"form"} onSubmit={handleSubmit(editUser)}>
+              <Fieldset.Root>
+                <Fieldset.Content>
+                  <Field.Root>
+                    <Field.Label>Full name</Field.Label>
+                    <Input {...register("full_name")} />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Phone</Field.Label>
+                    <Input {...register("phone_number")} />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>ITMO status</Field.Label>
+                    <Controller
+                      name="itmo_status"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup.Root
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={({ value }) => {
+                            field.onChange(value);
+                          }}
+                        >
+                          <Stack>
+                            {statuses.map((status) => (
+                              <RadioGroup.Item
+                                key={status.value}
+                                value={status.value}
+                              >
+                                <RadioGroup.ItemHiddenInput
+                                  onBlur={field.onBlur}
+                                />
+                                <RadioGroup.ItemIndicator />
+                                <RadioGroup.ItemText>
+                                  {status.label}
+                                </RadioGroup.ItemText>
+                              </RadioGroup.Item>
+                            ))}
+                          </Stack>
+                        </RadioGroup.Root>
+                      )}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Gender</Field.Label>
+                    <Controller
+                      name="gender"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup.Root
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={({ value }) => {
+                            field.onChange(value);
+                          }}
+                        >
+                          <Stack>
+                            {genders.map((gender) => (
+                              <RadioGroup.Item
+                                key={gender.value}
+                                value={gender.value}
+                              >
+                                <RadioGroup.ItemHiddenInput
+                                  onBlur={field.onBlur}
+                                />
+                                <RadioGroup.ItemIndicator />
+                                <RadioGroup.ItemText>
+                                  {gender.label}
+                                </RadioGroup.ItemText>
+                              </RadioGroup.Item>
+                            ))}
+                          </Stack>
+                        </RadioGroup.Root>
+                      )}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Status</Field.Label>
+                    <Controller
+                      control={control}
+                      name="is_club_member"
+                      render={({ field }) => (
+                        <Checkbox.Root
+                          checked={field.value}
+                          onCheckedChange={({ checked }) =>
+                            field.onChange(checked)
+                          }
+                          onBlur={field.onBlur}
+                        >
+                          <Checkbox.HiddenInput
+                            ref={field.ref}
+                            name={field.name}
+                          />
+                          <Checkbox.Control />
+                          <Checkbox.Label>Member</Checkbox.Label>
+                        </Checkbox.Root>
+                      )}
+                    />
+                  </Field.Root>
+                </Fieldset.Content>
+                <Group>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save</Button>
+                </Group>
+              </Fieldset.Root>
+            </Dialog.Body>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
+};
 
 const UserCard = memo((props: { value: User; reload: () => void }) => {
   const api = useAPI();
@@ -84,13 +278,16 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
               {user.is_club_member ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
-                  Member
+                  Member{" "}
+                  {user.club_member_since
+                    ? `(since ${formatDate(user.club_member_since, "dd-MM-yyyy")})`
+                    : null}
                 </Status.Root>
               ) : user.my_request ? (
                 <Status.Root colorPalette={"yellow"}>
                   <Status.Indicator />
                   {`Submitted (${formatDistanceToNow(
-                    user.my_request.created_at
+                    user.my_request.created_at,
                   )} ago)`}
                 </Status.Root>
               ) : (
@@ -106,6 +303,19 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
             <DataList.ItemValue>
               {user.full_name ? (
                 user.full_name
+              ) : (
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  Unknown
+                </Status.Root>
+              )}
+            </DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
+            <DataList.ItemLabel>Gender</DataList.ItemLabel>
+            <DataList.ItemValue>
+              {user.gender ? (
+                genders.find((v) => v.value == user.gender)?.label
               ) : (
                 <Status.Root colorPalette={"red"}>
                   <Status.Indicator />
@@ -150,6 +360,19 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
             </DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
+            <DataList.ItemLabel>ITMO status</DataList.ItemLabel>
+            <DataList.ItemValue>
+              {user.itmo_status ? (
+                statuses.find((v) => v.value == user.itmo_status)?.label
+              ) : (
+                <Status.Root colorPalette={"red"}>
+                  <Status.Indicator />
+                  Unknown
+                </Status.Root>
+              )}
+            </DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
             <DataList.ItemLabel>ISU</DataList.ItemLabel>
             <DataList.ItemValue>
               {user.isu ? (
@@ -178,26 +401,30 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
         </DataList.Root>
       </Card.Body>
       <Card.Footer>
-        {user.my_request ? (
-          user.my_request.status == 0 ? (
-            <SimpleGrid columns={2} w="full" gap={"2"}>
-              <Button colorPalette={"red"} onClick={rejectRequest}>
-                Reject
-              </Button>
-              <Button colorPalette={"green"} onClick={acceptRequest}>
-                Accept
-              </Button>
-            </SimpleGrid>
-          ) : null
-        ) : user.is_club_member ? (
-          <Button w="full" colorPalette={"red"} onClick={kickUser}>
-            Kick user
-          </Button>
-        ) : (
-          <Button w="full" colorPalette={"green"} onClick={addUser}>
-            Add user to club
-          </Button>
-        )}
+        <Group grow w={"full"}>
+          {user.my_request ? (
+            user.my_request.status == 0 ? (
+              <>
+                <Button colorPalette={"red"} onClick={rejectRequest}>
+                  Reject
+                </Button>
+                <Button colorPalette={"green"} onClick={acceptRequest}>
+                  Accept
+                </Button>
+              </>
+            ) : null
+          ) : user.is_club_member ? (
+            <Button colorPalette={"red"} onClick={kickUser}>
+              Kick user
+            </Button>
+          ) : (
+            <Button colorPalette={"green"} onClick={addUser}>
+              Add user to club
+            </Button>
+          )}
+          {/* <Button colorPalette={"red"}>Delete</Button> */}
+          <UserEditDialog {...props} />
+        </Group>
       </Card.Footer>
     </Card.Root>
   );
@@ -223,16 +450,16 @@ export const UsersTab = () => {
           })
             .search(search)
             .map((e) => e.item),
-    [users, search]
+    [users, search],
   );
 
   const members = useMemo(
     () => currentUsers.filter((user) => user.is_club_member),
-    [currentUsers]
+    [currentUsers],
   );
   const requests = useMemo(
     () => currentUsers.filter((user) => !!user.my_request),
-    [currentUsers]
+    [currentUsers],
   );
 
   const loadUsers = useCallback(async () => {

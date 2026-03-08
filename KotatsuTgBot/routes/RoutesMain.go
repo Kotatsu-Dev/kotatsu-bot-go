@@ -15,23 +15,16 @@
 package routes
 
 import (
-	//Внутренние пакеты проекта
-
+	"fmt"
 	"io"
 	"os"
-	"rr/kotatsutgbot/config"
-	"rr/kotatsutgbot/middleware"
-
-	// "../modules/rr_randstr"
-
-	//Сторонние библиотеки
-
-	//Системные пакеты
-	"fmt"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+
+	"rr/kotatsutgbot/config"
+	"rr/kotatsutgbot/middleware"
 )
 
 // ----------------------------------------------
@@ -99,7 +92,9 @@ func RunServer() {
 
 	// Группа API
 	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
+	if !config.GetConfig().IGNORE_AUTH {
+		api.Use(middleware.AuthMiddleware())
+	}
 	{
 
 		users := api.Group("/users")
@@ -133,6 +128,11 @@ func RunServer() {
 			anime_roulettes.POST("/", Handler_API_AnimeRoulettes_CreateObject)
 			anime_roulettes.PUT("/", Handler_API_AnimeRoulettes_UpdateObject)
 			anime_roulettes.DELETE("/", Handler_API_AnimeRoulettes_DeleteObject_ALL)
+		}
+
+		broadcast := api.Group("/broadcast")
+		{
+			broadcast.POST("/", Handler_API_SendBroadcast)
 		}
 	}
 

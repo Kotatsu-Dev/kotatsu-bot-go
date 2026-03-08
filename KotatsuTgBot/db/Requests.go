@@ -31,6 +31,16 @@ type Request_ReadJSON struct {
 	UserID    uint      `json:"user_id"`
 }
 
+func (request *Request) ToRead() *Request_ReadJSON {
+	return &Request_ReadJSON{
+		ID:        request.ID,
+		CreatedAt: request.CreatedAt,
+		Type:      request.Type,
+		Status:    request.Status,
+		UserID:    request.UserID,
+	}
+}
+
 // Добавить заявку
 func DB_CREATE_Request(user_id uint) int {
 
@@ -171,7 +181,9 @@ func DB_UPDATE_Choice_Request(update_json map[string]interface{}) (int, *User) {
 	if status, ok := update_json["status"].(int); ok {
 		switch status {
 		case 1:
+			tn := time.Now()
 			user.IsClubMember = true
+			user.ClubMemberSince = &tn
 			user.IsSentRequest = false
 			db.Save(&user)
 		case 2:

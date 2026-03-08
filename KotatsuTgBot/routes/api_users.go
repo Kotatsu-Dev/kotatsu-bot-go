@@ -134,13 +134,14 @@ func Handler_API_Users_UpdateObject_ClubMember(c *gin.Context) {
 			ParseMode: models.ParseModeHTML,
 		}
 
+		// TODO
 		if user.IsClubMember {
 			params.Text = "<b>Руководство добавило тебя в клуб</b>" + "\n" +
 				"Если появились вопросы, напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
 		} else {
 			params.Text = "<b>Руководство исключило тебя из клуба</b>" + "\n" +
 				"Возможно, тебя долго не было на встречах клуба." + "\n" + "Если появились вопросы, напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		}
 
 		_, err_send := b.SendMessage(ctx, params)

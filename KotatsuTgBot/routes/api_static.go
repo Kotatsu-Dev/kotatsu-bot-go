@@ -279,3 +279,89 @@ func Handler_DeleteObjects_All(c *gin.Context) {
 
 	Answer_OK(c)
 }
+
+type SendBroadcast struct {
+	Events           []int64  `json:"events"`
+	Users            []int64  `json:"users"`
+	Roulettes        []int64  `json:"roulettes"`
+	ClubMemberStatus *bool    `json:"club_member_status"`
+	ItmoStatus       []string `json:"itmo_status"`
+	Message          string   `json:"message"`
+}
+
+// BroadcastResult tracks the success/failure status for each user in a broadcast
+type BroadcastResult struct {
+	User         db.User_ReadJSON `json:"user"`
+	Success      bool             `json:"success"`
+	ErrorMessage string           `json:"error_message"`
+}
+
+func Handler_API_SendBroadcast(c *gin.Context) {
+	json_data := new(SendBroadcast)
+	err_json_bin := c.ShouldBindJSON(&json_data)
+
+	if err_json_bin != nil {
+		rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "c.ShouldBindJSON", "Неверные данные в запросе", err_json_bin.Error())
+		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err_json_bin.Error())
+		return
+	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	opts := []bot.Option{}
+
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
+	if err != nil {
+		rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "bot.New", "Ошибка инициализации бота", err.Error())
+		Answer_BadRequest(c, ANSWER_BOT_CONNECT_ERROR("").Code, ANSWER_BOT_CONNECT_ERROR("").Message+" Error: "+err.Error())
+		return
+	}
+
+	search_params := db.UserSearchParams{
+		Events:           json_data.Events,
+		Users:            json_data.Users,
+		Roulettes:        json_data.Roulettes,
+		ClubMemberStatus: json_data.ClubMemberStatus,
+		ItmoStatus:       json_data.ItmoStatus,
+	}
+
+	filtered_users := db.DB_User_Search(search_params)
+	if len(filtered_users) == 0 {
+		Answer_NotFound(c, ANSWER_NO_USERS_FOUND().Code, ANSWER_NO_USERS_FOUND().Message)
+		return
+	}
+
+	results := make([]BroadcastResult, 0, len(filtered_users))
+
+	for _, current_user := range filtered_users {
+		params := &bot.SendMessageParams{
+			ChatID:    current_user.UserTgID,
+			ParseMode: models.ParseModeHTML,
+			Text:      config.TT("broadcast", json_data.Message),
+		}
+
+		_, err_send := b.SendMessage(ctx, params)
+		if err_send != nil {
+			rr_debug.PrintLOG("api_static.go", "Handler_API_SendBroadcast", "bot.SendMessage", "Ошибка отправки сообщения пользователю", err_send.Error())
+			// Record failure for this user
+			results = append(results, BroadcastResult{
+				User:         current_user,
+				Success:      false,
+				ErrorMessage: err_send.Error(),
+			})
+		} else {
+			// Record success for this user
+			results = append(results, BroadcastResult{
+				User:         current_user,
+				Success:      true,
+				ErrorMessage: "",
+			})
+		}
+	}
+
+	// Return detailed results for all users
+	Answer_SendObject(c, gin.H{
+		"results": results,
+	})
+}

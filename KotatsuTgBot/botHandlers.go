@@ -39,7 +39,7 @@ import (
 	"strings"
 )
 
-var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)\s([А-Яа-яЁё]+)`)
+var fullNameRegexp = regexp.MustCompile(`([А-Яа-яЁё]+)\s(([А-Яа-яЁё]+)\s)?([А-Яа-яЁё]+)`)
 var linkToListRegexp = regexp.MustCompile(`^((https://)?anilist\.co/user/[A-Za-z0-9]+(/)?|(https://)?myanimelist\.net/profile/[A-Za-z0-9]+|(https://)?shikimori.one/[^/]+)$`)
 
 // Удалить элемент массива
@@ -83,23 +83,23 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 					switch db_answer_code {
 					case db.DB_ANSWER_SUCCESS:
 						switch update.Message.Text {
-						case "Повелитель демонов":
+						case config.T("keyboard.gender_male"):
 							proccessText_SetGender(ctx, b, update, user, "male")
-						case "Девочка волшебница":
+						case config.T("keyboard.gender_female"):
 							proccessText_SetGender(ctx, b, update, user, "female")
 
-						case "Да, я уже мандаринка":
+						case config.T("keyboard.visited_enough"):
 							proccessText_WasAtEvents(ctx, b, update, user, true)
-						case "Ещё нет :(":
+						case config.T("keyboard.not_visited_enough"):
 							proccessText_WasAtEvents(ctx, b, update, user, false)
-						case "Хорошо, заполню позже":
+						case config.T("keyboard.fill_back_later"):
 							proccessText_WasntAtEvents(ctx, b, update, user, false)
-						case "Хочу продолжить":
+						case config.T("keyboard.fill_now"):
 							proccessText_WasntAtEvents(ctx, b, update, user, true)
-						case "⛩ Вступить в клуб":
+						case config.T("keyboard.join_club"):
 							proccessText_JoinClub(ctx, b, update, user)
 
-						case "📝 Запись на мероприятия":
+						case config.T("keyboard.event_registration"):
 							proccessText_SigningUpForActivity(ctx, b, update)
 
 						case "📰 Подписаться на рассылку":
@@ -117,55 +117,60 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 						case "☎️ Связь с руководителем клуба":
 							proccessText_ContactClubManager(ctx, b, update, user)
 
-						case "⬅ Вернуться в меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+						case config.T("keyboard.to_main_menu"):
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "🚪 Покинуть клуб":
+						case config.T("keyboard.leave_club"):
 							proccessText_LeaveClub(ctx, b, update, user)
 
+							// Dead entry
 						case "📅 Мероприятия":
 							proccessText_SigningUpForActivity(ctx, b, update)
 
+							// Dead entry
 						case "🤝 Акции и партнёры":
 							proccessText_Partners(ctx, b, update)
 
+							// Dead entry
 						case "🟡 Аниме рулетка":
 							processText_AnimeRoulette(ctx, b, update, user)
 
-						case "⬅ Вернуться в меню рулетки":
+						case config.T("keyboard.to_roulette_menu"):
 							processText_AnimeRoulette(ctx, b, update, user)
 
+							// Dead entry
 						case "⬅️Вернуться в главное меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "✅ Участвовать в рулетке":
+						case config.T("keyboard.participate_roulette"):
 							processText_AnimeRoulette_Participate(ctx, b, update, user)
 
-						case "🚪 Покинуть рулетку":
+						case config.T("keyboard.leave_roulette"):
 							processText_AnimeRoulette_CancelParticipate(ctx, b, update, user)
 
-						case "❔ Загадать аниме":
+						case config.T("keyboard.send_title"):
 							processText_AnimeRoulette_AnimeWish(ctx, b, update, user)
 
+							// Dead entry
 						case "🗞 Рассылка":
 							proccessText_InDevelopment(ctx, b, update)
 
-						case "📋 Правила":
+						case config.T("keyboard.roulette_rules"):
 							proccessText_AnimeRoulette_Rules(ctx, b, update)
 
-						case "📔 Тема":
+						case config.T("keyboard.roulette_theme"):
 							proccessText_AnimeRoulette_MainTheme(ctx, b, update)
 
-						case "📚 Мой список":
+						case config.T("keyboard.roulette_list"):
 							proccessText_AnimeRoulette_LinkMyList(ctx, b, update, user)
 
-						case "📂 Мои мероприятия":
+						case config.T("keyboard.my_events"):
 							proccessText_MyActivities(ctx, b, update, user)
 
-						case "⬅ Вернуться в главное меню":
-							proccessText_BackMeinMenu(ctx, b, update, user)
+						case config.T("keyboard.to_main_menu"):
+							proccessText_BackMainMenu(ctx, b, update, user)
 
-						case "Я не пользуюсь номером, к которому привязан Telegram":
+						case config.T("keyboard.not_my_number"):
 							proccessText_NoPhoneNumber(ctx, b, update, user)
 
 						default:
@@ -238,7 +243,7 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 		ParseMode: models.ParseModeHTML,
 	}
 
-	if update.Message.Text == "🗃 Продолжить" {
+	if update.Message.Text == config.T("keyboard.continue") {
 		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 		db_answer_reg := regUser(update.Message.From.ID, full_tg_name, update.Message.From.Username)
 
@@ -253,9 +258,9 @@ func proccessRegistrationMessage(ctx context.Context, b *bot.Bot, update *models
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
 			if old_user.IsClubMember {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 			} else {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 			}
 
 		default:
@@ -285,14 +290,14 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 		ParseMode: models.ParseModeHTML,
 	}
 
-	if update.Message.Text == "🗃 Продолжить" {
+	if update.Message.Text == config.T("keyboard.continue") {
 		full_tg_name := update.CallbackQuery.From.FirstName + " " + update.CallbackQuery.From.LastName
 		db_answer_reg := regUser(update.CallbackQuery.From.ID, full_tg_name, update.CallbackQuery.From.Username)
 
 		switch db_answer_reg {
 		case db.DB_ANSWER_SUCCESS:
 			params.Text = config.T("main_menu")
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		case db.DB_ANSWER_OBJECT_EXISTS:
 			params.Text = config.T("registered")
@@ -300,9 +305,9 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 
 			if old_user.IsClubMember {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 			} else {
-				params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(old_user.IsSubscribeNewsletter)
+				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 			}
 
 		default:
@@ -337,9 +342,9 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 		params.Text = config.TT("welcome", update.Message.From)
 
 		if user.IsClubMember {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 		} else {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		}
 
 		_, err := b.SendMessage(ctx, params)
@@ -380,11 +385,6 @@ func BotHandler_Command_Login(ctx context.Context, b *bot.Bot, update *models.Up
 // Вступление в клуб
 func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 
-	params_load := &bot.SendMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		ParseMode: models.ParseModeHTML,
-	}
-
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.Chat.ID,
 		ParseMode: models.ParseModeHTML,
@@ -396,14 +396,8 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 	} else {
 		params.Text = config.T("request.rules")
 		params.ParseMode = models.ParseModeHTML
-		params_load.ReplyMarkup = keyboards.CommunicationManager
 		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 		params.ReplyMarkup = keyboards.Keyboard_WasAtEvents
-
-		_, err_msg_load := b.SendMessage(ctx, params_load)
-		if err_msg_load != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage(params_load)", "Ошибка отправки сообщения", err_msg_load.Error())
-		}
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -426,9 +420,9 @@ func proccessText_SetGender(ctx context.Context, b *bot.Bot, update *models.Upda
 	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	_, err_msg := b.SendMessage(ctx, params)
@@ -445,7 +439,7 @@ func proccessText_WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Up
 
 	if actually {
 		params.Text = config.T("request.is_itmo")
-		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		params.ReplyMarkup = keyboards.InlineKbd_JoinClub
 	} else {
 		params.Text = config.T("request.not_enough_visits")
 
@@ -471,14 +465,14 @@ func proccessText_WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.
 
 	if cont {
 		params.Text = config.T("request.is_itmo")
-		params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
+		params.ReplyMarkup = keyboards.InlineKbd_JoinClub
 	} else {
 		params.Text = config.T("main_menu")
 
 		if current_user.IsClubMember {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 		} else {
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		}
 	}
 
@@ -581,7 +575,7 @@ func proccessText_Partners(ctx context.Context, b *bot.Bot, update *models.Updat
 	}
 
 	params.Text = config.T("partners.list")
-	params.ReplyMarkup = keyboards.CreateInlineKbd_PartnersList()
+	params.ReplyMarkup = keyboards.InlineKbd_PartnersList
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -633,9 +627,9 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 
 	params.Text = config.T("subscription.on")
 	if user != nil && user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(true)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(true)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -657,9 +651,9 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 
 	params.Text = config.T("subscription.off")
 	if user != nil && user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(false)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(false)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -680,7 +674,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 	db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("feedback")
-	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
+	params.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -689,7 +683,7 @@ func proccessText_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 }
 
 // Вернуться в меню
-func proccessText_BackMeinMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
+func proccessText_BackMainMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	params := &bot.SendMessageParams{
 		ChatID:    update.Message.From.ID,
 		ParseMode: models.ParseModeHTML,
@@ -698,9 +692,9 @@ func proccessText_BackMeinMenu(ctx context.Context, b *bot.Bot, update *models.U
 	params.Text = config.T("main_menu")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	update_user_data := make(map[string]interface{})
@@ -723,9 +717,9 @@ func proccessText_NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.
 	params.Text = config.T("request.no_phone_number")
 
 	if current_user.IsClubMember {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsClubMember(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
 	update_user_data := make(map[string]interface{})
@@ -752,7 +746,7 @@ func proccessText_LeaveClub(ctx context.Context, b *bot.Bot, update *models.Upda
 	db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("leave_reason")
-	params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("skip")
+	params.ReplyMarkup = keyboards.Keyboard_Skip
 
 	_, err_msg := b.SendMessage(ctx, params)
 	if err_msg != nil {
@@ -934,7 +928,7 @@ func processText_AnimeRoulette_AnimeWish(ctx context.Context, b *bot.Bot, update
 				db.DB_UPDATE_User(update_user_data)
 
 				params.Text = config.T("roulette.send_title")
-				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+				params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 			} else {
 				params.Text = config.T("roulette.not_participant")
 			}
@@ -983,12 +977,12 @@ func proccessText_AnimeRoulette_LinkMyList(ctx context.Context, b *bot.Bot, upda
 			} else {
 				params.Text = config.TT("roulette.your_list", current_user)
 
-				params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+				params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 			}
 
 		} else {
 			params.Text = config.T("roulette.not_participant")
-			params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("anime_roulette")
+			params.ReplyMarkup = keyboards.Keyboard_CancelAnimeRoulette
 		}
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
@@ -1100,7 +1094,7 @@ func proccessStep_ContactClubManager(ctx context.Context, b *bot.Bot, update *mo
 
 	params_user.Text = config.TT("feedback_sent", reference_number_str)
 
-	params_user.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
+	params_user.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 	user_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 	profileURL := fmt.Sprintf("https://t.me/%s", update.Message.From.Username)
@@ -1213,7 +1207,7 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 			params.Text = config.T("error.generic")
 		}
 
-		params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	} else {
 		update_user_data["step"] = config.STEP_DEFAULT
@@ -1259,7 +1253,7 @@ func proccessStep_NoITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *
 	}
 
 	params.Text = config.T("request.enter_phone")
-	params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
+	params.ReplyMarkup = keyboards.Keyboard_RequestContact
 
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = current_user.UserTgID
@@ -1297,7 +1291,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 
 	if phone_number != "" {
 		update_user_data["phone_number"] = phone_number
-		params.ReplyMarkup = keyboards.CreateKeyboard_Cancel("")
+		params.ReplyMarkup = keyboards.Keyboard_ToMainMenu
 
 		if action == "join_club" {
 			params_support := &bot.SendMessageParams{
@@ -1332,7 +1326,7 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 				params.Text = config.T("error.generic")
 			}
 
-			params.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 		} else {
 			update_user_data["step"] = config.STEP_DEFAULT
 			update_user_data["is_itmo"] = false
@@ -1405,7 +1399,7 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 		params_user.Text = config.T("error.generic")
 	}
 
-	params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+	params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	_, err_msg := b.SendMessage(ctx, params_user)
 	if err_msg != nil {
@@ -1484,7 +1478,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		})
 
 		params_user.Text = config.T("leave_response")
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		db.DB_UPDATE_User(update_user_data)
 
@@ -1495,7 +1489,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 
 	case "⬅ Вернуться в главное меню":
 		params_user.Text = "Главное меню"
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 	default:
 		update_user_data["is_club_member"] = false
@@ -1507,7 +1501,7 @@ func proccessStep_LeavesClub(ctx context.Context, b *bot.Bot, update *models.Upd
 		})
 
 		params_user.Text = config.T("leave_response")
-		params_user.ReplyMarkup = keyboards.CreateKeyboard_MainMenuButtonsDefault(current_user.IsSubscribeNewsletter)
+		params_user.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 
 		db.DB_UPDATE_User(update_user_data)
 
@@ -1728,14 +1722,53 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		parts = strings.Split(update.CallbackQuery.Data, "::")
 		data = parts[1]
 
-		if data == "from_ITMO" {
-			update_user_data["step"] = config.STEP_ITMO_ENTER_ISU
-			db.DB_UPDATE_User(update_user_data)
+		switch data {
+		case "from_ITMO_student":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Student,
+			})
 
 			params.Text = config.T("request.enter_isu_number")
-		} else {
-			update_user_data["step"] = config.STEP_NOITMO_ENTER_FULLNAME
-			db.DB_UPDATE_User(update_user_data)
+		case "from_ITMO_graduate":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Graduate,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.Employee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_student_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.StudentEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_graduate_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_ITMO_ENTER_ISU,
+				"itmo_status": db.GraduateEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		default:
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_NOITMO_ENTER_FULLNAME,
+				"itmo_status": db.Guest,
+			})
 
 			params.Text = config.T("request.enter_full_name")
 		}
@@ -1849,14 +1882,53 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		parts = strings.Split(update.CallbackQuery.Data, "::")
 		data = parts[1]
 
-		if data == "from_ITMO" {
-			update_user_data["step"] = config.STEP_APPOINTMENT_ITMO_ENTER_ISU
-			db.DB_UPDATE_User(update_user_data)
+		switch data {
+		case "from_ITMO_student":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Student,
+			})
 
 			params.Text = config.T("request.enter_isu_number")
-		} else {
-			update_user_data["step"] = config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME
-			db.DB_UPDATE_User(update_user_data)
+		case "from_ITMO_graduate":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Graduate,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.Employee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_student_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.StudentEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		case "from_ITMO_graduate_employee":
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+				"itmo_status": db.GraduateEmployee,
+			})
+
+			params.Text = config.T("request.enter_isu_number")
+		default:
+			db.DB_UPDATE_User(map[string]any{
+				"user_tg_id":  update.CallbackQuery.From.ID,
+				"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
+				"itmo_status": db.Guest,
+			})
 
 			params.Text = config.T("request.enter_full_name")
 		}
@@ -2036,8 +2108,8 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				}
 			} else {
 				params.Text = config.TT("events.phone_number", current_user.PhoneNumber)
-				params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
-				params.ReplyMarkup = keyboards.CreateInlineKbd_RelevancePhoneNumber()
+				params_load.ReplyMarkup = keyboards.Keyboard_ToMainMenu
+				params.ReplyMarkup = keyboards.InlineKbd_RelevancePhoneNumber
 
 				fmt.Println(activity_id)
 
@@ -2050,8 +2122,8 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		} else {
 			params.Text = config.T("request.unknown")
 
-			params_load.ReplyMarkup = keyboards.CreateKeyboard_Cancel("back")
-			params.ReplyMarkup = keyboards.CreateInlineKbd_Appointment()
+			params_load.ReplyMarkup = keyboards.Keyboard_ToMainMenu
+			params.ReplyMarkup = keyboards.InlineKbd_Appointment
 
 			db.DB_UPDATE_User(map[string]interface{}{
 				"user_tg_id":       current_user.UserTgID,
@@ -2147,7 +2219,7 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db.DB_UPDATE_User(update_user_data)
 
 				params.Text = config.T("request.send_phone")
-				params.ReplyMarkup = keyboards.CreateKeyboard_RequestContact()
+				params.ReplyMarkup = keyboards.Keyboard_RequestContact
 			}
 
 			_, err_msg := b.SendMessage(ctx, params)

@@ -7,305 +7,104 @@
 package keyboards
 
 import (
-	//Внутренние пакеты проекта
-	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"time"
 
-	//Сторонние библиотеки
 	"github.com/go-telegram/bot/models"
 
-	//Системные пакеты
 	"fmt"
 )
 
-// ----------------------------------------------
-//
-//	Структуры
-//
-// ----------------------------------------------
-// Клавиатура для главного меню
-var Registration = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "🗃 Продолжить"},
-		},
-	},
-	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-}
+var Registration = Default().
+	TextT("keyboard.continue").
+	Build()
 
-var Keyboard_GenderSelect = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "Повелитель демонов"},
-			{Text: "Девочка волшебница"},
-		},
-	},
-	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-}
+var Keyboard_GenderSelect = Default().
+	TextT("keyboard.gender_male").
+	TextT("keyboard.gender_female").
+	Build()
 
-var Keyboard_WasAtEvents = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "Да, я уже мандаринка"},
-			{Text: "Ещё нет :("},
-		},
-	},
-	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
-}
+var Keyboard_WasAtEvents = Default().
+	TextT("keyboard.visited_enough").
+	TextT("keyboard.not_visited_enough").
+	Build()
 
-var Keyboard_WasntAtEvents = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "Хорошо, заполню позже"},
-			{Text: "Хочу продолжить"},
-		},
-	},
-	ResizeKeyboard:  true, // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: true, // Опционально: скрыть клавиатуру после использования
-}
+var Keyboard_WasntAtEvents = Default().
+	TextT("keyboard.fill_back_later").
+	TextT("keyboard.fill_now").
+	Build()
 
-// Клавиатура для незарегистрированных пользователей
-func CreateKeyboard_MainMenuButtonsDefault(news_letter bool) *models.ReplyKeyboardMarkup {
-	/*var news_letter_text string
-	if news_letter {
-		news_letter_text = "❌ Отписаться от рассылки"
-	} else {
-		news_letter_text = "📰 Подписаться на рассылку"
-	}*/
+var Keyboard_MainMenuButtonsDefault = Default().
+	TextT("keyboard.join_club").
+	TextT("keyboard.event_registration").
+	Build()
 
-	var keyboard = &models.ReplyKeyboardMarkup{
-		Keyboard: [][]models.KeyboardButton{
-			{
-				{Text: "⛩ Вступить в клуб"},
-				{Text: "📝 Запись на мероприятия"},
-			},
-			/*/*{
-				{Text: news_letter_text},
-			},*/
-		},
-		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-		OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-	}
-	return keyboard
-}
+var Keyboard_MainMenuButtonsClubMember = Default().
+	TextT("keyboard.event_registration").
+	Row().
+	TextT("keyboard.leave_club").
+	TextT("keyboard.my_events").
+	Build()
 
-// Клавиатура для главного меню участника клуба
-func CreateKeyboard_MainMenuButtonsClubMember(news_letter bool) *models.ReplyKeyboardMarkup {
-	/*var news_letter_text string
-	if news_letter {
-		news_letter_text = "❌ Отписаться от рассылки"
-	} else {
-		news_letter_text = "📰 Подписаться на рассылку"
-	}*/
+var CommunicationManager = Default().
+	TextT("keyboard.to_main_menu").
+	Build()
 
-	var keyboard = &models.ReplyKeyboardMarkup{
-		Keyboard: [][]models.KeyboardButton{
-			{
-				//{Text: news_letter_text},
-				{Text: "📝 Запись на мероприятия"},
-				// {Text: "🤝 Акции и партнёры"},
-			},
-			{
-				//{Text: news_letter_text},
-				{Text: "🚪 Покинуть клуб"},
-				{Text: "📂 Мои мероприятия"},
-			},
-		},
-		ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-		OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-	}
-	return keyboard
-}
+var ListEvents = Default().
+	TextT("keyboard.to_main_menu").
+	Build()
 
-var CommunicationManager = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "⬅ Вернуться в главное меню"},
-		},
-	},
-	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-}
-
-// Клавиатура для главного меню участника клуба
-var ListEvents = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "🟡 Аниме-рулетка"},
-		},
-		{
-			{Text: "⬅ Вернуться в главное меню"},
-		},
-	},
-	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-}
-
-// Клавиатура для выбранного мероприятия
-var SelectedEvent = &models.ReplyKeyboardMarkup{
-	Keyboard: [][]models.KeyboardButton{
-		{
-			{Text: "❌ Отменить запись"},
-		},
-		{
-			{Text: "🟡 Аниме рулетка"},
-		},
-		{
-			{Text: "⬅ Вернуться к списку мероприятий"},
-		},
-	},
-	ResizeKeyboard:  true,  // Опционально: уменьшить клавиатуру до размера кнопок
-	OneTimeKeyboard: false, // Опционально: скрыть клавиатуру после использования
-}
+// Probably unused
+var SelectedEvent = Default().
+	TextT("keyboard.cancel_registration").
+	TextT("keyboard.to_events_list")
 
 // Клавиатура для аниме рулетки перед её запуском
 func CreateKeyboard_AnimeRouletteStart(is_member bool) *models.ReplyKeyboardMarkup {
-
-	var keyboard = &models.ReplyKeyboardMarkup{}
-
-	if is_member {
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "🚪 Покинуть рулетку"},
-				},
-				{
-					{Text: "📋 Правила"},
-					{Text: "📚 Мой список"},
-				},
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
-	} else {
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "✅ Участвовать в рулетке"},
-				},
-				{
-					{Text: "📋 Правила"},
-					{Text: "📚 Мой список"},
-				},
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
-	}
-
-	return keyboard
+	return Default().
+		TextTIf(is_member, "keyboard.leave_roulette", "keyboard.participate_roulette").
+		Row().
+		TextT("keyboard.roulette_rules").
+		TextTC("keyboard.roulette_list", is_member).
+		Row().
+		TextT("keyboard.to_main_menu").
+		Build()
 }
 
 // Клавиатура для аниме рулетки когда запущена
 func CreateKeyboard_AnimeRouletteMenu(is_member bool) *models.ReplyKeyboardMarkup {
-
-	var keyboard = &models.ReplyKeyboardMarkup{}
-
-	if is_member {
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "❔ Загадать аниме"},
-				},
-				{
-					{Text: "📋 Правила"},
-					{Text: "📔 Тема"},
-					{Text: "📚 Мой список"},
-				},
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
-	} else {
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "✅ Участвовать в рулетке"},
-				},
-				{
-					{Text: "📋 Правила"},
-					{Text: "📔 Тема"},
-				},
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
-	}
-
-	return keyboard
+	return Default().
+		TextTIf(is_member, "keyboard.send_title", "keyboard.participate_roulette").
+		Row().
+		TextT("keyboard.roulette_rules").
+		TextT("keyboard.roulette_theme").
+		TextTC("keyboard.roulette_list", is_member).
+		Row().
+		TextT("keyboard.to_main_menu").
+		Build()
 }
 
-// Клавиатура возврата назад
-func CreateKeyboard_Cancel(cancel_type string) *models.ReplyKeyboardMarkup {
+var Keyboard_Skip = Default().
+	TextT("keyboard.skip").
+	Row().
+	TextT("keyboard.to_main_menu").
+	Build()
 
-	var keyboard = &models.ReplyKeyboardMarkup{}
+// Probably unused
+var Keyboard_CancelAnimeRoulette = Default().
+	TextT("keyboard.to_roulette_menu").
+	Build()
 
-	switch cancel_type {
-	case "skip":
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "Пропустить"},
-				},
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
+var Keyboard_ToMainMenu = Default().
+	TextT("keyboard.to_main_menu").
+	Build()
 
-	case "anime_roulette":
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "⬅ Вернуться в меню рулетки"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
+// For date formatting
+var date_format = "02.01 15:04"
+var loc, _ = time.LoadLocation("Europe/Moscow")
 
-	default:
-		keyboard = &models.ReplyKeyboardMarkup{
-			Keyboard: [][]models.KeyboardButton{
-				{
-					{Text: "⬅ Вернуться в главное меню"},
-				},
-			},
-			ResizeKeyboard:  true,
-			OneTimeKeyboard: false,
-		}
-	}
-
-	return keyboard
-}
-
-// Inline-клавиатура - Список мероприятий
 func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64, has_roulette bool) *models.InlineKeyboardMarkup {
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	var title string
-	var formattedTime string
-
-	// Определите желаемый формат дд.мм чч:мм
-	format := "02.01, 15:04"
+	k := DefaultInline()
 
 	for _, activity := range activities {
 
@@ -318,235 +117,98 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 			}
 		}
 
-		loc, _ := time.LoadLocation("Europe/Moscow")
-		formattedTime = activity.DateMeeting.In(loc).Format(format)
+		title_format := "[%s] %s"
 		if is_participant {
-			title = "✅ [" + formattedTime + "] " + activity.Title
-		} else {
-			title = "[" + formattedTime + "] " + activity.Title
+			title_format = "✅ [%s] %s"
 		}
 
-		row := []models.InlineKeyboardButton{
-			{
-				Text:         title,
-				CallbackData: fmt.Sprintf("ACTIVITIES::%d", activity.ID),
-			},
-		}
-		inlineKeyboard = append(inlineKeyboard, row)
+		k.
+			Row().
+			Data(
+				fmt.Sprintf(
+					title_format,
+					activity.DateMeeting.In(loc).Format(date_format),
+					activity.Title,
+				),
+				fmt.Sprintf("ACTIVITIES::%d", activity.ID),
+			)
 	}
 
 	if has_roulette {
-		inlineKeyboard = append(inlineKeyboard, []models.InlineKeyboardButton{
-			{
-				Text:         config.T("roulette.title"),
-				CallbackData: "ROULETTES",
-			},
-		})
+		k.
+			Row().
+			DataT("roulette.title", "ROULETTES")
 	}
 
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
+	return k.Build()
 }
 
-// Inline-клавиатура - Список акций и партнёров
-func CreateInlineKbd_PartnersList() *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
+var InlineKbd_PartnersList = DefaultInline().Row().Build()
 
-	row_1 := []models.InlineKeyboardButton{
-		{
-			Text:         "☕️ Кафе «Тайяки»",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "cafeTaiyaki"),
-		},
-	}
-
-	row_2 := []models.InlineKeyboardButton{
-		{
-			Text:         "🌟 Фестиваль GemFest [11.11]",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "gemfest"),
-		},
-	}
-
-	row_back := []models.InlineKeyboardButton{
-		{
-			Text:         "◀️ Назад",
-			CallbackData: fmt.Sprintf("PARTNERS::%s", "back"),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row_1)
-	inlineKeyboard = append(inlineKeyboard, row_2)
-	inlineKeyboard = append(inlineKeyboard, row_back)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
-}
-
-// Inline-клавиатура - Список моих мероприятий
 func CreateInlineKbd_MyActivitiesList(my_activities []*db.Activity) *models.InlineKeyboardMarkup {
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	var title string
-	var formattedTime string
-
-	// Определите желаемый формат дд.мм чч:мм
-	format := "02.01 15:04"
-	loc, _ := time.LoadLocation("Europe/Moscow")
+	k := DefaultInline()
 
 	for _, activity := range my_activities {
-
-		formattedTime = activity.DateMeeting.In(loc).Format(format)
-		title = "[" + formattedTime + "] " + activity.Title
-
-		row := []models.InlineKeyboardButton{
-			{
-				Text:         title,
-				CallbackData: fmt.Sprintf("MY_ACTIVITIES::%d", activity.ID),
-			},
-		}
-		inlineKeyboard = append(inlineKeyboard, row)
+		k.
+			Row().
+			Data(
+				fmt.Sprintf(
+					"[%s] %s",
+					activity.DateMeeting.In(loc).Format(date_format),
+					activity.Title,
+				),
+				fmt.Sprintf("MY_ACTIVITIES::%d", activity.ID),
+			)
 	}
 
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
+	return k.Build()
 }
 
-// Inline-клавиатура - Подписаться на мероприятие
 func CreateInlineKbd_SubscribeActivity(activity_id int) *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	row := []models.InlineKeyboardButton{
-		{
-			Text:         "✅ Запиши меня",
-			CallbackData: fmt.Sprintf("ACTIVITY_SUBSCRIBE::%d", activity_id),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
+	return DefaultInline().
+		DataT(
+			"keyboard.register_event",
+			fmt.Sprintf("ACTIVITY_SUBSCRIBE::%d", activity_id)).
+		Build()
 }
 
-// Inline-клавиатура - Отписаться от мероприятия
 func CreateInlineKbd_UnsubscribeActivity(activity_id int) *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	row := []models.InlineKeyboardButton{
-		{
-			Text:         "❌ Отмени запись",
-			CallbackData: fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", activity_id),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
+	return DefaultInline().
+		DataT(
+			"keyboard.cancel_registration",
+			fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", activity_id)).
+		Build()
 }
 
-// Inline-клавиатура - Вступить в клуб
-func CreateInlineKbd_JoinClub() *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
+var InlineKbd_JoinClub = DefaultInline().
+	DataT("keyboard.is_student", "JOIN_CLUB::from_ITMO_student").
+	Row().
+	DataT("keyboard.is_graduate", "JOIN_CLUB::from_ITMO_graduate").
+	Row().
+	DataT("keyboard.is_employee", "JOIN_CLUB::from_ITMO_employee").
+	Row().
+	DataT("keyboard.is_student_employee", "JOIN_CLUB::from_ITMO_student_employee").
+	Row().
+	DataT("keyboard.is_graduate_employee", "JOIN_CLUB::from_ITMO_graduate_employee").
+	Row().
+	DataT("keyboard.is_not_itmo", "JOIN_CLUB::not_from_ITMO").
+	Build()
 
-	row_1 := []models.InlineKeyboardButton{
-		{
-			Text:         "Я студент/сотрудник/выпускник ИТМО",
-			CallbackData: fmt.Sprintf("JOIN_CLUB::%s", "from_ITMO"),
-		},
-	}
+var InlineKbd_RelevancePhoneNumber = DefaultInline().
+	DataT("keyboard.actual_number", "RELEVANC_PHONE::yes").
+	Row().
+	DataT("keyboard.not_actual_number", "RELEVANC_PHONE::not").
+	Build()
 
-	row_2 := []models.InlineKeyboardButton{
-		{
-			Text:         "Я не из ИТМО",
-			CallbackData: fmt.Sprintf("JOIN_CLUB::%s", "not_from_ITMO"),
-		},
-	}
+var InlineKbd_Appointment = DefaultInline().
+	DataT("keyboard.is_student", "APPOINTMENT::from_ITMO").
+	Row().
+	DataT("keyboard.is_not_itmo", "APPOINTMENT::not_from_ITMO").
+	Build()
 
-	inlineKeyboard = append(inlineKeyboard, row_1)
-	inlineKeyboard = append(inlineKeyboard, row_2)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
-}
-
-// Inline-клавиатура - Проверка актуальности номера телефона пользователя
-func CreateInlineKbd_RelevancePhoneNumber() *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	row_1 := []models.InlineKeyboardButton{
-		{
-			Text:         "Номер актуальный, паспорт возьму",
-			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "yes"),
-		},
-	}
-
-	row_2 := []models.InlineKeyboardButton{
-		{
-			Text:         "У меня поменялся номер телефона",
-			CallbackData: fmt.Sprintf("RELEVANC_PHONE::%s", "no"),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row_1)
-	inlineKeyboard = append(inlineKeyboard, row_2)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
-}
-
-// Inline-клавиатура - Запись на мероприятие (для не участников клуба)
-func CreateInlineKbd_Appointment() *models.InlineKeyboardMarkup {
-	//Создаем экземпляр структуры
-	inlineKeyboard := [][]models.InlineKeyboardButton{}
-
-	row_1 := []models.InlineKeyboardButton{
-		{
-			Text:         "Я студент/сотрудник/выпускник ИТМО",
-			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "from_ITMO"),
-		},
-	}
-
-	row_2 := []models.InlineKeyboardButton{
-		{
-			Text:         "Я не из ИТМО",
-			CallbackData: fmt.Sprintf("APPOINTMENT::%s", "not_from_ITMO"),
-		},
-	}
-
-	inlineKeyboard = append(inlineKeyboard, row_1)
-	inlineKeyboard = append(inlineKeyboard, row_2)
-
-	return &models.InlineKeyboardMarkup{
-		InlineKeyboard: inlineKeyboard,
-	}
-}
-
-func CreateKeyboard_RequestContact() *models.ReplyKeyboardMarkup {
-	return &models.ReplyKeyboardMarkup{
-		Keyboard: [][]models.KeyboardButton{
-			{
-				{
-					Text:           "Отправить свой номер",
-					RequestContact: true,
-				},
-				{Text: "Я не пользуюсь привязаным к Telegram номером"},
-			}, {
-				{Text: "⬅ Вернуться в главное меню"},
-			},
-		},
-		ResizeKeyboard:  true,
-		OneTimeKeyboard: false,
-	}
-}
+var Keyboard_RequestContact = Default().
+	RequestContactT("keyboard.send_my_number").
+	TextT("keyboard.not_my_number").
+	Row().
+	TextT("keyboard.to_main_menu").
+	Build()
