@@ -27,14 +27,7 @@ import (
 	"rr/kotatsutgbot/middleware"
 )
 
-// ----------------------------------------------
-//
-//	MAIN
-//
-// ----------------------------------------------
 func RunServer() {
-
-	// ЛОГ ФАЙЛ, если у нас не отладка
 	if !config.GetConfig().CONFIG_IS_DEBUG {
 		// Disable Console Color, you don't need console color when writing the logs to file.
 		gin.DisableConsoleColor()
@@ -47,50 +40,22 @@ func RunServer() {
 	//Создаем роутер для обработки запросов
 	r := gin.Default()
 
-	//Раздача статики для дебаг-версии
-	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
-		r.NoRoute(static.ServeRoot("/", "./static/dist/"))
-		r.Static("/assets", "./assets") //Для статики в режиме отладки
-		//Загружаем HTML
-		r.LoadHTMLGlob("assets/html/*")
-		// r.LoadHTMLFiles("static/dist/index.html")
-	} else {
-		//Загружаем HTML
-		r.LoadHTMLGlob("static/assets/html/*")
-	}
+	r.NoRoute(static.ServeRoot("/", config.ByUI("./static/dist/")))
 
-	//CORS
+	// TODO: Index page + robots.txt
+	r.GET("/new-admin-panel", Handler_NewAdminPanel)
+	r.GET("/login", Handler_Login)
+
+	// TODO: Move into api
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc:  func(origin string) bool { return true },
 		AllowCredentials: true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 	}))
-
-	//
-	// 	   --------- Пути ---------
-	// 	Реализацию путей см. routes.go
-	//
-
-	//
-	//Пути общие
-	//
-
-	r.GET("/", Handler_Index)
-	r.GET("/admin-panel", Handler_AdminPanel)
-	r.GET("/new-admin-panel", Handler_NewAdminPanel)
 	r.GET("/get-calendar-file", Handler_GetCalendarActivities_Image_File)
-	r.GET("/support-response", Handler_SupportResponse)
-	r.GET("/login", Handler_Login)
-
-	// Основные пути
-	// r.POST("/send-message-user", Handler_SendMessageUser)
-	// r.POST("/send-message-user-from-support", Handler_SendMessageUserFromSupport)
 	r.POST("/upload-file-calendar-activities", Handler_UploadFile_CalendarActivities)
-	// r.DELETE("/all-db", Handler_DeleteObjects_All)
-	// r.GET("/get-result", Handler_GetWorkerStatus)
 
-	// Группа API
 	api := r.Group("/api")
 	if !config.GetConfig().IGNORE_AUTH {
 		api.Use(middleware.AuthMiddleware())
@@ -137,11 +102,9 @@ func RunServer() {
 	}
 
 	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
-		//Запуск сервера
-		r.Run(":" + config.GetConfig().CONFIG_DEBUG_SERVERLESS_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_DEBUG_SERVERLESS_SERVER_PORT)
 	} else {
-		//Запуск сервера
-		r.Run(":" + config.GetConfig().CONFIG_RELEASE_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_RELEASE_SERVER_PORT)
 	}
 }
 
