@@ -497,8 +497,7 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 	activities_list := db.DB_GET_Activities()
 
-	directory := "./img/calendar_activities"
-	// Получите список файлов в каталоге
+	directory := config.ByUI("./img/calendar_activities")
 	files, err_dir := os.ReadDir(directory)
 	if err_dir != nil {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.ReadDir", "Ошибка поиска файла календаря", err_dir.Error())
