@@ -392,11 +392,12 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 
 	if current_user.IsSentRequest {
 		params.Text = config.T("request.in_progress")
-
+	} else if current_user.IsClubMember {
+		params.Text = config.T("request.already_accepted")
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
 		params.Text = config.T("request.rules")
 		params.ParseMode = models.ParseModeHTML
-		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 		params.ReplyMarkup = keyboards.Keyboard_WasAtEvents
 	}
 

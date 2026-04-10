@@ -93,6 +93,7 @@ func SendMembershipUpdate(user_tg_id int64, is_member bool) error {
 
 	if is_member {
 		params.Text = config.T("member_welcome")
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
 		params.Text = config.T("member_kick")
 		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
