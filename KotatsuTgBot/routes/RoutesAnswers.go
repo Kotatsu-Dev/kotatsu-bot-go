@@ -307,8 +307,9 @@ func Answer_File(c *gin.Context, filepath string) {
 		//Убираем / в начале
 		// relative_path := filepath[:1]
 		// log.Println(filepath[1:])
-		c.File(filepath[1:])
+		c.File(config.ByUI(filepath[1:]))
 	} else {
+		// TODO: Setup at backend
 		//Отдать через NGINX X-Accel
 		c.Writer.Header().Set("X-Accel-Redirect", filepath)
 		c.String(http.StatusOK, "OK")

@@ -3,10 +3,10 @@ import type { AxiosInstance } from "axios";
 export const createCalendarApi = ($: AxiosInstance, root: string) => {
   return {
     imageUrl() {
-      return `${root}/get-calendar-file`;
+      return `${root}/api/calendar/`;
     },
     async upload(props: { image: File }) {
-      await $.postForm(`${root}/upload-file-calendar-activities`, props);
+      await $.postForm(`/calendar/`, props);
     },
   };
 };

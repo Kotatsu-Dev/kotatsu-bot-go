@@ -201,7 +201,15 @@ var InlineKbd_RelevancePhoneNumber = DefaultInline().
 	Build()
 
 var InlineKbd_Appointment = DefaultInline().
-	DataT("keyboard.is_student", "APPOINTMENT::from_ITMO").
+	DataT("keyboard.is_student", "APPOINTMENT::from_ITMO_student").
+	Row().
+	DataT("keyboard.is_graduate", "APPOINTMENT::from_ITMO_graduate").
+	Row().
+	DataT("keyboard.is_employee", "APPOINTMENT::from_ITMO_employee").
+	Row().
+	DataT("keyboard.is_student_employee", "APPOINTMENT::from_ITMO_student_employee").
+	Row().
+	DataT("keyboard.is_graduate_employee", "APPOINTMENT::from_ITMO_graduate_employee").
 	Row().
 	DataT("keyboard.is_not_itmo", "APPOINTMENT::not_from_ITMO").
 	Build()

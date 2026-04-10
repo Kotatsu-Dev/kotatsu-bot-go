@@ -8,11 +8,14 @@ package config
 
 import (
 	"os"
+	"path"
 
 	"github.com/pelletier/go-toml/v2"
 )
 
 type Config struct {
+	UI_DIR          string
+	LOCALES_DIR     string
 	CONFIG_URL_BASE string
 
 	CONFIG_BOT_TOKEN                    string
@@ -42,7 +45,11 @@ type Config struct {
 }
 
 var config *Config = nil
-var DEFAULT_CONFIG = Config{ROULETTES: true}
+var DEFAULT_CONFIG = Config{
+	UI_DIR:      ".",
+	LOCALES_DIR: "./locales",
+	ROULETTES:   true,
+}
 
 func GetConfig() Config {
 	if config != nil {
@@ -62,4 +69,8 @@ func GetConfig() Config {
 
 	config = &tmpConfig
 	return tmpConfig
+}
+
+func ByUI(path_ string) string {
+	return path.Join(GetConfig().UI_DIR, path_)
 }

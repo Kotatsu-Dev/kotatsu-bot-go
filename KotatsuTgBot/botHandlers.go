@@ -392,11 +392,12 @@ func proccessText_JoinClub(ctx context.Context, b *bot.Bot, update *models.Updat
 
 	if current_user.IsSentRequest {
 		params.Text = config.T("request.in_progress")
-
+	} else if current_user.IsClubMember {
+		params.Text = config.T("request.already_accepted")
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
 		params.Text = config.T("request.rules")
 		params.ParseMode = models.ParseModeHTML
-		// params.ReplyMarkup = keyboards.CreateInlineKbd_JoinClub()
 		params.ReplyMarkup = keyboards.Keyboard_WasAtEvents
 	}
 
@@ -496,8 +497,7 @@ func proccessText_SigningUpForActivity(ctx context.Context, b *bot.Bot, update *
 
 	activities_list := db.DB_GET_Activities()
 
-	directory := "./img/calendar_activities"
-	// Получите список файлов в каталоге
+	directory := config.ByUI("./img/calendar_activities")
 	files, err_dir := os.ReadDir(directory)
 	if err_dir != nil {
 		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.ReadDir", "Ошибка поиска файла календаря", err_dir.Error())
@@ -623,7 +623,7 @@ func proccessText_SubscribeNewsletter(ctx context.Context, b *bot.Bot, update *m
 	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = true
 
-	_, user := db.DB_UPDATE_User(update_user_data)
+	_, user, _ := db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("subscription.on")
 	if user != nil && user.IsClubMember {
@@ -647,7 +647,7 @@ func proccessText_UnsubscribeNewsletter(ctx context.Context, b *bot.Bot, update 
 	update_user_data := make(map[string]interface{})
 	update_user_data["user_tg_id"] = current_user.UserTgID
 	update_user_data["is_subscribe_newsletter"] = false
-	_, user := db.DB_UPDATE_User(update_user_data)
+	_, user, _ := db.DB_UPDATE_User(update_user_data)
 
 	params.Text = config.T("subscription.off")
 	if user != nil && user.IsClubMember {
@@ -1190,14 +1190,14 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 
 		update_user_data["is_itmo"] = true
 
-		db.DB_UPDATE_User(update_user_data)
+		_, updated_user, _ := db.DB_UPDATE_User(update_user_data)
 
 		db_answer_code := db.DB_CREATE_Request(current_user.ID)
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
 			params.Text = config.T("request.sent")
 
-			params_support.Text = config.TT("request.notification", current_user)
+			params_support.Text = config.TT("request.notification", updated_user)
 			_, err_msg := b.SendMessage(ctx, params_support)
 			if err_msg != nil {
 				rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
@@ -1309,14 +1309,14 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 
 			update_user_data["is_itmo"] = false
 
-			db.DB_UPDATE_User(update_user_data)
+			_, updated_user, _ := db.DB_UPDATE_User(update_user_data)
 
 			db_answer_code := db.DB_CREATE_Request(current_user.ID)
 			switch db_answer_code {
 			case db.DB_ANSWER_SUCCESS:
 				params.Text = config.T("request.sent")
 
-				params_support.Text = config.TT("request.notification", current_user)
+				params_support.Text = config.TT("request.notification", updated_user)
 				_, err_msg := b.SendMessage(ctx, params_support)
 				if err_msg != nil {
 					rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())
@@ -1382,14 +1382,14 @@ func proccessStep_EnterSecretCode(ctx context.Context, b *bot.Bot, update *model
 		update_user_data["is_itmo"] = false
 	}
 
-	db.DB_UPDATE_User(update_user_data)
+	_, updated_user, _ := db.DB_UPDATE_User(update_user_data)
 
 	db_answer_code := db.DB_CREATE_Request(current_user.ID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
 		params_user.Text = config.T("request.sent")
 
-		params_support.Text = config.TT("request.notification", current_user)
+		params_support.Text = config.TT("request.notification", updated_user)
 		_, err_msg := b.SendMessage(ctx, params_support)
 		if err_msg != nil {
 			rr_debug.PrintLOG("botHandlers.go", "proccessStep_EnterSecretCode", "b.SendMessage(ctx, params_support)", "Ошибка отправки сообщения", err_msg.Error())

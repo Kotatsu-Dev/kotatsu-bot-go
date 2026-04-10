@@ -21,7 +21,6 @@ import (
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
 	"rr/kotatsutgbot/rr_debug"
-	"strconv"
 
 	//Сторонние библиотеки
 	"github.com/gin-gonic/gin"
@@ -30,8 +29,6 @@ import (
 
 	//Системные пакеты
 	"context"
-	"os"
-	"os/signal"
 )
 
 // Получить всех зарегистрированных пользователей
@@ -61,9 +58,16 @@ func Handler_API_Users_UpdateObject(c *gin.Context) {
 		return
 	}
 
-	db_answer_code, _ := db.DB_UPDATE_User(update_json)
+	db_answer_code, user, has_changed_membership := db.DB_UPDATE_User(update_json)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
+		if has_changed_membership {
+			err := SendMembershipUpdate(user.UserTgID, user.IsClubMember)
+			if err != nil {
+				rr_debug.PrintLOG("api_static.go", "Handler_API_Users_UpdateObject_ClubMember", "bot.Send", "Ошибка отправки сообщения", err.Error())
+				Answer_BadRequest(c, ANSWER_BOT_SEND_MESSAGE_ERROR("").Code, ANSWER_BOT_SEND_MESSAGE_ERROR("").Message+" Error: "+err.Error())
+			}
+		}
 		Answer_OK(c)
 
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
@@ -76,90 +80,27 @@ func Handler_API_Users_UpdateObject(c *gin.Context) {
 	}
 }
 
-// Обновить существование пользователя в клубе
-func Handler_API_Users_UpdateObject_ClubMember(c *gin.Context) {
-
-	var update_json map[string]interface{}
-
-	err := c.ShouldBindJSON(&update_json)
+func SendMembershipUpdate(user_tg_id int64, is_member bool) error {
+	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN)
 	if err != nil {
-		rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
-		if config.GetConfig().CONFIG_IS_DEBUG {
-			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
-		} else {
-			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
-		}
-		return
+		return err
+	}
+
+	params := &bot.SendMessageParams{
+		ChatID:    user_tg_id,
+		ParseMode: models.ParseModeHTML,
+	}
+
+	if is_member {
+		params.Text = config.T("member_welcome")
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 	} else {
-		v, ok := update_json["user_tg_id"].(string)
-		if !ok {
-			rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", "ok")
-			if config.GetConfig().CONFIG_IS_DEBUG {
-				Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: tg_user_id not expected")
-			} else {
-				Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
-			}
-			return
-		} else {
-			update_json["user_tg_id"], err = strconv.ParseInt(v, 10, 64)
-			if err != nil {
-				rr_debug.PrintLOG("api_users.go", "Handler_API_Users_UpdateObject_ClubMember", "c.ShouldBindJSON", "Неверные данные в запросе", "ok")
-				if config.GetConfig().CONFIG_IS_DEBUG {
-					Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: tg_user_id not expected")
-				} else {
-					Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message)
-				}
-				return
-			}
-		}
+		params.Text = config.T("member_kick")
+		params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-
-	opts := []bot.Option{}
-
-	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
-	if err != nil {
-		rr_debug.PrintLOG("api_static.go", "Handler_SendMessageUser", "gotgbot.NewBot", "Ошибка инициализации бота", err.Error())
-	}
-
-	db_answer_code, user := db.DB_UPDATE_User(update_json)
-	switch db_answer_code {
-
-	case db.DB_ANSWER_SUCCESS:
-
-		params := &bot.SendMessageParams{
-			ChatID:    user.UserTgID,
-			ParseMode: models.ParseModeHTML,
-		}
-
-		// TODO
-		if user.IsClubMember {
-			params.Text = "<b>Руководство добавило тебя в клуб</b>" + "\n" +
-				"Если появились вопросы, напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
-		} else {
-			params.Text = "<b>Руководство исключило тебя из клуба</b>" + "\n" +
-				"Возможно, тебя долго не было на встречах клуба." + "\n" + "Если появились вопросы, напиши сообщение в канал @anime_itmo (значок чата внизу канала)"
-			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsDefault
-		}
-
-		_, err_send := b.SendMessage(ctx, params)
-		if err_send != nil {
-			rr_debug.PrintLOG("api_static.go", "Handler_API_Users_UpdateObject_ClubMember", "bot.Send", "Ошибка отправки сообщения", err_send.Error())
-			Answer_BadRequest(c, ANSWER_BOT_SEND_MESSAGE_ERROR(params.Text).Code, ANSWER_BOT_SEND_MESSAGE_ERROR(params.Text).Message+" Error: "+err_send.Error())
-		}
-		Answer_OK(c)
-		return
-
-	case db.DB_ANSWER_OBJECT_NOT_FOUND:
-		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
-		return
-
-	default:
-		Answer_BadRequest(c, ANSWER_DB_GENERAL_ERROR().Code, ANSWER_DB_GENERAL_ERROR().Message)
-		return
-	}
+	_, err_send := b.SendMessage(context.TODO(), params)
+	return err_send
 }
 
 // Удалить всех пользователей

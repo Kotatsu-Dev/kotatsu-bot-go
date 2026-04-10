@@ -1,17 +1,3 @@
-// ------------------------------------
-// RR IT 2024
-//
-// ------------------------------------
-// Базовый движок для Котацу бота
-
-//
-// ----------------------------------------------------------------------------------
-//
-// 								Routes (Пути)
-//
-// ----------------------------------------------------------------------------------
-//
-
 package routes
 
 import (
@@ -27,39 +13,21 @@ import (
 	"rr/kotatsutgbot/middleware"
 )
 
-// ----------------------------------------------
-//
-//	MAIN
-//
-// ----------------------------------------------
 func RunServer() {
-
-	// ЛОГ ФАЙЛ, если у нас не отладка
 	if !config.GetConfig().CONFIG_IS_DEBUG {
-		// Disable Console Color, you don't need console color when writing the logs to file.
 		gin.DisableConsoleColor()
-
-		// Logging to a file.
 		f, _ := os.Create("gin_server.log")
 		gin.DefaultWriter = io.MultiWriter(f)
 	}
 
-	//Создаем роутер для обработки запросов
 	r := gin.Default()
 
-	//Раздача статики для дебаг-версии
-	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
-		r.NoRoute(static.ServeRoot("/", "./static/dist/"))
-		r.Static("/assets", "./assets") //Для статики в режиме отладки
-		//Загружаем HTML
-		r.LoadHTMLGlob("assets/html/*")
-		// r.LoadHTMLFiles("static/dist/index.html")
-	} else {
-		//Загружаем HTML
-		r.LoadHTMLGlob("static/assets/html/*")
-	}
+	r.NoRoute(static.ServeRoot("/", config.ByUI("./static/dist/")))
 
-	//CORS
+	// TODO: Index page + robots.txt
+	r.GET("/admin", Handler_NewAdminPanel)
+	r.GET("/login", Handler_Login)
+
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc:  func(origin string) bool { return true },
 		AllowCredentials: true,
@@ -67,41 +35,15 @@ func RunServer() {
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 	}))
 
-	//
-	// 	   --------- Пути ---------
-	// 	Реализацию путей см. routes.go
-	//
-
-	//
-	//Пути общие
-	//
-
-	r.GET("/", Handler_Index)
-	r.GET("/admin-panel", Handler_AdminPanel)
-	r.GET("/new-admin-panel", Handler_NewAdminPanel)
-	r.GET("/get-calendar-file", Handler_GetCalendarActivities_Image_File)
-	r.GET("/support-response", Handler_SupportResponse)
-	r.GET("/login", Handler_Login)
-
-	// Основные пути
-	// r.POST("/send-message-user", Handler_SendMessageUser)
-	// r.POST("/send-message-user-from-support", Handler_SendMessageUserFromSupport)
-	r.POST("/upload-file-calendar-activities", Handler_UploadFile_CalendarActivities)
-	// r.DELETE("/all-db", Handler_DeleteObjects_All)
-	// r.GET("/get-result", Handler_GetWorkerStatus)
-
-	// Группа API
 	api := r.Group("/api")
 	if !config.GetConfig().IGNORE_AUTH {
 		api.Use(middleware.AuthMiddleware())
 	}
 	{
-
 		users := api.Group("/users")
 		{
 			users.GET("/", Handler_API_Users_GetList)
 			users.PUT("/", Handler_API_Users_UpdateObject)
-			users.PUT("/club-member", Handler_API_Users_UpdateObject_ClubMember)
 			users.DELETE("/", Handler_API_Users_DeleteObject_ALL)
 		}
 
@@ -134,22 +76,21 @@ func RunServer() {
 		{
 			broadcast.POST("/", Handler_API_SendBroadcast)
 		}
+
+		calendar := api.Group("/calendar")
+		{
+			// TODO: Move to static file url
+			calendar.GET("/", Handler_GetCalendarActivities_Image_File)
+			calendar.POST("/", Handler_UploadFile_CalendarActivities)
+		}
 	}
 
 	if config.GetConfig().CONFIG_IS_DEBUG_SERVERLESS {
-		//Запуск сервера
-		r.Run(":" + config.GetConfig().CONFIG_DEBUG_SERVERLESS_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_DEBUG_SERVERLESS_SERVER_PORT)
 	} else {
-		//Запуск сервера
-		r.Run(":" + config.GetConfig().CONFIG_RELEASE_SERVER_PORT) // listen and serve on 0.0.0.0:PORT
+		r.Run(":" + config.GetConfig().CONFIG_RELEASE_SERVER_PORT)
 	}
 }
-
-// ----------------------------------------------
-//
-// 				Структуры
-//
-// ----------------------------------------------
 
 // ----------------------------------------------
 //
