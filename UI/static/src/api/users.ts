@@ -50,8 +50,8 @@ export const createUsersApi = ($: AxiosInstance) => {
       user_tg_id: number;
       is_club_member: boolean;
     }) {
-      await $.put("/users/club-member", {
-        user_tg_id: props.user_tg_id.toString(),
+      await $.put("/users/", {
+        user_tg_id: props.user_tg_id,
         is_club_member: props.is_club_member,
       });
     },

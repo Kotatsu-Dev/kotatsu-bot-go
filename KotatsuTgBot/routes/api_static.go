@@ -48,7 +48,7 @@ func Handler_NewAdminPanel(c *gin.Context) {
 
 func Handler_Login(c *gin.Context) {
 	c.SetCookie("session_token", c.Request.URL.RawQuery, 3600*24, "/", "", false, true)
-	c.Redirect(http.StatusFound, "/new-admin-panel")
+	c.Redirect(http.StatusFound, "/admin")
 }
 
 func Handler_GetCalendarActivities_Image_File(c *gin.Context) {

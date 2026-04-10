@@ -29,8 +29,8 @@ const (
 	Student          ITMOStatus = "student"
 	Graduate         ITMOStatus = "graduate"
 	Employee         ITMOStatus = "employee"
-	GraduateEmployee ITMOStatus = "graduate_emplyee"
-	StudentEmployee  ITMOStatus = "student_emplyee"
+	GraduateEmployee ITMOStatus = "graduate_employee"
+	StudentEmployee  ITMOStatus = "student_employee"
 )
 
 type User struct {
@@ -213,7 +213,7 @@ func DB_GET_Users() []User_ReadJSON {
 }
 
 // Обновляем пользователя
-func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
+func DB_UPDATE_User(update_json map[string]interface{}) (int, *User, bool) {
 
 	db := DB_Database()
 
@@ -225,16 +225,17 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 	if !ok {
 		_user_tg_id, ok := update_json["user_tg_id"].(float64)
 		if !ok {
-			return DB_ANSWER_OBJECT_NOT_FOUND, nil
+			return DB_ANSWER_OBJECT_NOT_FOUND, nil, false
 		}
 		user_tg_id = int64(_user_tg_id)
 	}
 	db.Where("user_tg_id = ?", user_tg_id).First(&user)
 	if user.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND, nil
+		return DB_ANSWER_OBJECT_NOT_FOUND, nil, false
 	}
 
-	// Обновляем поля, если они присутствуют в карте
+	updated_user_status := false
+
 	for key, value := range update_json {
 		switch key {
 		case "step":
@@ -297,6 +298,7 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 		case "is_club_member":
 			if v, ok := value.(bool); ok && v != user.IsClubMember {
 				user.IsClubMember = v
+				updated_user_status = true
 			}
 
 		case "is_subscribe_newsletter":
@@ -322,7 +324,7 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User) {
 	}
 
 	db.Save(&user)
-	return DB_ANSWER_SUCCESS, &user
+	return DB_ANSWER_SUCCESS, &user, updated_user_status
 }
 
 // Удаление пользователя по tg_id
