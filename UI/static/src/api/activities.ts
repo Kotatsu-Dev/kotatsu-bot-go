@@ -7,6 +7,7 @@ const Activity = z.object({
   title: z.string(),
   participants: z.any().array(), // TODO
   date_meeting: z.iso.datetime({ offset: true }),
+  guest_registration_until: z.iso.datetime({ offset: true }).or(z.null()),
   description: z.string(),
   location: z.string(),
   path_images: z.string().array().optional(),
@@ -31,6 +32,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
     async create(props: {
       title: string;
       date_meeting: Date;
+      guest_registration_until?: Date;
       description: string;
       location: string;
       send_images: FileList | File[];
@@ -38,6 +40,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
       await $.postForm("/activities/", {
         ...props,
         date_meeting: props.date_meeting.toISOString(),
+        guest_registration_until: props.guest_registration_until?.toISOString(),
       });
     },
 
