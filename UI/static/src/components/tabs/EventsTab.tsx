@@ -210,6 +210,10 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
             <DataList.ItemValue>{event.date_meeting}</DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
+            <DataList.ItemLabel>Guest registration until</DataList.ItemLabel>
+            <DataList.ItemValue>{event.guest_registration_until}</DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
             <DataList.ItemLabel>Location</DataList.ItemLabel>
             <DataList.ItemValue>{event.location}</DataList.ItemValue>
           </DataList.Item>
@@ -296,6 +300,7 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
 type Inputs = {
   title: string;
   date_meeting: Date;
+  guest_registration_until: Date;
   description: string;
   location: string;
   send_images: FileList;
@@ -323,10 +328,10 @@ export const EventsTab = () => {
   };
 
   const upcoming = events.filter(
-    (event) => isFuture(event.date_meeting) && event.status
+    (event) => isFuture(event.date_meeting) && event.status,
   );
   const past = events.filter(
-    (event) => isPast(event.date_meeting) && event.status
+    (event) => isPast(event.date_meeting) && event.status,
   );
   const inactive = events.filter((event) => !event.status);
 
@@ -368,17 +373,19 @@ export const EventsTab = () => {
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>Date</Field.Label>
-                        {/* <Input
-                          type={"datetime-local"}
-                          {...register("date_meeting")}
-                        /> */}
                         <Controller
                           control={control}
                           name="date_meeting"
                           render={({ field }) => <Calendar {...field} />}
                         />
-                        {/* TODO: Dayzed/react-datepicker + chakra or https://github.com/hiwllc/datepicker */}
-                        {/* https://codesandbox.io/p/sandbox/all-in-one-solution-7lrvdg?file=%2Fsrc%2Fmain.tsx%3A17%2C6-17%2C10 */}
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Guest registration until</Field.Label>
+                        <Controller
+                          control={control}
+                          name="guest_registration_until"
+                          render={({ field }) => <Calendar {...field} />}
+                        />
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>Location</Field.Label>

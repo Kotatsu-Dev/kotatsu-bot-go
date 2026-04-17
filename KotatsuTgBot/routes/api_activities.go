@@ -38,6 +38,7 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 	// Получение текстовых полей из формы
 	title := c.PostForm("title")
 	dateMeeting := c.PostForm("date_meeting")
+	guestRegistrationUntil := c.PostForm("guest_registration_until")
 	description := c.PostForm("description")
 	location := c.PostForm("location")
 
@@ -83,19 +84,25 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 		Answer_BadRequest(c, ANSWER_EMPTY_FIELDS().Code, ANSWER_EMPTY_FIELDS().Message)
 		return
 	} else {
-		// Парсим строку в time.Time
 		date_meeting_time, err_time := time.Parse(time.RFC3339, dateMeeting)
 		if err_time != nil {
 			rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_CreateObject", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
 			return
 		}
 
+		guest_registration_until, err_time := time.Parse(time.RFC3339, guestRegistrationUntil)
+		if err_time != nil {
+			rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_CreateObject", "GuestRegistrationUntil Parse", "Ошибка при парсинге времени", err_time.Error())
+			return
+		}
+
 		activity_to_add := db.Activity_CreateJSON{
-			Title:       title,
-			DateMeeting: date_meeting_time,
-			Description: description,
-			Location:    location,
-			PathsImages: images_path,
+			Title:                  title,
+			DateMeeting:            date_meeting_time,
+			GuestRegistrationUntil: &guest_registration_until,
+			Description:            description,
+			Location:               location,
+			PathsImages:            images_path,
 		}
 
 		db_answer_code := db.DB_CREATE_Activity(&activity_to_add)

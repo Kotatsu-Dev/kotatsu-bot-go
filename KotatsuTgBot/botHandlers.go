@@ -1218,7 +1218,7 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
-
+			// No ITMO check since we 100% from ITMO here
 			db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
 			params.Text = config.TT("events.registered", activity)
@@ -1335,11 +1335,18 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 			db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 			switch db_answer_code {
 			case db.DB_ANSWER_SUCCESS:
+				// No itmo check since we 100% not from ITMO here
+				if activity.GuestRegistrationUntil != nil &&
+					activity.GuestRegistrationUntil.Before(time.Now()) {
+					params.Text = config.T("events.registration_closed")
+					params.ReplyMarkup = keyboards.ListEvents
+					update_user_data["step"] = config.STEP_DEFAULT
+				} else {
+					db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-				db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
-
-				params.Text = config.TT("events.registered", activity)
-				params.ReplyMarkup = keyboards.ListEvents
+					params.Text = config.TT("events.registered", activity)
+					params.ReplyMarkup = keyboards.ListEvents
+				}
 			}
 		}
 
@@ -1429,11 +1436,18 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
+			if activity.GuestRegistrationUntil != nil &&
+				!current_user.IsITMO &&
+				activity.GuestRegistrationUntil.Before(time.Now()) {
+				params.Text = config.T("events.registration_closed")
+				params.ReplyMarkup = keyboards.ListEvents
+				update_user_data["step"] = config.STEP_DEFAULT
+			} else {
+				db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-			db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
-
-			params.Text = config.TT("events.saved_n_registered", activity)
-			params.ReplyMarkup = keyboards.ListEvents
+				params.Text = config.TT("events.saved_n_registered", activity)
+				params.ReplyMarkup = keyboards.ListEvents
+			}
 		}
 
 		db.DB_UPDATE_User(update_user_data)
@@ -2097,8 +2111,9 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(activity_id))
 				switch db_answer_code {
 				case db.DB_ANSWER_SUCCESS:
+					// Is ITMO = true
 					db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), current_user.ID)
-					params.Text = "Я записала тебя на мероприятие «" + activity.Title + "»"
+					params.Text = config.TT("events.registered", activity)
 					params.ReplyMarkup = keyboards.ListEvents
 
 					db.DB_UPDATE_User(map[string]interface{}{
@@ -2209,10 +2224,18 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 		if db_answer_code == db.DB_ANSWER_SUCCESS {
 			if data == "yes" {
-				db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
-				params.Text = config.TT("events.registered", activity)
-				params.ReplyMarkup = keyboards.ListEvents
-				update_user_data["step"] = config.STEP_DEFAULT
+				if activity.GuestRegistrationUntil != nil &&
+					!current_user.IsITMO &&
+					activity.GuestRegistrationUntil.Before(time.Now()) {
+					params.Text = config.T("events.registration_closed")
+					params.ReplyMarkup = keyboards.ListEvents
+					update_user_data["step"] = config.STEP_DEFAULT
+				} else {
+					db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
+					params.Text = config.TT("events.registered", activity)
+					params.ReplyMarkup = keyboards.ListEvents
+					update_user_data["step"] = config.STEP_DEFAULT
+				}
 
 			} else {
 				update_user_data["step"] = config.STEP_CHANGING_PHONE
@@ -2229,7 +2252,6 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 
 		}
 
-	// Переход в подменю рулетки
 	case strings.HasPrefix(update.CallbackQuery.Data, "ROULETTES"):
 		b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 			CallbackQueryID: update.CallbackQuery.ID,

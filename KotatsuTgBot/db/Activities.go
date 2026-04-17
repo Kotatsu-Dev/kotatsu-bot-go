@@ -17,46 +17,50 @@ import (
 
 type Activity struct {
 	gorm.Model
-	Title        string         `json:"title"`                                                                      // Название мероприятия
-	Participants []*User        `json:"participants" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"` // Участники мероприятия
-	DateMeeting  time.Time      `json:"date_meeting"`                                                               // Дата проведения мероприятия
-	Description  string         `json:"description"`                                                                // Описание мероприятия
-	Location     string         `json:"location"`                                                                   // Место проведения мероприятия
-	PathsImages  pq.StringArray `json:"paths_images" gorm:"type:text[]"`                                            // Пути к картинкам мероприятия
-	Status       bool           `json:"status"`                                                                     // Статус мероприятия
+	Title                  string         `json:"title"`
+	Participants           []*User        `json:"participants" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"`
+	DateMeeting            time.Time      `json:"date_meeting"`
+	GuestRegistrationUntil *time.Time     `json:"guest_registration_until"`
+	Description            string         `json:"description"`
+	Location               string         `json:"location"`
+	PathsImages            pq.StringArray `json:"paths_images" gorm:"type:text[]"`
+	Status                 bool           `json:"status"`
 }
 
 type Activity_CreateJSON struct {
-	Title       string    `json:"title"`
-	DateMeeting time.Time `json:"date_meeting"`
-	Description string    `json:"description"`
-	Location    string    `json:"location"`
-	PathsImages []string  `json:"paths_images"`
+	Title                  string     `json:"title"`
+	DateMeeting            time.Time  `json:"date_meeting"`
+	GuestRegistrationUntil *time.Time `json:"guest_registration_until"`
+	Description            string     `json:"description"`
+	Location               string     `json:"location"`
+	PathsImages            []string   `json:"paths_images"`
 }
 
 type Activity_ReadJSON struct {
-	ID           uint      `json:"id"`
-	CreatedAt    time.Time `json:"created_at"`
-	Title        string    `json:"title"`
-	Participants []*User   `json:"participants"`
-	DateMeeting  time.Time `json:"date_meeting"`
-	Description  string    `json:"description"`
-	Location     string    `json:"location"`
-	PathsImages  []string  `json:"paths_images"`
-	Status       bool      `json:"status"`
+	ID                     uint       `json:"id"`
+	CreatedAt              time.Time  `json:"created_at"`
+	Title                  string     `json:"title"`
+	Participants           []*User    `json:"participants"`
+	DateMeeting            time.Time  `json:"date_meeting"`
+	GuestRegistrationUntil *time.Time `json:"guest_registration_until"`
+	Description            string     `json:"description"`
+	Location               string     `json:"location"`
+	PathsImages            []string   `json:"paths_images"`
+	Status                 bool       `json:"status"`
 }
 
 func (activity *Activity) ToRead() *Activity_ReadJSON {
 	return &Activity_ReadJSON{
-		ID:           activity.ID,
-		CreatedAt:    activity.CreatedAt,
-		Title:        activity.Title,
-		Participants: activity.Participants,
-		DateMeeting:  activity.DateMeeting,
-		Description:  activity.Description,
-		Location:     activity.Location,
-		PathsImages:  activity.PathsImages,
-		Status:       activity.Status,
+		ID:                     activity.ID,
+		CreatedAt:              activity.CreatedAt,
+		Title:                  activity.Title,
+		Participants:           activity.Participants,
+		DateMeeting:            activity.DateMeeting,
+		GuestRegistrationUntil: activity.GuestRegistrationUntil,
+		Description:            activity.Description,
+		Location:               activity.Location,
+		PathsImages:            activity.PathsImages,
+		Status:                 activity.Status,
 	}
 }
 
@@ -68,9 +72,7 @@ func ActivityToReadSlice(activities []Activity) []Activity_ReadJSON {
 	return res
 }
 
-// Добавить мероприятие
 func DB_CREATE_Activity(activity_to_add *Activity_CreateJSON) int {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -83,21 +85,20 @@ func DB_CREATE_Activity(activity_to_add *Activity_CreateJSON) int {
 	}
 
 	activity = Activity{
-		Title:       activity_to_add.Title,
-		DateMeeting: activity_to_add.DateMeeting,
-		Description: activity_to_add.Description,
-		Location:    activity_to_add.Location,
-		PathsImages: activity_to_add.PathsImages,
-		Status:      true,
+		Title:                  activity_to_add.Title,
+		DateMeeting:            activity_to_add.DateMeeting,
+		GuestRegistrationUntil: activity_to_add.GuestRegistrationUntil,
+		Description:            activity_to_add.Description,
+		Location:               activity_to_add.Location,
+		PathsImages:            activity_to_add.PathsImages,
+		Status:                 true,
 	}
 
 	db.Save(&activity)
 	return DB_ANSWER_SUCCESS
 }
 
-// Получить мероприятие по названию
 func DB_GET_Activity_BY_Title(title string) (int, *Activity_ReadJSON) {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -112,9 +113,7 @@ func DB_GET_Activity_BY_Title(title string) (int, *Activity_ReadJSON) {
 	return DB_ANSWER_SUCCESS, activity.ToRead()
 }
 
-// Получить мероприятие по ID
 func DB_GET_Activity_BY_ID(activity_id uint) (int, *Activity_ReadJSON) {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -129,9 +128,7 @@ func DB_GET_Activity_BY_ID(activity_id uint) (int, *Activity_ReadJSON) {
 	return DB_ANSWER_SUCCESS, activity.ToRead()
 }
 
-// Получить список всех мероприятий
 func DB_GET_Activities() []Activity_ReadJSON {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -139,13 +136,11 @@ func DB_GET_Activities() []Activity_ReadJSON {
 
 	var activities []Activity
 
-	// Загружаем связанные сущности InvitedUsers
 	db.Preload("Participants").Find(&activities)
 
 	return ActivityToReadSlice(activities)
 }
 
-// Обновить данные мероприятия
 func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	db := DB_Database()
 
@@ -164,7 +159,6 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	// Обновляем поля, если они присутствуют в карте
 	for key, value := range update_json {
 		switch key {
 		case "status":
@@ -178,9 +172,7 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	return DB_ANSWER_SUCCESS
 }
 
-// Добавляем пользователей в мероприятие
 func DB_UPDATE_Activity_ADD_Participants(activity_id uint, user_id uint) int {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -199,14 +191,10 @@ func DB_UPDATE_Activity_ADD_Participants(activity_id uint, user_id uint) int {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	// Добавить пользователя в массив Participants
-	activity.Participants = append(activity.Participants, &user)
-
-	db.Save(&activity)
+	db.Model(&activity).Association("Participants").Append(&user)
 	return DB_ANSWER_SUCCESS
 }
 
-// Удаляем пользователя из мероприятия
 func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 	db := DB_Database()
 
@@ -229,7 +217,6 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 	fmt.Println(user)
 	fmt.Println(activity)
 
-	// Находим индекс пользователя в массиве Participants
 	userIndex := -1
 	for i, participant := range activity.Participants {
 		if participant.ID == user.ID {
@@ -238,7 +225,6 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 		}
 	}
 
-	// Если пользователь не найден в массиве Participants
 	if userIndex == -1 {
 		return DB_ANSWER_OBJECT_EXISTS
 	}
