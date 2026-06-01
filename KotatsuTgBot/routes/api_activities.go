@@ -46,30 +46,20 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 		files = c.Request.MultipartForm.File["send_images[]"]
 	}
 
-	x := 0
-	x_str := ""
-
-	var uploadDir string
-	var filePath string
-	var err_file error
+	uploadDir := config.ByUI("./img/activities/")
 	var images_path []string
 
 	if len(files) != 0 {
-		for i, file := range files {
-			// Используем filepath.Ext для получения расширения
+		for _, file := range files {
 			extension := filepath.Ext(file.Filename)
-			x = i + 1
+			name := strings.TrimSuffix(filepath.Base(file.Filename), extension)
 
-			x_str = strconv.Itoa(x)
-
-			uploadDir = config.ByUI(filepath.Join(uploadDir, title))
-			fileName := x_str + "." + uuid.NewString() + extension
-			os.MkdirAll(uploadDir, os.ModePerm)
-			filePath = filepath.Join(uploadDir, fileName)
+			fileName := name + "." + uuid.NewString() + extension
+			filePath := filepath.Join(uploadDir, fileName)
 
 			images_path = append(images_path, filePath)
 
-			if err_file = c.SaveUploadedFile(file, filePath); err_file != nil {
+			if err_file := c.SaveUploadedFile(file, filePath); err_file != nil {
 				Answer_BadRequest(c, ANSWER_INVALID_FILE_UPLOAD().Code, ANSWER_INVALID_FILE_UPLOAD().Message)
 				return
 			}
@@ -180,9 +170,7 @@ func Handler_API_Activities_UpdateObject(c *gin.Context) {
 		}
 	}
 
-	var uploadDir string
-	var filePath string
-	var err_file error
+	uploadDir := config.ByUI("./img/activities/")
 	var images_path []string
 
 	if len(files) != 0 {
@@ -190,20 +178,16 @@ func Handler_API_Activities_UpdateObject(c *gin.Context) {
 			extension := filepath.Ext(file.Filename)
 			name := strings.TrimSuffix(filepath.Base(file.Filename), extension)
 
-			// TODO: Fix subfolder
-			uploadDir = config.ByUI(filepath.Join(uploadDir, "new_files"))
 			fileName := name + "." + uuid.NewString() + extension
-			os.MkdirAll(uploadDir, os.ModePerm)
-			filePath = filepath.Join(uploadDir, fileName)
+			filePath := filepath.Join(uploadDir, fileName)
 
 			images_path = append(images_path, filePath)
 
-			if err_file = c.SaveUploadedFile(file, filePath); err_file != nil {
+			if err_file := c.SaveUploadedFile(file, filePath); err_file != nil {
 				Answer_BadRequest(c, ANSWER_INVALID_FILE_UPLOAD().Code, ANSWER_INVALID_FILE_UPLOAD().Message)
 				return
 			}
 		}
-
 		update_json["path_images"] = images_path
 	}
 
