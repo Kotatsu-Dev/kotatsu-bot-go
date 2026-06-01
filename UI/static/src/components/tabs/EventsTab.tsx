@@ -10,6 +10,7 @@ import {
   Field,
   Fieldset,
   FileUpload,
+  Group,
   Heading,
   IconButton,
   Input,
@@ -165,11 +166,131 @@ const exportExcel = async (event: Activity) => {
   return blob;
 };
 
+const EventEditDialog = (props: { value: Activity; reload: () => void }) => {
+  const api = useAPI();
+  const [open, setOpen] = useState(false);
+  const { register, handleSubmit, control } = useForm<Inputs>({
+    defaultValues: {
+      title: props.value.title,
+      date_meeting: new Date(props.value.date_meeting),
+      guest_registration_until: props.value.guest_registration_until
+        ? new Date(props.value.guest_registration_until)
+        : undefined,
+      description: props.value.description,
+      location: props.value.location,
+      send_images: undefined,
+      status: props.value.status,
+    },
+  });
+
+  const editEvent: SubmitHandler<Inputs> = async (data, event) => {
+    try {
+      console.log(data)
+      await api.activities.update({ ...data, id: props.value.id });
+      toaster.success({
+        description: "Event successfully edited!",
+      });
+      console.log(data);
+      setOpen(false);
+      props.reload();
+    } catch (e) {
+      handleError(e);
+      event?.stopPropagation();
+    }
+  };
+  return (
+    <Dialog.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
+      <Dialog.Trigger asChild>
+        <Button colorPalette={"green"}>Edit</Button>
+      </Dialog.Trigger>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner colorPalette={"orange"}>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Edit event</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body as={"form"} onSubmit={handleSubmit(editEvent)}>
+              <Fieldset.Root>
+                <Fieldset.Content>
+                  <Field.Root>
+                    <Field.Label>Title</Field.Label>
+                    <Input
+                      placeholder="Enter event title"
+                      {...register("title")}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Date</Field.Label>
+                    <Controller
+                      control={control}
+                      name="date_meeting"
+                      render={({ field }) => <Calendar {...field} />}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Guest registration</Field.Label>
+                    <Controller
+                      control={control}
+                      name="guest_registration_until"
+                      render={({ field }) => <Calendar {...field} />}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Location</Field.Label>
+                    <Input
+                      placeholder="Enter location"
+                      {...register("location")}
+                    />
+                  </Field.Root>
+                  <Field.Root>
+                    <Field.Label>Description</Field.Label>
+                    <Textarea
+                      placeholder="Enter event description"
+                      {...register("description")}
+                    />
+                  </Field.Root>
+                  <FileUpload.Root
+                    maxFiles={5}
+                    accept={"image/*"}
+                    {...register("send_images")}
+                  >
+                    <FileUpload.HiddenInput />
+                    <FileUpload.Trigger asChild>
+                      <Button variant="outline" w="full">
+                        Upload images for event
+                      </Button>
+                    </FileUpload.Trigger>
+                    <FileUpload.List showSize clearable />
+                  </FileUpload.Root>
+                </Fieldset.Content>
+                <Group>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save</Button>
+                </Group>
+              </Fieldset.Root>
+            </Dialog.Body>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
+};
+
 const EventCard = (props: { value: Activity; reload: () => void }) => {
   const api = useAPI();
   const event = props.value;
 
-  const deleteEvent = async (event: Activity) => {
+  const deactivateEvent = async (event: Activity) => {
     try {
       await api.activities.setStatus({ id: event.id, status: false });
       props.reload();
@@ -191,12 +312,12 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
               {event.status ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
-                  Active
+                  Shown
                 </Status.Root>
               ) : (
                 <Status.Root colorPalette={"red"}>
                   <Status.Indicator />
-                  Inactive
+                  Hidden
                 </Status.Root>
               )}
             </DataList.ItemValue>
@@ -210,8 +331,10 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
             <DataList.ItemValue>{event.date_meeting}</DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
-            <DataList.ItemLabel>Guest registration until</DataList.ItemLabel>
-            <DataList.ItemValue>{event.guest_registration_until}</DataList.ItemValue>
+            <DataList.ItemLabel>Guest registration</DataList.ItemLabel>
+            <DataList.ItemValue>
+              {event.guest_registration_until}
+            </DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
             <DataList.ItemLabel>Location</DataList.ItemLabel>
@@ -224,10 +347,11 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
           disabled={!event.status}
           colorPalette={"red"}
           flexGrow={1}
-          onClick={() => deleteEvent(event)}
+          onClick={() => deactivateEvent(event)}
         >
-          Delete
+          Hide
         </Button>
+        <EventEditDialog {...props} />
         <DownloadTrigger
           data={() => exportExcel(event)}
           fileName="СЗ.xlsx"
@@ -300,10 +424,11 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
 type Inputs = {
   title: string;
   date_meeting: Date;
-  guest_registration_until: Date;
+  guest_registration_until?: Date;
   description: string;
   location: string;
   send_images: FileList;
+  status: boolean;
 };
 
 export const EventsTab = () => {
@@ -380,7 +505,7 @@ export const EventsTab = () => {
                         />
                       </Field.Root>
                       <Field.Root>
-                        <Field.Label>Guest registration until</Field.Label>
+                        <Field.Label>Guest registration</Field.Label>
                         <Controller
                           control={control}
                           name="guest_registration_until"

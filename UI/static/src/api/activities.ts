@@ -22,6 +22,24 @@ export const createActivitiesApi = ($: AxiosInstance) => {
       return Activity.array().parse(res.data.data.list_activities);
     },
 
+    async update(props: {
+      id: number;
+      title: string;
+      date_meeting: Date;
+      guest_registration_until?: Date;
+      description: string;
+      location: string;
+      send_images?: FileList | File[];
+      status: boolean;
+    }) {
+      await $.putForm("/activities/", {
+        ...props,
+        activity_id: props.id,
+        date_meeting: props.date_meeting.toISOString(),
+        guest_registration_until: props.guest_registration_until?.toISOString(),
+      });
+    },
+
     async setStatus({ id, status }: { id: number; status: boolean }) {
       await $.put("/activities/", {
         activity_id: id,

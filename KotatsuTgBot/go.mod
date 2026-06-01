@@ -14,9 +14,11 @@ require (
 
 require github.com/gin-contrib/static v1.1.5
 
-require github.com/gin-contrib/cors v1.7.6
-
-require github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
+require (
+	github.com/gin-contrib/cors v1.7.6
+	github.com/google/uuid v1.6.0
+	github.com/nicksnyder/go-i18n/v2 v2.6.0
+)
 
 require (
 	github.com/bytedance/sonic v1.13.3 // indirect
@@ -53,7 +55,7 @@ require (
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/text v0.26.0
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
