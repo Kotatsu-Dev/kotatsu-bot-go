@@ -299,6 +299,15 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
     }
   };
 
+  const reactivateEvent = async (event: Activity) => {
+    try {
+      await api.activities.setStatus({ id: event.id, status: true });
+      props.reload();
+    } catch (e) {
+      handleError(e);
+    }
+  };
+
   return (
     <Card.Root key={event.id}>
       <Card.Header>
@@ -343,14 +352,23 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
         </DataList.Root>
       </Card.Body>
       <Card.Footer>
+        {event.status ? 
         <Button
-          disabled={!event.status}
           colorPalette={"red"}
           flexGrow={1}
           onClick={() => deactivateEvent(event)}
         >
           Hide
         </Button>
+        : 
+        <Button
+          colorPalette={"red"}
+          flexGrow={1}
+          onClick={() => reactivateEvent(event)}
+        >
+          Show
+        </Button>
+        }
         <EventEditDialog {...props} />
         <DownloadTrigger
           data={() => exportExcel(event)}

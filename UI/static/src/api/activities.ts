@@ -41,7 +41,7 @@ export const createActivitiesApi = ($: AxiosInstance) => {
     },
 
     async setStatus({ id, status }: { id: number; status: boolean }) {
-      await $.put("/activities/", {
+      await $.putForm("/activities/", {
         activity_id: id,
         status,
       });
