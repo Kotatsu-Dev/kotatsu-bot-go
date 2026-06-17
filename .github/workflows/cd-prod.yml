@@ -25,6 +25,8 @@ jobs:
           node-version: 20
       
       - name: Build frontend
+        env:
+          VITE_BOT_ID: 587079869
         run: cd UI/static && npm ci && npm run build
 
       - name: Copy app to server
