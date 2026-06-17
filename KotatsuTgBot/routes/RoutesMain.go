@@ -32,10 +32,11 @@ func RunServer() {
 		AllowOriginFunc:  func(origin string) bool { return true },
 		AllowCredentials: true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 	}))
 
 	api := r.Group("/api")
+	api.GET("/login", middleware.ExchangeToken())
 	if !config.GetConfig().IGNORE_AUTH {
 		api.Use(middleware.AuthMiddleware())
 	}

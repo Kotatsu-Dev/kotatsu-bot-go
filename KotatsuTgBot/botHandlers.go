@@ -19,7 +19,6 @@ import (
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/gen_certs"
 	"rr/kotatsutgbot/keyboards"
-	"rr/kotatsutgbot/middleware"
 	"rr/kotatsutgbot/rr_debug"
 	"time"
 
@@ -354,28 +353,6 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
 		proccessRegistrationMessage(ctx, b, update)
 	}
-}
-
-func BotHandler_Command_Login(ctx context.Context, b *bot.Bot, update *models.Update) {
-	url := config.GetConfig().CONFIG_URL_BASE + "/login?" +
-		middleware.CreateSessionCookie(strconv.FormatInt(update.Message.From.ID, 10), 24*time.Hour)
-
-	middleware.CreateSessionCookie(strconv.FormatInt(update.Message.From.ID, 10), 24*time.Hour)
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		ParseMode: models.ParseModeHTML,
-		Text:      config.T("login.text"),
-		ReplyMarkup: models.InlineKeyboardMarkup{
-			InlineKeyboard: [][]models.InlineKeyboardButton{
-				{
-					{
-						Text: config.T("login.button"), URL: url,
-					},
-				},
-			},
-		},
-	})
-	fmt.Println(err)
 }
 
 //
