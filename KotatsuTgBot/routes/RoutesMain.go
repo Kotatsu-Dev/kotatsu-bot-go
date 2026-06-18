@@ -26,7 +26,6 @@ func RunServer() {
 
 	// TODO: Index page + robots.txt
 	r.GET("/admin", Handler_NewAdminPanel)
-	r.GET("/login", Handler_Login)
 
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc:  func(origin string) bool { return true },
@@ -37,6 +36,8 @@ func RunServer() {
 
 	api := r.Group("/api")
 	api.GET("/login", middleware.ExchangeToken())
+	// TODO: Move to static file url
+	api.GET("/calendar/", Handler_GetCalendarActivities_Image_File)
 	if !config.GetConfig().IGNORE_AUTH {
 		api.Use(middleware.AuthMiddleware())
 	}
@@ -80,8 +81,6 @@ func RunServer() {
 
 		calendar := api.Group("/calendar")
 		{
-			// TODO: Move to static file url
-			calendar.GET("/", Handler_GetCalendarActivities_Image_File)
 			calendar.POST("/", Handler_UploadFile_CalendarActivities)
 		}
 	}
