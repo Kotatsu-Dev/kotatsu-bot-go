@@ -159,8 +159,7 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	fmt.Println(update_json)
-
+	// Обновляем поля, если они присутствуют в карте
 	for key, value := range update_json {
 		switch key {
 		case "title":

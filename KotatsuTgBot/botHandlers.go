@@ -1326,7 +1326,6 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 						update_user_data["step"] = config.STEP_DEFAULT
 					} else {
 						db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
-
 						params.Text = config.TT("events.registered", activity)
 						params.ReplyMarkup = keyboards.ListEvents
 					}
