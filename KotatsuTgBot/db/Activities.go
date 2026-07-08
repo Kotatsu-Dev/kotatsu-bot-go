@@ -159,8 +159,39 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
+	// Обновляем поля, если они присутствуют в карте
 	for key, value := range update_json {
 		switch key {
+		case "title":
+			if v, ok := value.(string); ok && v != activity.Title {
+				activity.Title = v
+			}
+		case "date_meeting":
+			if v, ok := value.(string); ok {
+				v_, err := time.Parse(time.RFC3339, v)
+				if err == nil && v_ != activity.DateMeeting {
+					activity.DateMeeting = v_
+				}
+			}
+		case "guest_registration_until":
+			if v, ok := value.(string); ok {
+				v_, err := time.Parse(time.RFC3339, v)
+				if err == nil && (activity.GuestRegistrationUntil == nil || v_ != *activity.GuestRegistrationUntil) {
+					activity.GuestRegistrationUntil = &v_
+				}
+			}
+		case "description":
+			if v, ok := value.(string); ok && v != activity.Description {
+				activity.Description = v
+			}
+		case "location":
+			if v, ok := value.(string); ok && v != activity.Location {
+				activity.Location = v
+			}
+		case "path_images":
+			if v, ok := value.([]string); ok {
+				activity.PathsImages = v
+			}
 		case "status":
 			if v, ok := value.(bool); ok && v != activity.Status {
 				activity.Status = v

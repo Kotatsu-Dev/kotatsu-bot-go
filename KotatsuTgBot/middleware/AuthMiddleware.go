@@ -2,39 +2,18 @@ package middleware
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
 	"net/http"
 	"rr/kotatsutgbot/config"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/golang-jwt/jwt/v5"
 )
-
-func signData(data string) string {
-	hmacSecret := []byte(config.GetConfig().AUTH_SECRET)
-	mac := hmac.New(sha256.New, hmacSecret)
-	mac.Write([]byte(data))
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
-}
-
-func verifyData(data, signature string) bool {
-	expectedSig := signData(data)
-	return hmac.Equal([]byte(expectedSig), []byte(signature))
-}
-
-func CreateSessionCookie(userID string, validFor time.Duration) string {
-	expiry := time.Now().Add(validFor).Unix()
-	data := fmt.Sprintf("%d:%s", expiry, userID)
-	sig := signData(data)
-	return fmt.Sprintf("%s:%s", data, sig)
-}
 
 func CheckIsAdmin(userId int64) bool {
 	b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN)
@@ -85,47 +64,74 @@ func CheckIsMember(userId int64) bool {
 	return true
 }
 
-func ParseAndVerifySessionCookie(cookieValue string) (userID int64, isValid bool) {
-	parts := strings.Split(cookieValue, ":")
-	if len(parts) != 3 {
-		return 0, false
-	}
+var k, _ = keyfunc.NewDefaultCtx(context.TODO(), []string{"https://oauth.telegram.org/.well-known/jwks.json"})
 
-	expiryStr, userIDStr, signature := parts[0], parts[1], parts[2]
-	data := fmt.Sprintf("%s:%s", expiryStr, userIDStr)
-
-	if !verifyData(data, signature) {
-		return 0, false
-	}
-
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+func ParseAndVerifySession(session string, keyfunc jwt.Keyfunc) (userID int64, isValid bool) {
+	data, err := jwt.Parse(session, keyfunc)
 	if err != nil {
 		return 0, false
 	}
 
-	expiry, err := strconv.ParseInt(expiryStr, 10, 64)
-	if err != nil {
-		return 0, false
-	}
+	userIDStr := data.Claims.(jwt.MapClaims)["id"].(string)
 
-	if time.Now().Unix() > expiry {
+	userID, err = strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
 		return 0, false
 	}
 
 	return userID, true
 }
 
-func AuthMiddleware() gin.HandlerFunc {
+func ExchangeToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cookie, err := c.Cookie("session_token")
-		if err != nil {
+		header := c.GetHeader("Authorization")
+		parts := strings.SplitN(header, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization must be Bearer [token]"})
+			c.Abort()
+			return
+		}
+
+		userID, isValid := ParseAndVerifySession(parts[1], k.Keyfunc)
+		if !isValid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "missing or invalid session cookie",
+				"error": "invalid or expired session",
 			})
 			return
 		}
 
-		userID, isValid := ParseAndVerifySessionCookie(cookie)
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"id":  strconv.FormatInt(userID, 10),
+			"exp": time.Now().Add(24 * time.Hour).Unix(),
+		})
+
+		tokenString, err := token.SignedString([]byte(config.GetConfig().AUTH_SECRET))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "failed to create token",
+			})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{
+			"token": tokenString,
+		})
+	}
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		parts := strings.SplitN(header, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer [token]"})
+			c.Abort()
+			return
+		}
+
+		userID, isValid := ParseAndVerifySession(parts[1], func(t *jwt.Token) (any, error) {
+			return []byte(config.GetConfig().AUTH_SECRET), nil
+		})
 		if !isValid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "invalid or expired session",

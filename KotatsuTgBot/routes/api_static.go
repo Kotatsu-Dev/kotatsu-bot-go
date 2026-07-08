@@ -29,7 +29,6 @@ import (
 	//Системные пакеты
 
 	"context"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -44,11 +43,6 @@ import (
 func Handler_NewAdminPanel(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
 	c.File(config.ByUI("./static/dist/index.html"))
-}
-
-func Handler_Login(c *gin.Context) {
-	c.SetCookie("session_token", c.Request.URL.RawQuery, 3600*24, "/", "", false, true)
-	c.Redirect(http.StatusFound, "/admin")
 }
 
 func Handler_GetCalendarActivities_Image_File(c *gin.Context) {

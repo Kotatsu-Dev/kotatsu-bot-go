@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import axios, { AxiosError } from "axios";
 import { createUsersApi } from "./users";
 import { createActivitiesApi } from "./activities";
@@ -9,6 +9,8 @@ import { createDbApi } from "./db";
 import { createRoulettesApi } from "./roulettes";
 import { toaster } from "../components/ui/toaster";
 import z, { ZodError } from "zod";
+import { useLocalStorage } from "usehooks-ts";
+import { Button } from "@chakra-ui/react";
 
 const ErrorData = z.object({
   status: z.object({
@@ -17,35 +19,97 @@ const ErrorData = z.object({
   }),
 });
 
-const createApi = (_ctx: null) => {
-  const base = import.meta.env.PROD
-    ? new URL("/", location.toString()).toString().slice(0, -1)
-    : `http://localhost:8006`;
+const BASE_URL =
+  import.meta.env.VITE_BASE_URL ??
+  new URL("/", location.toString()).toString().slice(0, -1);
+const API_URL =
+  import.meta.env.VITE_API_URL ??
+  new URL("/api", location.toString()).toString();
+
+const createApi = (token: string) => {
   const $ = axios.create({
-    baseURL: `${base}/api/`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    baseURL: API_URL,
   });
 
   return {
     users: createUsersApi($),
     activities: createActivitiesApi($),
-    calendar: createCalendarApi($, base),
-    broadcast: createBroadcastApi($, base),
+    calendar: createCalendarApi($, BASE_URL),
+    broadcast: createBroadcastApi($, BASE_URL),
     requests: createRequestsApi($),
     roulettes: createRoulettesApi($),
-    db: createDbApi($, base),
+    db: createDbApi($, BASE_URL),
   };
 };
 
-const APIContext = createContext(null);
+const parseJwt = (token: string) => {
+  var base64Url = token.split(".")[1];
+  var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  var jsonPayload = decodeURIComponent(
+    window
+      .atob(base64)
+      .split("")
+      .map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join(""),
+  );
+
+  return JSON.parse(jsonPayload);
+};
+
+const APIContext = createContext<ReturnType<typeof createApi> | null>(null);
 
 export const APIProvider = (props: { children: ReactNode[] | ReactNode }) => {
-  return (
-    <APIContext.Provider value={null}>{props.children}</APIContext.Provider>
-  );
+  const [token, setToken, _] = useLocalStorage("token", "");
+
+  useEffect(() => {
+    (window as any).Telegram.Login.init({
+      client_id: import.meta.env.VITE_BOT_ID,
+      request_access: ["write"],
+    });
+  }, []);
+
+  const login = () => {
+    (window as any).Telegram.Login.open((result: any) => {
+      if ("error" in result) {
+        return;
+      }
+      const base = import.meta.env.PROD
+        ? new URL("/", location.toString()).toString().slice(0, -1)
+        : `http://localhost:8006`;
+
+      // TODO: Model check
+      axios
+        .get(`${base}/api/login`, {
+          headers: {
+            Authorization: `Bearer ${result.id_token}`,
+          },
+        })
+        .then((data) => setToken(data.data.token));
+    });
+  };
+
+  if (token != "") {
+    const parsed = parseJwt(token);
+    if (parsed.exp * 1000 >= Date.now()) {
+      // Not expired
+      return (
+        <APIContext.Provider value={createApi(token)}>
+          {props.children}
+        </APIContext.Provider>
+      );
+    }
+  }
+
+  return <Button onClick={login}>Login</Button>;
 };
 
 export const useAPI = () => {
-  return createApi(useContext(APIContext));
+  return useContext(APIContext)!;
 };
 
 export const handleError = (e: unknown) => {

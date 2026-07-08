@@ -39,6 +39,5 @@ func main() {
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, BotHandler_Command_Start)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, BotHandler_Command_Start)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/login", bot.MatchTypeExact, BotHandler_Command_Login)
 	b.Start(ctx)
 }

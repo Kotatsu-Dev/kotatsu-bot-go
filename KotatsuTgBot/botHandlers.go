@@ -19,7 +19,6 @@ import (
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/gen_certs"
 	"rr/kotatsutgbot/keyboards"
-	"rr/kotatsutgbot/middleware"
 	"rr/kotatsutgbot/rr_debug"
 	"time"
 
@@ -354,28 +353,6 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 	case db.DB_ANSWER_OBJECT_NOT_FOUND:
 		proccessRegistrationMessage(ctx, b, update)
 	}
-}
-
-func BotHandler_Command_Login(ctx context.Context, b *bot.Bot, update *models.Update) {
-	url := config.GetConfig().CONFIG_URL_BASE + "/login?" +
-		middleware.CreateSessionCookie(strconv.FormatInt(update.Message.From.ID, 10), 24*time.Hour)
-
-	middleware.CreateSessionCookie(strconv.FormatInt(update.Message.From.ID, 10), 24*time.Hour)
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		ParseMode: models.ParseModeHTML,
-		Text:      config.T("login.text"),
-		ReplyMarkup: models.InlineKeyboardMarkup{
-			InlineKeyboard: [][]models.InlineKeyboardButton{
-				{
-					{
-						Text: config.T("login.button"), URL: url,
-					},
-				},
-			},
-		},
-	})
-	fmt.Println(err)
 }
 
 //
@@ -1218,11 +1195,16 @@ func proccessStep_ITMO_EnterFullName(ctx context.Context, b *bot.Bot, update *mo
 
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
-			// No ITMO check since we 100% from ITMO here
-			db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
+			if activity.Status {
+				// No ITMO check since we 100% from ITMO here
+				db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-			params.Text = config.TT("events.registered", activity)
-			params.ReplyMarkup = keyboards.ListEvents
+				params.Text = config.TT("events.registered", activity)
+				params.ReplyMarkup = keyboards.ListEvents
+			} else {
+				params.Text = config.TT("events.non_existent", activity)
+				params.ReplyMarkup = keyboards.ListEvents
+			}
 		}
 	}
 
@@ -1335,16 +1317,20 @@ func proccessStep_NoITMO_EnterPhoneNumber(ctx context.Context, b *bot.Bot, updat
 			db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 			switch db_answer_code {
 			case db.DB_ANSWER_SUCCESS:
-				// No itmo check since we 100% not from ITMO here
-				if activity.GuestRegistrationUntil != nil &&
-					activity.GuestRegistrationUntil.Before(time.Now()) {
-					params.Text = config.T("events.registration_closed")
-					params.ReplyMarkup = keyboards.ListEvents
-					update_user_data["step"] = config.STEP_DEFAULT
+				if activity.Status {
+					// No itmo check since we 100% not from ITMO here
+					if activity.GuestRegistrationUntil != nil &&
+						activity.GuestRegistrationUntil.Before(time.Now()) {
+						params.Text = config.T("events.registration_closed")
+						params.ReplyMarkup = keyboards.ListEvents
+						update_user_data["step"] = config.STEP_DEFAULT
+					} else {
+						db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
+						params.Text = config.TT("events.registered", activity)
+						params.ReplyMarkup = keyboards.ListEvents
+					}
 				} else {
-					db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
-
-					params.Text = config.TT("events.registered", activity)
+					params.Text = config.TT("events.non_existent", activity)
 					params.ReplyMarkup = keyboards.ListEvents
 				}
 			}
@@ -1436,16 +1422,21 @@ func proccessStep_ChangePhoneNumber(ctx context.Context, b *bot.Bot, update *mod
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 		switch db_answer_code {
 		case db.DB_ANSWER_SUCCESS:
-			if activity.GuestRegistrationUntil != nil &&
-				!current_user.IsITMO &&
-				activity.GuestRegistrationUntil.Before(time.Now()) {
-				params.Text = config.T("events.registration_closed")
-				params.ReplyMarkup = keyboards.ListEvents
-				update_user_data["step"] = config.STEP_DEFAULT
-			} else {
-				db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
+			if activity.Status {
+				if activity.GuestRegistrationUntil != nil &&
+					!current_user.IsITMO &&
+					activity.GuestRegistrationUntil.Before(time.Now()) {
+					params.Text = config.T("events.registration_closed")
+					params.ReplyMarkup = keyboards.ListEvents
+					update_user_data["step"] = config.STEP_DEFAULT
+				} else {
+					db.DB_UPDATE_Activity_ADD_Participants(activity.ID, current_user.ID)
 
-				params.Text = config.TT("events.saved_n_registered", activity)
+					params.Text = config.TT("events.saved_n_registered", activity)
+					params.ReplyMarkup = keyboards.ListEvents
+				}
+			} else {
+				params.Text = config.TT("events.non_existent", activity)
 				params.ReplyMarkup = keyboards.ListEvents
 			}
 		}
@@ -2111,11 +2102,15 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 				db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(activity_id))
 				switch db_answer_code {
 				case db.DB_ANSWER_SUCCESS:
-					// Is ITMO = true
-					db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), current_user.ID)
-					params.Text = config.TT("events.registered", activity)
-					params.ReplyMarkup = keyboards.ListEvents
-
+					if activity.Status {
+						// Is ITMO = true
+						db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), current_user.ID)
+						params.Text = config.TT("events.registered", activity)
+						params.ReplyMarkup = keyboards.ListEvents
+					} else {
+						params.Text = config.TT("events.non_existent", activity)
+						params.ReplyMarkup = keyboards.ListEvents
+					}
 					db.DB_UPDATE_User(map[string]interface{}{
 						"user_tg_id": current_user.UserTgID,
 						"step":       config.STEP_DEFAULT,
@@ -2224,17 +2219,22 @@ func BotHandler_CallbackQuery(ctx context.Context, b *bot.Bot, update *models.Up
 		db_answer_code, activity := db.DB_GET_Activity_BY_ID(uint(current_user.TempActivityID))
 		if db_answer_code == db.DB_ANSWER_SUCCESS {
 			if data == "yes" {
-				if activity.GuestRegistrationUntil != nil &&
-					!current_user.IsITMO &&
-					activity.GuestRegistrationUntil.Before(time.Now()) {
-					params.Text = config.T("events.registration_closed")
-					params.ReplyMarkup = keyboards.ListEvents
-					update_user_data["step"] = config.STEP_DEFAULT
+				if activity.Status {
+					if activity.GuestRegistrationUntil != nil &&
+						!current_user.IsITMO &&
+						activity.GuestRegistrationUntil.Before(time.Now()) {
+						params.Text = config.T("events.registration_closed")
+						params.ReplyMarkup = keyboards.ListEvents
+						update_user_data["step"] = config.STEP_DEFAULT
+					} else {
+						db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
+						params.Text = config.TT("events.registered", activity)
+						params.ReplyMarkup = keyboards.ListEvents
+						update_user_data["step"] = config.STEP_DEFAULT
+					}
 				} else {
-					db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
-					params.Text = config.TT("events.registered", activity)
+					params.Text = config.TT("events.non_existent", activity)
 					params.ReplyMarkup = keyboards.ListEvents
-					update_user_data["step"] = config.STEP_DEFAULT
 				}
 
 			} else {

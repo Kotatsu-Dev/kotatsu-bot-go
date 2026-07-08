@@ -5,3 +5,5 @@
 Написан по изначальным материалам [@rzhevskyrobotics](https://github.com/rzhevskyrobotics) вот этим мощнейшим дедом [@JinnySh23](https://github.com/JinnySh23).
 
 Когда-нибудь мы добавим сюда документацию. Когда-нибудь обязательно:)
+
+<!-- TODO: Env local in frontend -->

@@ -15,17 +15,16 @@
 package routes
 
 import (
-
-	//Внутренние пакеты проекта
-
+	"fmt"
+	"mime/multipart"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
+	"strings"
 
-	//Сторонние библиотеки
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
-	//Системные пакеты
 	"os"
 	"path/filepath"
 	"strconv"
@@ -47,31 +46,20 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 		files = c.Request.MultipartForm.File["send_images[]"]
 	}
 
-	x := 0
-	x_str := ""
-
-	var uploadDir string
-	var filePath string
-	var err_file error
+	uploadDir := config.ByUI("./img/activities/")
 	var images_path []string
 
 	if len(files) != 0 {
-		for i, file := range files {
-			// Используем filepath.Ext для получения расширения
+		for _, file := range files {
 			extension := filepath.Ext(file.Filename)
-			x = i + 1
+			name := strings.TrimSuffix(filepath.Base(file.Filename), extension)
 
-			x_str = strconv.Itoa(x)
+			fileName := name + "." + uuid.NewString() + extension
+			filePath := filepath.Join(uploadDir, fileName)
 
-			// // Создание пути для сохранения файла
-			uploadDir = "./img/activities/" + title + "/"
-			os.MkdirAll(uploadDir, os.ModePerm)
-			filePath = filepath.Join(uploadDir, x_str+extension) // Замените на желаемое имя файла и расширение
+			images_path = append(images_path, filePath)
 
-			images_path = append(images_path, uploadDir+x_str+extension)
-
-			// // Сохранение файла
-			if err_file = c.SaveUploadedFile(file, filePath); err_file != nil {
+			if err_file := c.SaveUploadedFile(file, filePath); err_file != nil {
 				Answer_BadRequest(c, ANSWER_INVALID_FILE_UPLOAD().Code, ANSWER_INVALID_FILE_UPLOAD().Message)
 				return
 			}
@@ -90,16 +78,21 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 			return
 		}
 
-		guest_registration_until, err_time := time.Parse(time.RFC3339, guestRegistrationUntil)
-		if err_time != nil {
-			rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_CreateObject", "GuestRegistrationUntil Parse", "Ошибка при парсинге времени", err_time.Error())
-			return
+		var guest_registration_until *time.Time = nil
+		if guestRegistrationUntil != "" {
+			_guest_registration_until, err_time := time.Parse(time.RFC3339, guestRegistrationUntil)
+			if err_time != nil {
+				rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_CreateObject", "GuestRegistrationUntil Parse", "Ошибка при парсинге времени", err_time.Error())
+				Answer_BadRequest(c, ANSWER_EMPTY_FIELDS().Code, ANSWER_EMPTY_FIELDS().Message)
+				return
+			}
+			guest_registration_until = &_guest_registration_until
 		}
 
 		activity_to_add := db.Activity_CreateJSON{
 			Title:                  title,
 			DateMeeting:            date_meeting_time,
-			GuestRegistrationUntil: &guest_registration_until,
+			GuestRegistrationUntil: guest_registration_until,
 			Description:            description,
 			Location:               location,
 			PathsImages:            images_path,
@@ -137,11 +130,9 @@ func Handler_API_Activities_GetList(c *gin.Context) {
 // Обновить данные мероприятия
 func Handler_API_Activities_UpdateObject(c *gin.Context) {
 
-	var update_json map[string]interface{}
+	update_json := make(map[string]interface{})
 
-	err := c.ShouldBindJSON(&update_json)
-	if err != nil {
-		rr_debug.PrintLOG("api_requests.go", "Handler_API_Activities_UpdateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
+	if err := c.Request.ParseMultipartForm(2 << 32); err != nil {
 		if config.GetConfig().CONFIG_IS_DEBUG {
 			Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
 		} else {
@@ -149,6 +140,58 @@ func Handler_API_Activities_UpdateObject(c *gin.Context) {
 		}
 		return
 	}
+
+	for key, values := range c.Request.MultipartForm.Value {
+		if len(values) > 0 {
+			switch key {
+			case "activity_id":
+				update_json[key], _ = strconv.ParseFloat(values[0], 64)
+			case "title":
+				update_json[key] = values[0]
+			case "date_meeting":
+				update_json[key] = values[0]
+			case "guest_registration_until":
+				update_json[key] = values[0]
+			case "description":
+				update_json[key] = values[0]
+			case "location":
+				update_json[key] = values[0]
+			case "status":
+				update_json[key], _ = strconv.ParseBool(values[0])
+			}
+		}
+	}
+
+	var files []*multipart.FileHeader
+	if c.Request.MultipartForm != nil {
+		files = c.Request.MultipartForm.File["send_images"]
+		if len(files) <= 0 {
+			files = c.Request.MultipartForm.File["send_images[]"]
+		}
+	}
+
+	uploadDir := config.ByUI("./img/activities/")
+	var images_path []string
+
+	if len(files) != 0 {
+		for _, file := range files {
+			extension := filepath.Ext(file.Filename)
+			name := strings.TrimSuffix(filepath.Base(file.Filename), extension)
+
+			fileName := name + "." + uuid.NewString() + extension
+			filePath := filepath.Join(uploadDir, fileName)
+
+			images_path = append(images_path, filePath)
+
+			if err_file := c.SaveUploadedFile(file, filePath); err_file != nil {
+				Answer_BadRequest(c, ANSWER_INVALID_FILE_UPLOAD().Code, ANSWER_INVALID_FILE_UPLOAD().Message)
+				return
+			}
+		}
+		update_json["path_images"] = images_path
+	}
+
+	fmt.Println(c.Request.MultipartForm)
 
 	db_answer_code := db.DB_UPDATE_Activity(update_json)
 	switch db_answer_code {
