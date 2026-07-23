@@ -10,7 +10,7 @@ import { createRoulettesApi } from "./roulettes";
 import { toaster } from "../components/ui/toaster";
 import z, { ZodError } from "zod";
 import { useLocalStorage } from "usehooks-ts";
-import { Button } from "@chakra-ui/react";
+import { Button, Center } from "@chakra-ui/react";
 
 const ErrorData = z.object({
   status: z.object({
@@ -105,7 +105,13 @@ export const APIProvider = (props: { children: ReactNode[] | ReactNode }) => {
     }
   }
 
-  return <Button onClick={login}>Login</Button>;
+  return (
+    <Center h={"100vh"}>
+      <Button colorPalette={"cyan"} onClick={login}>
+        Login with Telegram
+      </Button>
+    </Center>
+  );
 };
 
 export const useAPI = () => {
