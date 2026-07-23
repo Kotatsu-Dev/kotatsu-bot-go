@@ -27,6 +27,7 @@ jobs:
       - name: Build frontend
         env:
           VITE_BOT_ID: 6565682617
+          VITE_BOT_USERNAME: test_kotatsu_tg_bot
         run: cd UI/static && npm ci && npm run build
 
       - name: Copy app to server
