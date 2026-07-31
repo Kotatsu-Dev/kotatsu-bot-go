@@ -258,10 +258,10 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 	for key, value := range update_json {
 		switch key {
 		case "status":
-			panic("Not supported")
+			return DB_ANSWER_NOT_SUPPORTED
 
 		case "current_stage":
-			panic("Not supported")
+			return DB_ANSWER_NOT_SUPPORTED
 
 		case "theme":
 			if v, ok := value.(string); ok && v != anime_roulette.Theme {
@@ -269,7 +269,7 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 			}
 
 		case "stage_new_date":
-			panic("Not supported")
+			return DB_ANSWER_NOT_SUPPORTED
 
 		case "start_date":
 			if v, ok := value.(string); ok {

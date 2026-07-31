@@ -289,7 +289,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 		ParseMode: models.ParseModeHTML,
 	}
 
-	if update.Message.Text == config.T("keyboard.continue") {
+	if update.Message != nil && update.Message.Text == config.T("keyboard.continue") {
 		full_tg_name := update.CallbackQuery.From.FirstName + " " + update.CallbackQuery.From.LastName
 		db_answer_reg := regUser(update.CallbackQuery.From.ID, full_tg_name, update.CallbackQuery.From.Username)
 
@@ -301,7 +301,7 @@ func proccessRegistrationCallback(ctx context.Context, b *bot.Bot, update *model
 		case db.DB_ANSWER_OBJECT_EXISTS:
 			params.Text = config.T("registered")
 
-			_, old_user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
+			_, old_user := db.DB_GET_User_BY_UserTgID(update.CallbackQuery.From.ID)
 
 			if old_user.IsClubMember {
 				params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
@@ -383,7 +383,7 @@ func BotHandler_Command_Start_Link(ctx context.Context, b *bot.Bot, update *mode
 			is_participant := false
 
 			for _, participant := range activity.Participants {
-				if participant.UserTgID == update.CallbackQuery.From.ID {
+				if participant.UserTgID == update.Message.From.ID {
 					is_participant = true
 					break
 				}
