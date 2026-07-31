@@ -41,9 +41,12 @@ func Handler_API_Activities_CreateObject(c *gin.Context) {
 	description := c.PostForm("description")
 	location := c.PostForm("location")
 
-	files := c.Request.MultipartForm.File["send_images"]
-	if len(files) <= 0 {
-		files = c.Request.MultipartForm.File["send_images[]"]
+	var files []*multipart.FileHeader
+	if c.Request.MultipartForm != nil {
+		files = c.Request.MultipartForm.File["send_images"]
+		if len(files) <= 0 {
+			files = c.Request.MultipartForm.File["send_images[]"]
+		}
 	}
 
 	uploadDir := config.ByUI("./img/activities/")
