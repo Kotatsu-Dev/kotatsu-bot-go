@@ -16,4 +16,5 @@ const (
 	DB_ANSWER_PERMISSION_DENIED          // Отказано в доступе
 	DB_ANSWER_DELETE_ERROR               // Ошибка удаления объекта
 	DB_ANSWER_UNEXPECTED_ERROR           // Незапланированная ошибка
+	DB_ANSWER_NOT_SUPPORTED              // Операция не поддерживается
 )

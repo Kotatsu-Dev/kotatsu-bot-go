@@ -2,6 +2,7 @@ import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
+  Clipboard,
   CloseButton,
   Container,
   DataList,
@@ -185,7 +186,7 @@ const EventEditDialog = (props: { value: Activity; reload: () => void }) => {
 
   const editEvent: SubmitHandler<Inputs> = async (data, event) => {
     try {
-      console.log(data)
+      console.log(data);
       await api.activities.update({ ...data, id: props.value.id });
       toaster.success({
         description: "Event successfully edited!",
@@ -332,6 +333,20 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
             </DataList.ItemValue>
           </DataList.Item>
           <DataList.Item>
+            <DataList.ItemLabel>Link</DataList.ItemLabel>
+            <DataList.ItemValue>
+              <Clipboard.Root
+                value={`https://t.me/${import.meta.env.VITE_BOT_USERNAME}?start=${props.value.id}`}
+              >
+                <Clipboard.Trigger asChild>
+                  <IconButton variant="surface" size="xs">
+                    <Clipboard.Indicator />
+                  </IconButton>
+                </Clipboard.Trigger>
+              </Clipboard.Root>
+            </DataList.ItemValue>
+          </DataList.Item>
+          <DataList.Item>
             <DataList.ItemLabel>Description</DataList.ItemLabel>
             <DataList.ItemValue>{event.description}</DataList.ItemValue>
           </DataList.Item>
@@ -352,23 +367,23 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
         </DataList.Root>
       </Card.Body>
       <Card.Footer>
-        {event.status ? 
-        <Button
-          colorPalette={"red"}
-          flexGrow={1}
-          onClick={() => deactivateEvent(event)}
-        >
-          Hide
-        </Button>
-        : 
-        <Button
-          colorPalette={"red"}
-          flexGrow={1}
-          onClick={() => reactivateEvent(event)}
-        >
-          Show
-        </Button>
-        }
+        {event.status ? (
+          <Button
+            colorPalette={"red"}
+            flexGrow={1}
+            onClick={() => deactivateEvent(event)}
+          >
+            Hide
+          </Button>
+        ) : (
+          <Button
+            colorPalette={"red"}
+            flexGrow={1}
+            onClick={() => reactivateEvent(event)}
+          >
+            Show
+          </Button>
+        )}
         <EventEditDialog {...props} />
         <DownloadTrigger
           data={() => exportExcel(event)}
