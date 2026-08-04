@@ -4,16 +4,18 @@ import {
   Card,
   Checkbox,
   CloseButton,
+  Collapsible,
   Container,
   DataList,
   Dialog,
   Field,
   Fieldset,
+  Flex,
   Group,
   Heading,
+  Icon,
   Input,
   Link,
-  Listbox,
   Portal,
   RadioGroup,
   Stack,
@@ -27,10 +29,11 @@ import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   genders,
   itmoStatuses as statuses,
-  itmoTraitCollection,
+  itmoTraits,
   traitsOf,
   type ItmoTrait,
 } from "../../constants/users";
@@ -436,6 +439,13 @@ export const UsersTab = () => {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
   const [itmoTraitFilter, setItmoTraitFilter] = useState<string[]>([]);
   const [onlyRequests, setOnlyRequests] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount =
+    (clubFilter !== "all" ? 1 : 0) +
+    (genderFilter !== "all" ? 1 : 0) +
+    (itmoTraitFilter.length > 0 ? 1 : 0) +
+    (onlyRequests ? 1 : 0);
 
   const currentUsers = useMemo(() => {
     let result = searchUsers(users, search);
@@ -482,6 +492,12 @@ export const UsersTab = () => {
     setOnlyRequests(false);
   };
 
+  const toggleItmoTrait = (trait: string, checked: boolean) => {
+    setItmoTraitFilter((current) =>
+      checked ? [...current, trait] : current.filter((t) => t !== trait),
+    );
+  };
+
   const loadUsers = useCallback(async () => {
     setUsers(await api.users.getAll());
   }, []);
@@ -503,106 +519,143 @@ export const UsersTab = () => {
           }}
         />
         <Card.Root>
-          <Card.Body>
-            <Stack gap={4}>
-              <Field.Root>
-                <Field.Label>Club membership</Field.Label>
-                <RadioGroup.Root
-                  value={clubFilter}
-                  onValueChange={({ value }) =>
-                    setClubFilter((value as ClubFilter) ?? "all")
-                  }
-                >
-                  <Group wrap={"wrap"}>
-                    <RadioGroup.Item value="all">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>All</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                    <RadioGroup.Item value="member">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>Members</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                    <RadioGroup.Item value="not_member">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>Non-members</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                  </Group>
-                </RadioGroup.Root>
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>Gender</Field.Label>
-                <RadioGroup.Root
-                  value={genderFilter}
-                  onValueChange={({ value }) =>
-                    setGenderFilter((value as GenderFilter) ?? "all")
-                  }
-                >
-                  <Group wrap={"wrap"}>
-                    <RadioGroup.Item value="all">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>All</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                    <RadioGroup.Item value="male">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>Male</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                    <RadioGroup.Item value="female">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>Female</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                    <RadioGroup.Item value="unknown">
-                      <RadioGroup.ItemHiddenInput />
-                      <RadioGroup.ItemIndicator />
-                      <RadioGroup.ItemText>Unknown</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                  </Group>
-                </RadioGroup.Root>
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>ITMO status</Field.Label>
-                <Field.HelperText>
-                  All selected traits must match. Nothing selected means no
-                  filtering.
-                </Field.HelperText>
-                <Listbox.Root
-                  collection={itmoTraitCollection}
-                  selectionMode="multiple"
-                  value={itmoTraitFilter}
-                  onValueChange={({ value }) => setItmoTraitFilter(value)}
-                >
-                  <Listbox.Content>
-                    {itmoTraitCollection.items.map((trait) => (
-                      <Listbox.Item item={trait} key={trait.value}>
-                        <Listbox.ItemText>{trait.label}</Listbox.ItemText>
-                        <Listbox.ItemIndicator />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Field.Root>
-
-              <Checkbox.Root
-                checked={onlyRequests}
-                onCheckedChange={({ checked }) => setOnlyRequests(!!checked)}
+          <Collapsible.Root
+            open={filtersOpen}
+            onOpenChange={({ open }) => setFiltersOpen(open)}
+          >
+            <Collapsible.Trigger asChild>
+              <Flex
+                align={"center"}
+                justify={"space-between"}
+                cursor={"pointer"}
+                px={3}
+                py={2}
               >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>Pending request only</Checkbox.Label>
-              </Checkbox.Root>
+                <Text fontWeight={"medium"}>
+                  Filters
+                  {activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}
+                </Text>
+                <Icon>
+                  {filtersOpen ? <FaChevronUp /> : <FaChevronDown />}
+                </Icon>
+              </Flex>
+            </Collapsible.Trigger>
+            <Collapsible.Content>
+              <Card.Body p={3} pt={0}>
+                <Stack gap={2}>
+                  <Flex align={"center"} gap={3} wrap={"wrap"}>
+                    <Text fontWeight={"medium"} minW={"120px"}>
+                      Club membership
+                    </Text>
+                    <RadioGroup.Root
+                      value={clubFilter}
+                      onValueChange={({ value }) =>
+                        setClubFilter((value as ClubFilter) ?? "all")
+                      }
+                    >
+                      <Group gap={3} wrap={"wrap"}>
+                        <RadioGroup.Item value="all">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="member">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Members</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="not_member">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>
+                            Non-members
+                          </RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      </Group>
+                    </RadioGroup.Root>
+                  </Flex>
 
-              <Button variant={"outline"} onClick={resetFilters}>
-                Reset filters
-              </Button>
-            </Stack>
-          </Card.Body>
+                  <Flex align={"center"} gap={3} wrap={"wrap"}>
+                    <Text fontWeight={"medium"} minW={"120px"}>
+                      Gender
+                    </Text>
+                    <RadioGroup.Root
+                      value={genderFilter}
+                      onValueChange={({ value }) =>
+                        setGenderFilter((value as GenderFilter) ?? "all")
+                      }
+                    >
+                      <Group gap={3} wrap={"wrap"}>
+                        <RadioGroup.Item value="all">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="male">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Male</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="female">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Female</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="unknown">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Unknown</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      </Group>
+                    </RadioGroup.Root>
+                  </Flex>
+
+                  <Flex align={"center"} gap={3} wrap={"wrap"}>
+                    <Text fontWeight={"medium"} minW={"120px"}>
+                      ITMO status
+                    </Text>
+                    <Group gap={3} wrap={"wrap"}>
+                      {itmoTraits.map((trait) => (
+                        <Checkbox.Root
+                          key={trait.value}
+                          checked={itmoTraitFilter.includes(trait.value)}
+                          onCheckedChange={({ checked }) =>
+                            toggleItmoTrait(trait.value, !!checked)
+                          }
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Control />
+                          <Checkbox.Label>{trait.label}</Checkbox.Label>
+                        </Checkbox.Root>
+                      ))}
+                    </Group>
+                  </Flex>
+                  {itmoTraitFilter.length > 0 ? (
+                    <Text color={"fg.muted"}>
+                      ITMO: all checked traits must match at once
+                    </Text>
+                  ) : null}
+
+                  <Flex align={"center"} gap={4} wrap={"wrap"}>
+                    <Checkbox.Root
+                      checked={onlyRequests}
+                      onCheckedChange={({ checked }) =>
+                        setOnlyRequests(!!checked)
+                      }
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>Pending request only</Checkbox.Label>
+                    </Checkbox.Root>
+
+                    <Button variant={"outline"} onClick={resetFilters}>
+                      Reset filters
+                    </Button>
+                  </Flex>
+                </Stack>
+              </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
         </Card.Root>
 
         <Text textAlign={"center"} color={"fg.muted"}>
