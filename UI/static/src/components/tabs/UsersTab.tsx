@@ -542,11 +542,9 @@ export const UsersTab = () => {
             </Collapsible.Trigger>
             <Collapsible.Content>
               <Card.Body p={3} pt={0}>
-                <Stack gap={2}>
-                  <Flex align={"center"} gap={3} wrap={"wrap"}>
-                    <Text fontWeight={"medium"} minW={"120px"}>
-                      Club membership
-                    </Text>
+                <Stack gap={3}>
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>Membership</Text>
                     <RadioGroup.Root
                       value={clubFilter}
                       onValueChange={({ value }) =>
@@ -573,12 +571,20 @@ export const UsersTab = () => {
                         </RadioGroup.Item>
                       </Group>
                     </RadioGroup.Root>
-                  </Flex>
+                    <Checkbox.Root
+                      checked={onlyRequests}
+                      onCheckedChange={({ checked }) =>
+                        setOnlyRequests(!!checked)
+                      }
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>Request</Checkbox.Label>
+                    </Checkbox.Root>
+                  </Stack>
 
-                  <Flex align={"center"} gap={3} wrap={"wrap"}>
-                    <Text fontWeight={"medium"} minW={"120px"}>
-                      Gender
-                    </Text>
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>Gender</Text>
                     <RadioGroup.Root
                       value={genderFilter}
                       onValueChange={({ value }) =>
@@ -608,12 +614,10 @@ export const UsersTab = () => {
                         </RadioGroup.Item>
                       </Group>
                     </RadioGroup.Root>
-                  </Flex>
+                  </Stack>
 
-                  <Flex align={"center"} gap={3} wrap={"wrap"}>
-                    <Text fontWeight={"medium"} minW={"120px"}>
-                      ITMO status
-                    </Text>
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>ITMO status</Text>
                     <Group gap={3} wrap={"wrap"}>
                       {itmoTraits.map((trait) => (
                         <Checkbox.Root
@@ -629,25 +633,14 @@ export const UsersTab = () => {
                         </Checkbox.Root>
                       ))}
                     </Group>
-                  </Flex>
-                  {itmoTraitFilter.length > 0 ? (
-                    <Text color={"fg.muted"}>
-                      ITMO: all checked traits must match at once
-                    </Text>
-                  ) : null}
+                    {itmoTraitFilter.length > 0 ? (
+                      <Text color={"fg.muted"}>
+                        ITMO: all checked traits must match at once
+                      </Text>
+                    ) : null}
+                  </Stack>
 
-                  <Flex align={"center"} gap={4} wrap={"wrap"}>
-                    <Checkbox.Root
-                      checked={onlyRequests}
-                      onCheckedChange={({ checked }) =>
-                        setOnlyRequests(!!checked)
-                      }
-                    >
-                      <Checkbox.HiddenInput />
-                      <Checkbox.Control />
-                      <Checkbox.Label>Pending request only</Checkbox.Label>
-                    </Checkbox.Root>
-
+                  <Flex justify={"flex-end"}>
                     <Button variant={"outline"} onClick={resetFilters}>
                       Reset filters
                     </Button>
