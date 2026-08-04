@@ -13,11 +13,12 @@ import {
   Heading,
   Input,
   Link,
+  Listbox,
   Portal,
   RadioGroup,
   Stack,
   Status,
-  Tabs,
+  Text,
 } from "@chakra-ui/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "../ui/toaster";
@@ -25,8 +26,15 @@ import type { User } from "@/api/users";
 import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
-import Fuse from "fuse.js";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import {
+  genders,
+  itmoStatuses as statuses,
+  itmoTraitCollection,
+  traitsOf,
+  type ItmoTrait,
+} from "../../constants/users";
+import { searchUsers } from "../../lib/userSearch";
 
 type Inputs = {
   full_name: string;
@@ -36,21 +44,10 @@ type Inputs = {
   itmo_status: string;
 };
 
-const genders = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "", label: "Unknown" },
-];
+const PAGE_SIZE = 10;
 
-const statuses = [
-  { value: "guest", label: "Guest" },
-  { value: "student", label: "Student" },
-  { value: "graduate", label: "Graduate" },
-  { value: "employee", label: "Employee" },
-  { value: "student_employee", label: "Student and employee" },
-  { value: "graduate_employee", label: "Graduate and employee" },
-  { value: "", label: "Unknown" },
-];
+type ClubFilter = "all" | "member" | "not_member";
+type GenderFilter = "all" | "male" | "female" | "unknown";
 
 const UserEditDialog = (props: { value: User; reload: () => void }) => {
   const api = useAPI();
@@ -433,34 +430,57 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
 export const UsersTab = () => {
   const api = useAPI();
   const [users, setUsers] = useState<User[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useDebounceValue("", 500);
+  const [clubFilter, setClubFilter] = useState<ClubFilter>("all");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
+  const [itmoTraitFilter, setItmoTraitFilter] = useState<string[]>([]);
+  const [onlyRequests, setOnlyRequests] = useState(false);
 
-  const currentUsers = useMemo(
-    () =>
-      search.length == 0
-        ? users
-        : new Fuse(users, {
-            keys: [
-              "user_name",
-              "full_tg_name",
-              "isu",
-              "full_name",
-              "phone_number",
-            ],
-          })
-            .search(search)
-            .map((e) => e.item),
-    [users, search],
-  );
+  const currentUsers = useMemo(() => {
+    let result = searchUsers(users, search);
 
-  const members = useMemo(
-    () => currentUsers.filter((user) => user.is_club_member),
-    [currentUsers],
-  );
-  const requests = useMemo(
-    () => currentUsers.filter((user) => !!user.my_request),
-    [currentUsers],
-  );
+    if (clubFilter !== "all") {
+      const wanted = clubFilter === "member";
+      result = result.filter((user) => user.is_club_member === wanted);
+    }
+
+    if (genderFilter !== "all") {
+      const wanted = genderFilter === "unknown" ? "" : genderFilter;
+      result = result.filter((user) => (user.gender ?? "") === wanted);
+    }
+
+    if (itmoTraitFilter.length > 0) {
+      result = result.filter((user) => {
+        const traits = traitsOf(user.itmo_status);
+        return itmoTraitFilter.every((trait) =>
+          traits.includes(trait as ItmoTrait),
+        );
+      });
+    }
+
+    if (onlyRequests) {
+      result = result.filter((user) => !!user.my_request);
+    }
+
+    return result;
+  }, [
+    users,
+    search,
+    clubFilter,
+    genderFilter,
+    itmoTraitFilter,
+    onlyRequests,
+  ]);
+
+  const resetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setClubFilter("all");
+    setGenderFilter("all");
+    setItmoTraitFilter([]);
+    setOnlyRequests(false);
+  };
 
   const loadUsers = useCallback(async () => {
     setUsers(await api.users.getAll());
@@ -471,47 +491,137 @@ export const UsersTab = () => {
   }, []);
 
   return (
-    <Container maxW={"lg"}>
+    <Container maxW={"lg"} mb={5}>
       <Stack>
         <Heading textAlign={"center"}>User management</Heading>
         <Input
-          defaultValue={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
+          placeholder="Search by name, ISU, phone, @username or Telegram ID"
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.currentTarget.value);
+            setSearch(e.currentTarget.value);
+          }}
         />
-        <Tabs.Root fitted variant={"enclosed"} defaultValue={"all"}>
-          <Tabs.List>
-            <Tabs.Trigger value="all">Everybody</Tabs.Trigger>
-            <Tabs.Trigger value="members">Members</Tabs.Trigger>
-            <Tabs.Trigger value="requests">Requests</Tabs.Trigger>
-          </Tabs.List>
-          <Tabs.Content value="all">
-            <PaginatedList
-              items={currentUsers}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-          <Tabs.Content value="members">
-            <PaginatedList
-              items={members}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-          <Tabs.Content value="requests">
-            <PaginatedList
-              items={requests}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-        </Tabs.Root>
+        <Card.Root>
+          <Card.Body>
+            <Stack gap={4}>
+              <Field.Root>
+                <Field.Label>Club membership</Field.Label>
+                <RadioGroup.Root
+                  value={clubFilter}
+                  onValueChange={({ value }) =>
+                    setClubFilter((value as ClubFilter) ?? "all")
+                  }
+                >
+                  <Group wrap={"wrap"}>
+                    <RadioGroup.Item value="all">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                    <RadioGroup.Item value="member">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>Members</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                    <RadioGroup.Item value="not_member">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>Non-members</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                  </Group>
+                </RadioGroup.Root>
+              </Field.Root>
+
+              <Field.Root>
+                <Field.Label>Gender</Field.Label>
+                <RadioGroup.Root
+                  value={genderFilter}
+                  onValueChange={({ value }) =>
+                    setGenderFilter((value as GenderFilter) ?? "all")
+                  }
+                >
+                  <Group wrap={"wrap"}>
+                    <RadioGroup.Item value="all">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                    <RadioGroup.Item value="male">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>Male</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                    <RadioGroup.Item value="female">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>Female</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                    <RadioGroup.Item value="unknown">
+                      <RadioGroup.ItemHiddenInput />
+                      <RadioGroup.ItemIndicator />
+                      <RadioGroup.ItemText>Unknown</RadioGroup.ItemText>
+                    </RadioGroup.Item>
+                  </Group>
+                </RadioGroup.Root>
+              </Field.Root>
+
+              <Field.Root>
+                <Field.Label>ITMO status</Field.Label>
+                <Field.HelperText>
+                  All selected traits must match. Nothing selected means no
+                  filtering.
+                </Field.HelperText>
+                <Listbox.Root
+                  collection={itmoTraitCollection}
+                  selectionMode="multiple"
+                  value={itmoTraitFilter}
+                  onValueChange={({ value }) => setItmoTraitFilter(value)}
+                >
+                  <Listbox.Content>
+                    {itmoTraitCollection.items.map((trait) => (
+                      <Listbox.Item item={trait} key={trait.value}>
+                        <Listbox.ItemText>{trait.label}</Listbox.ItemText>
+                        <Listbox.ItemIndicator />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
+              </Field.Root>
+
+              <Checkbox.Root
+                checked={onlyRequests}
+                onCheckedChange={({ checked }) => setOnlyRequests(!!checked)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>Pending request only</Checkbox.Label>
+              </Checkbox.Root>
+
+              <Button variant={"outline"} onClick={resetFilters}>
+                Reset filters
+              </Button>
+            </Stack>
+          </Card.Body>
+        </Card.Root>
+
+        <Text textAlign={"center"} color={"fg.muted"}>
+          Showing {currentUsers.length} of {users.length} users
+        </Text>
+
+        {currentUsers.length === 0 ? (
+          <Text textAlign={"center"} py={6}>
+            No users match these filters
+          </Text>
+        ) : (
+          <PaginatedList
+            items={currentUsers}
+            pageSize={PAGE_SIZE}
+            render={(user) => (
+              <UserCard key={user.id} value={user} reload={loadUsers} />
+            )}
+          />
+        )}
       </Stack>
     </Container>
   );

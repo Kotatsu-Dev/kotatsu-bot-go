@@ -20,23 +20,12 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { toaster } from "../ui/toaster";
+import { itmoStatusCollection as itmoStatus } from "../../constants/users";
 
 const clubMemberStatus = createListCollection({
   items: [
     { label: "Club member", value: "club_member" },
     { label: "Not club member", value: "not_club_member" },
-  ],
-});
-
-const itmoStatus = createListCollection({
-  items: [
-    { label: "Guest", value: "guest" },
-    { label: "Student", value: "student" },
-    { label: "Graduate", value: "graduate" },
-    { label: "Employee", value: "employee" },
-    { label: "Student and employee", value: "student_employee" },
-    { label: "Graduate and employee", value: "graduate_employee" },
-    { label: "Unknown", value: "" },
   ],
 });
 
