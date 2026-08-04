@@ -25,11 +25,21 @@ import {
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { toaster } from "../ui/toaster";
 import { type Activity } from "../../api/activities";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { Workbook } from "exceljs";
 import { FaDownload, FaEye } from "react-icons/fa";
 import { Calendar } from "../Calendar";
+import { PaginatedList } from "./PaginatedList";
+import { useDebounceValue } from "usehooks-ts";
+
+const PAGE_SIZE = 10;
+
+const sortByDateDesc = (list: Activity[]) =>
+  [...list].sort(
+    (a, b) =>
+      new Date(b.date_meeting).getTime() - new Date(a.date_meeting).getTime(),
+  );
 
 const exportExcel = async (event: Activity) => {
   const wb = new Workbook();
@@ -468,6 +478,8 @@ export const EventsTab = () => {
   const api = useAPI();
   const [events, setEvents] = useState<Activity[]>([]);
   const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useDebounceValue("", 500);
   const { register, handleSubmit, reset, control } = useForm<Inputs>();
 
   const createEvent: SubmitHandler<Inputs> = async (data, event) => {
@@ -485,13 +497,36 @@ export const EventsTab = () => {
     }
   };
 
-  const upcoming = events.filter(
-    (event) => isFuture(event.date_meeting) && event.status,
+  const filteredEvents = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (needle.length === 0) return events;
+    return events.filter((event) =>
+      event.title.toLowerCase().includes(needle),
+    );
+  }, [events, search]);
+
+  const upcoming = useMemo(
+    () =>
+      sortByDateDesc(
+        filteredEvents.filter(
+          (event) => isFuture(event.date_meeting) && event.status,
+        ),
+      ),
+    [filteredEvents],
   );
-  const past = events.filter(
-    (event) => isPast(event.date_meeting) && event.status,
+  const past = useMemo(
+    () =>
+      sortByDateDesc(
+        filteredEvents.filter(
+          (event) => isPast(event.date_meeting) && event.status,
+        ),
+      ),
+    [filteredEvents],
   );
-  const inactive = events.filter((event) => !event.status);
+  const inactive = useMemo(
+    () => sortByDateDesc(filteredEvents.filter((event) => !event.status)),
+    [filteredEvents],
+  );
 
   const loadEvents = async () => {
     try {
@@ -583,6 +618,14 @@ export const EventsTab = () => {
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
+        <Input
+          placeholder="Search by event title"
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.currentTarget.value);
+            setSearch(e.currentTarget.value);
+          }}
+        />
         <Tabs.Root fitted variant={"enclosed"} defaultValue={"upcoming"}>
           <Tabs.List>
             <Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
@@ -590,25 +633,31 @@ export const EventsTab = () => {
             <Tabs.Trigger value="inactive">Inactive</Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="upcoming">
-            <Stack>
-              {upcoming.map((event) => (
+            <PaginatedList
+              items={upcoming}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
                 <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="past">
-            <Stack>
-              {past.map((event) => (
+            <PaginatedList
+              items={past}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
                 <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="inactive">
-            <Stack>
-              {inactive.map((event) => (
+            <PaginatedList
+              items={inactive}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
                 <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+              )}
+            />
           </Tabs.Content>
         </Tabs.Root>
       </Stack>
