@@ -11,6 +11,7 @@ import {
   Field,
   Fieldset,
   FileUpload,
+  Flex,
   Group,
   Heading,
   IconButton,
@@ -20,18 +21,21 @@ import {
   Status,
   Table,
   Tabs,
+  Text,
   Textarea,
 } from "@chakra-ui/react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { toaster } from "../ui/toaster";
 import { type Activity } from "../../api/activities";
+import type { User } from "../../api/users";
 import { useEffect, useMemo, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { Workbook } from "exceljs";
-import { FaDownload, FaEye } from "react-icons/fa";
+import { FaDownload, FaEye, FaTimes } from "react-icons/fa";
 import { Calendar } from "../Calendar";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
+import { searchUsers } from "../../lib/userSearch";
 
 const PAGE_SIZE = 10;
 
@@ -297,9 +301,73 @@ const EventEditDialog = (props: { value: Activity; reload: () => void }) => {
   );
 };
 
-const EventCard = (props: { value: Activity; reload: () => void }) => {
+const EventCard = (props: {
+  value: Activity;
+  reload: () => void;
+  allUsers: User[];
+}) => {
   const api = useAPI();
   const event = props.value;
+
+  // event.participants comes back with unreliable id/created_at (backend TODO in
+  // db/Activities.go ToRead()) — resolve each row via user_tg_id against the
+  // canonical user list instead of trusting participant.id directly.
+  const byTgId = useMemo(
+    () => new Map(props.allUsers.map((u) => [u.user_tg_id, u])),
+    [props.allUsers],
+  );
+
+  const participants = useMemo(() => {
+    const result: User[] = [];
+    for (const raw of event.participants) {
+      const user = byTgId.get(raw.user_tg_id);
+      if (user) result.push(user);
+    }
+    return result;
+  }, [event.participants, byTgId]);
+
+  const participantTgIds = useMemo(
+    () => new Set(participants.map((u) => u.user_tg_id)),
+    [participants],
+  );
+
+  const [participantSearchInput, setParticipantSearchInput] = useState("");
+  const [participantSearch, setParticipantSearch] = useDebounceValue("", 500);
+
+  const participantSearchResults = useMemo(() => {
+    if (participantSearch.trim().length === 0) return [];
+    return searchUsers(props.allUsers, participantSearch)
+      .filter((u) => !participantTgIds.has(u.user_tg_id))
+      .slice(0, 8);
+  }, [props.allUsers, participantSearch, participantTgIds]);
+
+  const addParticipant = async (user: User) => {
+    try {
+      await api.activities.addParticipant({
+        activityId: event.id,
+        userId: user.id,
+      });
+      toaster.success({ description: "Participant added" });
+      setParticipantSearchInput("");
+      setParticipantSearch("");
+      props.reload();
+    } catch (e) {
+      handleError(e);
+    }
+  };
+
+  const removeParticipant = async (user: User) => {
+    try {
+      await api.activities.removeParticipant({
+        activityId: event.id,
+        userId: user.id,
+      });
+      toaster.success({ description: "Participant removed" });
+      props.reload();
+    } catch (e) {
+      handleError(e);
+    }
+  };
 
   const deactivateEvent = async (event: Activity) => {
     try {
@@ -426,10 +494,11 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
                         <Table.ColumnHeader>Telegram</Table.ColumnHeader>
                         <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
                         <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                        <Table.ColumnHeader></Table.ColumnHeader>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                      {event.participants.map((user) => (
+                      {participants.map((user) => (
                         <Table.Row key={user.id}>
                           <Table.Cell>{user.full_name}</Table.Cell>
                           <Table.Cell>{user.user_name}</Table.Cell>
@@ -447,10 +516,70 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
                             )}
                           </Table.Cell>
                           <Table.Cell>{user.phone_number}</Table.Cell>
+                          <Table.Cell>
+                            <IconButton
+                              aria-label="Remove participant"
+                              size="xs"
+                              variant="ghost"
+                              onClick={() => removeParticipant(user)}
+                            >
+                              <FaTimes />
+                            </IconButton>
+                          </Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
                   </Table.Root>
+
+                  <Stack gap={2} mt={4}>
+                    <Text fontWeight={"medium"}>Add participant</Text>
+                    <Input
+                      placeholder="Search by name, ISU, phone, @username or Telegram ID"
+                      value={participantSearchInput}
+                      onChange={(e) => {
+                        setParticipantSearchInput(e.currentTarget.value);
+                        setParticipantSearch(e.currentTarget.value);
+                      }}
+                    />
+                    {participantSearchResults.length > 0 ? (
+                      <Stack gap={1}>
+                        {participantSearchResults.map((user) => (
+                          <Flex
+                            key={user.id}
+                            justify={"space-between"}
+                            align={"center"}
+                            gap={2}
+                            px={2}
+                            py={1}
+                            borderRadius={"md"}
+                            cursor={"pointer"}
+                            _hover={{ bg: "bg.muted" }}
+                            onClick={() => addParticipant(user)}
+                          >
+                            <Stack gap={0}>
+                              <Text>
+                                {user.full_name ||
+                                  (user.user_name
+                                    ? `@${user.user_name}`
+                                    : `Telegram ID ${user.user_tg_id}`)}
+                              </Text>
+                              <Text fontSize={"sm"} color={"fg.muted"}>
+                                {[
+                                  user.isu,
+                                  user.phone_number,
+                                  user.user_name ? `@${user.user_name}` : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </Text>
+                            </Stack>
+                          </Flex>
+                        ))}
+                      </Stack>
+                    ) : participantSearchInput.trim().length > 0 ? (
+                      <Text color={"fg.muted"}>No users found</Text>
+                    ) : null}
+                  </Stack>
                 </Dialog.Body>
                 <Dialog.CloseTrigger asChild>
                   <CloseButton size="sm" />
@@ -477,6 +606,7 @@ type Inputs = {
 export const EventsTab = () => {
   const api = useAPI();
   const [events, setEvents] = useState<Activity[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useDebounceValue("", 500);
@@ -536,8 +666,17 @@ export const EventsTab = () => {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      setAllUsers(await api.users.getAll());
+    } catch (e) {
+      handleError(e);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
+    loadUsers();
   }, []);
 
   return (
@@ -637,7 +776,12 @@ export const EventsTab = () => {
               items={upcoming}
               pageSize={PAGE_SIZE}
               render={(event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
               )}
             />
           </Tabs.Content>
@@ -646,7 +790,12 @@ export const EventsTab = () => {
               items={past}
               pageSize={PAGE_SIZE}
               render={(event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
               )}
             />
           </Tabs.Content>
@@ -655,7 +804,12 @@ export const EventsTab = () => {
               items={inactive}
               pageSize={PAGE_SIZE}
               render={(event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
               )}
             />
           </Tabs.Content>

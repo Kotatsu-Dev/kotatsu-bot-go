@@ -65,5 +65,18 @@ export const createActivitiesApi = ($: AxiosInstance) => {
     async wipe() {
       await $.delete("/activities/");
     },
+
+    async addParticipant(props: { activityId: number; userId: number }) {
+      await $.post("/activities/participants", {
+        activity_id: props.activityId,
+        user_id: props.userId,
+      });
+    },
+
+    async removeParticipant(props: { activityId: number; userId: number }) {
+      await $.delete("/activities/participants", {
+        data: { activity_id: props.activityId, user_id: props.userId },
+      });
+    },
   };
 };
