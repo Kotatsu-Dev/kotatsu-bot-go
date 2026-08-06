@@ -69,7 +69,7 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
     try {
       await api.users.update({ ...data, user_tg_id: props.value.user_tg_id });
       toaster.success({
-        description: "Event successfully created!",
+        description: "User successfully edited!",
       });
       console.log(data);
       setOpen(false);
