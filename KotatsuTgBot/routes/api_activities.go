@@ -236,6 +236,60 @@ func Handler_API_Activities_DeleteObject_ALL(c *gin.Context) {
 	}
 }
 
+// Добавить участника мероприятия вручную
+func Handler_API_Activities_AddParticipant(c *gin.Context) {
+
+	var req Activity_Participant_Request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_AddParticipant", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
+		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
+		return
+	}
+
+	db_answer_code := db.DB_UPDATE_Activity_ADD_Participants(req.ActivityID, req.UserID)
+	switch db_answer_code {
+	case db.DB_ANSWER_SUCCESS:
+		Answer_OK(c)
+		return
+
+	case db.DB_ANSWER_OBJECT_NOT_FOUND:
+		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
+		return
+
+	default:
+		Answer_BadRequest(c, ANSWER_DB_GENERAL_ERROR().Code, ANSWER_DB_GENERAL_ERROR().Message)
+		return
+	}
+}
+
+// Удалить участника мероприятия вручную
+func Handler_API_Activities_RemoveParticipant(c *gin.Context) {
+
+	var req Activity_Participant_Request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_RemoveParticipant", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
+		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
+		return
+	}
+
+	db_answer_code := db.DB_UPDATE_Activity_REMOVE_Participant(req.ActivityID, req.UserID)
+	switch db_answer_code {
+	case db.DB_ANSWER_SUCCESS:
+		Answer_OK(c)
+		return
+
+	case db.DB_ANSWER_OBJECT_NOT_FOUND, db.DB_ANSWER_OBJECT_EXISTS:
+		// DB_ANSWER_OBJECT_EXISTS here means "not currently a participant" —
+		// DB_UPDATE_Activity_REMOVE_Participant reuses that code for that case.
+		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
+		return
+
+	default:
+		Answer_BadRequest(c, ANSWER_DB_GENERAL_ERROR().Code, ANSWER_DB_GENERAL_ERROR().Message)
+		return
+	}
+}
+
 func removeAllContents(directory string) error {
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

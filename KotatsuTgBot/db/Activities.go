@@ -54,6 +54,9 @@ func (activity *Activity) ToRead() *Activity_ReadJSON {
 		ID:                     activity.ID,
 		CreatedAt:              activity.CreatedAt,
 		Title:                  activity.Title,
+		// TODO: participants copied raw ([]*User), not converted to User_ReadJSON like
+		// AnimeRoulette_ReadJSON does via ParticipantsToReadJson — id/created_at/etc
+		// serialize capitalized (gorm.Model has no json tag override), unreliable on the wire.
 		Participants:           activity.Participants,
 		DateMeeting:            activity.DateMeeting,
 		GuestRegistrationUntil: activity.GuestRegistrationUntil,
