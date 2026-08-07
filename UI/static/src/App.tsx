@@ -30,7 +30,7 @@ import {
   FaFileExport,
   FaUsers,
 } from "react-icons/fa";
-import { FaCalendarDays, FaMessage, FaShuffle } from "react-icons/fa6";
+import { FaCalendarDays, FaShuffle } from "react-icons/fa6";
 import { BroadcastTab } from "./components/tabs/BroadcastTab";
 
 const tabs = [
@@ -59,11 +59,11 @@ const tabs = [
     value: "roulettes",
     title: "Roulettes",
   },
-  {
-    icon: <FaMessage />,
-    value: "messages",
-    title: "Messages",
-  },
+  // {
+  //   icon: <FaMessage />,
+  //   value: "messages",
+  //   title: "Messages",
+  // },
   // {
   //   value: "requests",
   //   title: "Requests",

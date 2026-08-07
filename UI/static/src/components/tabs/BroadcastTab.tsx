@@ -1,9 +1,9 @@
 import { handleError, useAPI } from "../../api/api";
 import {
-  Badge,
   Button,
   Card,
   CloseButton,
+  Collapsible,
   Combobox,
   Container,
   createListCollection,
@@ -11,6 +11,7 @@ import {
   Field,
   Flex,
   Heading,
+  Icon,
   IconButton,
   Input,
   Listbox,
@@ -32,7 +33,7 @@ import type { User } from "../../api/users";
 import type { Activity } from "../../api/activities";
 import type { Roulette } from "../../api/roulettes";
 import type { BroadcastResult } from "../../api/broadcast";
-import { FaTimes } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp, FaTimes } from "react-icons/fa";
 
 const clubMemberStatus = createListCollection({
   items: [
@@ -41,19 +42,18 @@ const clubMemberStatus = createListCollection({
   ],
 });
 
-type Rule =
-  | { id: string; kind: "event"; eventId: number; label: string }
-  | { id: string; kind: "roulette"; rouletteId: number; label: string }
-  | {
-      id: string;
-      kind: "filter";
-      clubStatuses: string[];
-      itmoStatuses: string[];
-      label: string;
-    };
+type Rule = {
+  id: string;
+  eventIds: number[];
+  rouletteIds: number[];
+  clubStatuses: string[];
+  itmoStatuses: string[];
+  label: string;
+};
 
 const displayName = (user: User) =>
-  user.full_name || (user.user_name ? `@${user.user_name}` : "") ||
+  user.full_name ||
+  (user.user_name ? `@${user.user_name}` : "") ||
   `Telegram ID ${user.user_tg_id}`;
 
 export const BroadcastTab = () => {
@@ -82,6 +82,7 @@ export const BroadcastTab = () => {
   );
 
   const [rules, setRules] = useState<Rule[]>([]);
+  const [ruleBuilderOpen, setRuleBuilderOpen] = useState(true);
   const [manualTgIds, setManualTgIds] = useState<Set<number>>(new Set());
   const [excludedTgIds, setExcludedTgIds] = useState<Set<number>>(new Set());
 
@@ -145,42 +146,28 @@ export const BroadcastTab = () => {
     [allUsers],
   );
 
-  const addEventRules = () => {
-    const newRules: Rule[] = selectedEventIds
-      .map((id) => allEvents.find((event) => event.id === id))
-      .filter((event): event is Activity => !!event)
-      .map((event) => ({
-        id: newRuleId(),
-        kind: "event",
-        eventId: event.id,
-        label: `Event: ${event.title}`,
-      }));
-    setRules((prev) => [...prev, ...newRules]);
-    setSelectedEventIds([]);
-  };
-
-  const addRouletteRules = () => {
-    const newRules: Rule[] = selectedRouletteIds
-      .map((id) => allRoulettes.find((roulette) => roulette.id === id))
-      .filter((roulette): roulette is Roulette => !!roulette)
-      .map((roulette) => ({
-        id: newRuleId(),
-        kind: "roulette",
-        rouletteId: roulette.id,
-        label: `Roulette: ${roulette.theme}`,
-      }));
-    setRules((prev) => [...prev, ...newRules]);
-    setSelectedRouletteIds([]);
-  };
-
-  const addFilterRule = () => {
-    if (selectedClubStatuses.length === 0 && selectedItmoStatuses.length === 0) {
+  const addRule = () => {
+    if (
+      selectedEventIds.length === 0 &&
+      selectedRouletteIds.length === 0 &&
+      selectedClubStatuses.length === 0 &&
+      selectedItmoStatuses.length === 0
+    ) {
       return;
     }
 
-    const parts: string[] = [];
+    const eventLabels = selectedEventIds
+      .map((id) => allEvents.find((event) => event.id === id)?.title)
+      .filter((title): title is string => !!title);
+    const rouletteLabels = selectedRouletteIds
+      .map((id) => allRoulettes.find((roulette) => roulette.id === id)?.theme)
+      .filter((theme): theme is string => !!theme);
+    const scopeParts = [...eventLabels, ...rouletteLabels];
+    const scope = scopeParts.length > 0 ? scopeParts.join(", ") : "All users";
+
+    const filterParts: string[] = [];
     if (selectedClubStatuses.length > 0) {
-      parts.push(
+      filterParts.push(
         selectedClubStatuses
           .map(
             (value) =>
@@ -191,7 +178,7 @@ export const BroadcastTab = () => {
       );
     }
     if (selectedItmoStatuses.length > 0) {
-      parts.push(
+      filterParts.push(
         selectedItmoStatuses
           .map(
             (value) =>
@@ -202,47 +189,70 @@ export const BroadcastTab = () => {
       );
     }
 
+    const label =
+      filterParts.length > 0
+        ? scope === "All users"
+          ? filterParts.join(", ")
+          : `${scope} → ${filterParts.join(", ")}`
+        : scope;
+
     setRules((prev) => [
       ...prev,
       {
         id: newRuleId(),
-        kind: "filter",
+        eventIds: selectedEventIds,
+        rouletteIds: selectedRouletteIds,
         clubStatuses: selectedClubStatuses,
         itmoStatuses: selectedItmoStatuses,
-        label: `Filter: ${parts.join(" · ")}`,
+        label,
       },
     ]);
+    setSelectedEventIds([]);
+    setSelectedRouletteIds([]);
     setSelectedClubStatuses([]);
     setSelectedItmoStatuses([]);
+    setRuleBuilderOpen(false);
   };
 
   const removeRule = (id: string) => {
     setRules((prev) => prev.filter((rule) => rule.id !== id));
   };
 
-  const resolveEventAudience = (eventId: number): User[] => {
-    const event = allEvents.find((e) => e.id === eventId);
-    if (!event) return [];
-    const result: User[] = [];
-    for (const participant of event.participants) {
-      const user = byTgId.get(participant.user_tg_id);
-      if (user) result.push(user);
+  const resolveRuleAudience = (rule: Rule): User[] => {
+    let base: User[];
+
+    if (rule.eventIds.length > 0 || rule.rouletteIds.length > 0) {
+      const seen = new Set<number>();
+      base = [];
+
+      for (const eventId of rule.eventIds) {
+        const event = allEvents.find((e) => e.id === eventId);
+        if (!event) continue;
+        for (const participant of event.participants) {
+          const user = byTgId.get(participant.user_tg_id);
+          if (user && !seen.has(user.user_tg_id)) {
+            seen.add(user.user_tg_id);
+            base.push(user);
+          }
+        }
+      }
+
+      for (const rouletteId of rule.rouletteIds) {
+        const roulette = allRoulettes.find((r) => r.id === rouletteId);
+        if (!roulette?.participants) continue;
+        for (const participant of roulette.participants) {
+          const user = byTgId.get(participant.user_tg_id) ?? participant;
+          if (!seen.has(user.user_tg_id)) {
+            seen.add(user.user_tg_id);
+            base.push(user);
+          }
+        }
+      }
+    } else {
+      base = allUsers;
     }
-    return result;
-  };
 
-  const resolveRouletteAudience = (rouletteId: number): User[] => {
-    const roulette = allRoulettes.find((r) => r.id === rouletteId);
-    if (!roulette?.participants) return [];
-    return roulette.participants.map(
-      (participant) => byTgId.get(participant.user_tg_id) ?? participant,
-    );
-  };
-
-  const resolveFilterAudience = (
-    rule: Extract<Rule, { kind: "filter" }>,
-  ): User[] =>
-    allUsers.filter((user) => {
+    return base.filter((user) => {
       if (rule.clubStatuses.length > 0) {
         const wantMember = rule.clubStatuses.includes("club_member");
         const wantNotMember = rule.clubStatuses.includes("not_club_member");
@@ -257,6 +267,7 @@ export const BroadcastTab = () => {
       }
       return true;
     });
+  };
 
   const recipients = useMemo(() => {
     const map = new Map<number, { user: User; sources: string[] }>();
@@ -271,15 +282,13 @@ export const BroadcastTab = () => {
       }
     };
 
-    for (const rule of rules) {
-      const audience =
-        rule.kind === "event"
-          ? resolveEventAudience(rule.eventId)
-          : rule.kind === "roulette"
-            ? resolveRouletteAudience(rule.rouletteId)
-            : resolveFilterAudience(rule);
-      for (const user of audience) include(user, rule.label);
-    }
+    rules.forEach((rule, index) => {
+      // Number by current position, not a stored id -- so if an earlier rule
+      // is deleted, later rules' numbers shift down and stay in sync with
+      // what's shown in the active-rules list below.
+      const source = `Rule ${index + 1}`;
+      for (const user of resolveRuleAudience(rule)) include(user, source);
+    });
 
     for (const tgId of manualTgIds) {
       const user = byTgId.get(tgId);
@@ -317,8 +326,10 @@ export const BroadcastTab = () => {
 
   const userSearchResults = useMemo(() => {
     if (userSearch.trim().length === 0) return [];
-    return searchUsers(allUsers, userSearch).slice(0, 8);
-  }, [allUsers, userSearch]);
+    return searchUsers(allUsers, userSearch)
+      .filter((user) => !recipientTgIds.has(user.user_tg_id))
+      .slice(0, 8);
+  }, [allUsers, userSearch, recipientTgIds]);
 
   const handleSend = async () => {
     try {
@@ -342,6 +353,7 @@ export const BroadcastTab = () => {
       setManualTgIds(new Set());
       setExcludedTgIds(new Set());
       setMessage("");
+      setRuleBuilderOpen(true);
     } catch (error) {
       handleError(error);
     }
@@ -354,190 +366,198 @@ export const BroadcastTab = () => {
       </Heading>
       <Stack gap={4}>
         <Card.Root>
-          <Card.Body>
-            <Stack gap={3}>
-              <Text fontWeight={"medium"}>Add rule by event</Text>
-              <Combobox.Root
-                multiple
-                closeOnSelect={false}
-                collection={events}
-                onInputValueChange={(e) => filterEvents(e.inputValue)}
-                onValueChange={({ value }) =>
-                  setSelectedEventIds(value as unknown as number[])
-                }
-                value={selectedEventIds as unknown as string[]}
+          <Collapsible.Root
+            open={ruleBuilderOpen}
+            onOpenChange={({ open }) => setRuleBuilderOpen(open)}
+          >
+            <Collapsible.Trigger asChild>
+              <Flex
+                align={"center"}
+                justify={"space-between"}
+                cursor={"pointer"}
+                px={3}
+                py={2}
               >
-                <Combobox.Control>
-                  <Combobox.Input placeholder="Type to search events" />
-                  <Combobox.IndicatorGroup>
-                    <Combobox.ClearTrigger />
-                    <Combobox.Trigger />
-                  </Combobox.IndicatorGroup>
-                </Combobox.Control>
-                <Portal>
-                  <Combobox.Positioner>
-                    <Combobox.Content>
-                      <Combobox.Empty>No items found</Combobox.Empty>
-                      {events.items.map((item) => (
-                        <Combobox.Item item={item} key={item.value}>
-                          {item.label}
-                          <Combobox.ItemIndicator />
-                        </Combobox.Item>
-                      ))}
-                    </Combobox.Content>
-                  </Combobox.Positioner>
-                </Portal>
-              </Combobox.Root>
-              <Flex justify={"space-between"} align={"center"}>
-                <Text color={"fg.muted"}>
-                  {selectedEventIds.length > 0
-                    ? `${selectedEventIds.length} event(s) selected`
-                    : "No events selected"}
-                </Text>
-                <Button
-                  size="sm"
-                  onClick={addEventRules}
-                  disabled={selectedEventIds.length === 0}
-                >
-                  Add rule
-                </Button>
+                <Text fontWeight={"medium"}>Add rule</Text>
+                <Icon>
+                  {ruleBuilderOpen ? <FaChevronUp /> : <FaChevronDown />}
+                </Icon>
               </Flex>
-            </Stack>
-          </Card.Body>
-        </Card.Root>
+            </Collapsible.Trigger>
+            <Collapsible.Content>
+              <Card.Body p={3} pt={0}>
+                <Stack gap={3}>
+                  <Stack gap={1}>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      Events
+                    </Text>
+                    <Combobox.Root
+                      multiple
+                      closeOnSelect={false}
+                      collection={events}
+                      onInputValueChange={(e) => filterEvents(e.inputValue)}
+                      onValueChange={({ value }) =>
+                        setSelectedEventIds(value as unknown as number[])
+                      }
+                      value={selectedEventIds as unknown as string[]}
+                    >
+                      <Combobox.Control>
+                        <Combobox.Input placeholder="Type to search events" />
+                        <Combobox.IndicatorGroup>
+                          <Combobox.ClearTrigger />
+                          <Combobox.Trigger />
+                        </Combobox.IndicatorGroup>
+                      </Combobox.Control>
+                      <Portal>
+                        <Combobox.Positioner>
+                          <Combobox.Content>
+                            <Combobox.Empty>No items found</Combobox.Empty>
+                            {events.items.map((item) => (
+                              <Combobox.Item item={item} key={item.value}>
+                                {item.label}
+                                <Combobox.ItemIndicator />
+                              </Combobox.Item>
+                            ))}
+                          </Combobox.Content>
+                        </Combobox.Positioner>
+                      </Portal>
+                    </Combobox.Root>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      {selectedEventIds.length > 0
+                        ? `${selectedEventIds.length} event(s) selected`
+                        : "No events selected"}
+                    </Text>
+                  </Stack>
 
-        <Card.Root>
-          <Card.Body>
-            <Stack gap={3}>
-              <Text fontWeight={"medium"}>Add rule by roulette</Text>
-              <Combobox.Root
-                multiple
-                closeOnSelect={false}
-                collection={roulettes}
-                onInputValueChange={(e) => filterRoulettes(e.inputValue)}
-                onValueChange={({ value }) =>
-                  setSelectedRouletteIds(value as unknown as number[])
-                }
-                value={selectedRouletteIds as unknown as string[]}
-              >
-                <Combobox.Control>
-                  <Combobox.Input placeholder="Type to search roulettes" />
-                  <Combobox.IndicatorGroup>
-                    <Combobox.ClearTrigger />
-                    <Combobox.Trigger />
-                  </Combobox.IndicatorGroup>
-                </Combobox.Control>
-                <Portal>
-                  <Combobox.Positioner>
-                    <Combobox.Content>
-                      <Combobox.Empty>No items found</Combobox.Empty>
-                      {roulettes.items.map((item) => (
-                        <Combobox.Item item={item} key={item.value}>
-                          {item.label}
-                          <Combobox.ItemIndicator />
-                        </Combobox.Item>
-                      ))}
-                    </Combobox.Content>
-                  </Combobox.Positioner>
-                </Portal>
-              </Combobox.Root>
-              <Flex justify={"space-between"} align={"center"}>
-                <Text color={"fg.muted"}>
-                  {selectedRouletteIds.length > 0
-                    ? `${selectedRouletteIds.length} roulette(s) selected`
-                    : "No roulettes selected"}
-                </Text>
-                <Button
-                  size="sm"
-                  onClick={addRouletteRules}
-                  disabled={selectedRouletteIds.length === 0}
-                >
-                  Add rule
-                </Button>
-              </Flex>
-            </Stack>
-          </Card.Body>
-        </Card.Root>
+                  <Stack gap={1}>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      Roulettes
+                    </Text>
+                    <Combobox.Root
+                      multiple
+                      closeOnSelect={false}
+                      collection={roulettes}
+                      onInputValueChange={(e) =>
+                        filterRoulettes(e.inputValue)
+                      }
+                      onValueChange={({ value }) =>
+                        setSelectedRouletteIds(value as unknown as number[])
+                      }
+                      value={selectedRouletteIds as unknown as string[]}
+                    >
+                      <Combobox.Control>
+                        <Combobox.Input placeholder="Type to search roulettes" />
+                        <Combobox.IndicatorGroup>
+                          <Combobox.ClearTrigger />
+                          <Combobox.Trigger />
+                        </Combobox.IndicatorGroup>
+                      </Combobox.Control>
+                      <Portal>
+                        <Combobox.Positioner>
+                          <Combobox.Content>
+                            <Combobox.Empty>No items found</Combobox.Empty>
+                            {roulettes.items.map((item) => (
+                              <Combobox.Item item={item} key={item.value}>
+                                {item.label}
+                                <Combobox.ItemIndicator />
+                              </Combobox.Item>
+                            ))}
+                          </Combobox.Content>
+                        </Combobox.Positioner>
+                      </Portal>
+                    </Combobox.Root>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      {selectedRouletteIds.length > 0
+                        ? `${selectedRouletteIds.length} roulette(s) selected`
+                        : "No roulettes selected"}
+                    </Text>
+                  </Stack>
 
-        <Card.Root>
-          <Card.Body>
-            <Stack gap={3}>
-              <Text fontWeight={"medium"}>Add rule by filter</Text>
+                  <Stack gap={1}>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      Club membership
+                    </Text>
+                    <Listbox.Root
+                      collection={clubMemberStatus}
+                      selectionMode="multiple"
+                      value={selectedClubStatuses}
+                      onValueChange={({ value }) =>
+                        setSelectedClubStatuses(value)
+                      }
+                    >
+                      <Listbox.Content>
+                        {clubMemberStatus.items.map((membership) => (
+                          <Listbox.Item
+                            item={membership}
+                            key={membership.value}
+                          >
+                            <Listbox.ItemText>
+                              {membership.label}
+                            </Listbox.ItemText>
+                            <Listbox.ItemIndicator />
+                          </Listbox.Item>
+                        ))}
+                      </Listbox.Content>
+                    </Listbox.Root>
+                  </Stack>
+
+                  <Stack gap={1}>
+                    <Text fontSize={"sm"} color={"fg.muted"}>
+                      ITMO status
+                    </Text>
+                    <Listbox.Root
+                      collection={itmoStatus}
+                      selectionMode="multiple"
+                      value={selectedItmoStatuses}
+                      onValueChange={({ value }) =>
+                        setSelectedItmoStatuses(value)
+                      }
+                    >
+                      <Listbox.Content>
+                        {itmoStatus.items.map((status) => (
+                          <Listbox.Item item={status} key={status.value}>
+                            <Listbox.ItemText>
+                              {status.label}
+                            </Listbox.ItemText>
+                            <Listbox.ItemIndicator />
+                          </Listbox.Item>
+                        ))}
+                      </Listbox.Content>
+                    </Listbox.Root>
+                  </Stack>
+
+                  <Flex justify={"flex-end"}>
+                    <Button
+                      size="sm"
+                      onClick={addRule}
+                      disabled={
+                        selectedEventIds.length === 0 &&
+                        selectedRouletteIds.length === 0 &&
+                        selectedClubStatuses.length === 0 &&
+                        selectedItmoStatuses.length === 0
+                      }
+                    >
+                      Add rule
+                    </Button>
+                  </Flex>
+                </Stack>
+              </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+
+          {rules.length > 0 ? (
+            <Card.Body pt={0}>
               <Stack gap={1}>
-                <Text fontSize={"sm"} color={"fg.muted"}>
-                  Club membership
-                </Text>
-                <Listbox.Root
-                  collection={clubMemberStatus}
-                  selectionMode="multiple"
-                  value={selectedClubStatuses}
-                  onValueChange={({ value }) => setSelectedClubStatuses(value)}
-                >
-                  <Listbox.Content>
-                    {clubMemberStatus.items.map((membership) => (
-                      <Listbox.Item item={membership} key={membership.value}>
-                        <Listbox.ItemText>{membership.label}</Listbox.ItemText>
-                        <Listbox.ItemIndicator />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Stack>
-              <Stack gap={1}>
-                <Text fontSize={"sm"} color={"fg.muted"}>
-                  ITMO status
-                </Text>
-                <Listbox.Root
-                  collection={itmoStatus}
-                  selectionMode="multiple"
-                  value={selectedItmoStatuses}
-                  onValueChange={({ value }) => setSelectedItmoStatuses(value)}
-                >
-                  <Listbox.Content>
-                    {itmoStatus.items.map((status) => (
-                      <Listbox.Item item={status} key={status.value}>
-                        <Listbox.ItemText>{status.label}</Listbox.ItemText>
-                        <Listbox.ItemIndicator />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Stack>
-              <Flex justify={"space-between"} align={"center"}>
-                <Text color={"fg.muted"}>
-                  {selectedClubStatuses.length + selectedItmoStatuses.length >
-                  0
-                    ? "Filter configured"
-                    : "No filter configured"}
-                </Text>
-                <Button
-                  size="sm"
-                  onClick={addFilterRule}
-                  disabled={
-                    selectedClubStatuses.length === 0 &&
-                    selectedItmoStatuses.length === 0
-                  }
-                >
-                  Add rule
-                </Button>
-              </Flex>
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-
-        {rules.length > 0 ? (
-          <Card.Root>
-            <Card.Body>
-              <Stack gap={2}>
-                <Text fontWeight={"medium"}>Active rules</Text>
-                {rules.map((rule) => (
+                {rules.map((rule, index) => (
                   <Flex
                     key={rule.id}
                     justify={"space-between"}
                     align={"center"}
                     gap={2}
                   >
-                    <Text>{rule.label}</Text>
+                    <Text fontSize={"sm"}>
+                      Rule {index + 1}: {rule.label}
+                    </Text>
                     <IconButton
                       aria-label="Remove rule"
                       size="xs"
@@ -550,15 +570,17 @@ export const BroadcastTab = () => {
                 ))}
               </Stack>
             </Card.Body>
-          </Card.Root>
-        ) : null}
+          ) : null}
+        </Card.Root>
 
         <Card.Root>
           <Card.Body>
             <Stack gap={3}>
-              <Text fontWeight={"medium"}>Add individual user</Text>
+              <Text fontWeight={"medium"}>
+                Recipients ({recipients.length})
+              </Text>
               <Input
-                placeholder="Search by name, ISU, phone, @username or Telegram ID"
+                placeholder="Add a person — search by name, ISU, phone, @username or Telegram ID"
                 value={userSearchInput}
                 onChange={(e) => {
                   setUserSearchInput(e.currentTarget.value);
@@ -567,56 +589,41 @@ export const BroadcastTab = () => {
               />
               {userSearchResults.length > 0 ? (
                 <Stack gap={1}>
-                  {userSearchResults.map((user) => {
-                    const included = recipientTgIds.has(user.user_tg_id);
-                    return (
-                      <Flex
-                        key={user.id}
-                        justify={"space-between"}
-                        align={"center"}
-                        gap={2}
-                        px={2}
-                        py={1}
-                        borderRadius={"md"}
-                        cursor={"pointer"}
-                        _hover={{ bg: "bg.muted" }}
-                        onClick={() => addManualUser(user)}
-                      >
-                        <Stack gap={0}>
-                          <Text>{displayName(user)}</Text>
-                          <Text fontSize={"sm"} color={"fg.muted"}>
-                            {[
-                              user.isu,
-                              user.phone_number,
-                              user.user_name ? `@${user.user_name}` : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </Text>
-                        </Stack>
-                        {included ? (
-                          <Badge colorPalette={"green"}>Added</Badge>
-                        ) : null}
-                      </Flex>
-                    );
-                  })}
+                  {userSearchResults.map((user) => (
+                    <Flex
+                      key={user.id}
+                      justify={"space-between"}
+                      align={"center"}
+                      gap={2}
+                      px={2}
+                      py={1}
+                      borderRadius={"md"}
+                      cursor={"pointer"}
+                      _hover={{ bg: "bg.muted" }}
+                      onClick={() => addManualUser(user)}
+                    >
+                      <Stack gap={0}>
+                        <Text>{displayName(user)}</Text>
+                        <Text fontSize={"sm"} color={"fg.muted"}>
+                          {[
+                            user.isu,
+                            user.phone_number,
+                            user.user_name ? `@${user.user_name}` : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Text>
+                      </Stack>
+                    </Flex>
+                  ))}
                 </Stack>
               ) : userSearchInput.trim().length > 0 ? (
                 <Text color={"fg.muted"}>No users found</Text>
               ) : null}
-            </Stack>
-          </Card.Body>
-        </Card.Root>
 
-        <Card.Root>
-          <Card.Body>
-            <Stack gap={2}>
-              <Text fontWeight={"medium"}>
-                Recipients ({recipients.length})
-              </Text>
               {recipients.length === 0 ? (
                 <Text color={"fg.muted"}>
-                  No recipients yet — add a rule or a user above
+                  No recipients yet — add a rule or search for a user above
                 </Text>
               ) : (
                 <Table.Root size={"sm"}>
