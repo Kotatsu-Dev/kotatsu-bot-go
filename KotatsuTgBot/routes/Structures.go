@@ -46,6 +46,16 @@ type UpdateObject_Activity_Data struct {
 	Status     int    `json:"status"`
 }
 
+// =========================================================================
+//
+//	Handler_API_Activities_AddParticipant / Handler_API_Activities_RemoveParticipant
+//
+// =========================================================================
+type Activity_Participant_Request struct {
+	ActivityID uint `json:"activity_id"`
+	UserID     uint `json:"user_id"`
+}
+
 // ----------------------------------------------
 //
 //	API ANIME_ROULETTES
