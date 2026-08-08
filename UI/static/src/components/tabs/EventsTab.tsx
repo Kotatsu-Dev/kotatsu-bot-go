@@ -12,6 +12,7 @@ import {
   Fieldset,
   FileUpload,
   Flex,
+  Box,
   Group,
   Heading,
   IconButton,
@@ -487,49 +488,51 @@ const EventCard = (props: {
                   <Dialog.Title>Signed up for "{event.title}"</Dialog.Title>
                 </Dialog.Header>
                 <Dialog.Body>
-                  <Table.Root>
-                    <Table.Header>
-                      <Table.Row>
-                        <Table.ColumnHeader>Name</Table.ColumnHeader>
-                        <Table.ColumnHeader>Telegram</Table.ColumnHeader>
-                        <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
-                        <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
-                        <Table.ColumnHeader></Table.ColumnHeader>
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                      {participants.map((user) => (
-                        <Table.Row key={user.id}>
-                          <Table.Cell>{user.full_name}</Table.Cell>
-                          <Table.Cell>{user.user_name}</Table.Cell>
-                          <Table.Cell>
-                            {user.is_itmo ? (
-                              <Status.Root colorPalette={"green"}>
-                                <Status.Indicator />
-                                Yes
-                              </Status.Root>
-                            ) : (
-                              <Status.Root colorPalette={"red"}>
-                                <Status.Indicator />
-                                No
-                              </Status.Root>
-                            )}
-                          </Table.Cell>
-                          <Table.Cell>{user.phone_number}</Table.Cell>
-                          <Table.Cell>
-                            <IconButton
-                              aria-label="Remove participant"
-                              size="xs"
-                              variant="ghost"
-                              onClick={() => removeParticipant(user)}
-                            >
-                              <FaTimes />
-                            </IconButton>
-                          </Table.Cell>
+                  <Box overflowX="auto">
+                    <Table.Root>
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>Name</Table.ColumnHeader>
+                          <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                          <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
+                          <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                          <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Root>
+                      </Table.Header>
+                      <Table.Body>
+                        {participants.map((user) => (
+                          <Table.Row key={user.id}>
+                            <Table.Cell>{user.full_name}</Table.Cell>
+                            <Table.Cell>{user.user_name}</Table.Cell>
+                            <Table.Cell>
+                              {user.is_itmo ? (
+                                <Status.Root colorPalette={"green"}>
+                                  <Status.Indicator />
+                                  Yes
+                                </Status.Root>
+                              ) : (
+                                <Status.Root colorPalette={"red"}>
+                                  <Status.Indicator />
+                                  No
+                                </Status.Root>
+                              )}
+                            </Table.Cell>
+                            <Table.Cell>{user.phone_number}</Table.Cell>
+                            <Table.Cell>
+                              <IconButton
+                                aria-label="Remove participant"
+                                size="xs"
+                                variant="ghost"
+                                onClick={() => removeParticipant(user)}
+                              >
+                                <FaTimes />
+                              </IconButton>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Box>
 
                   <Stack gap={2} mt={4}>
                     <Text fontWeight={"medium"}>Add participant</Text>
