@@ -2,6 +2,8 @@ package cb
 
 import (
 	"context"
+	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"rr/kotatsutgbot/config"
@@ -13,273 +15,270 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func SetGender(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, gender db.Gender) {
-	db.DB_UPDATE_User(map[string]any{
-		"user_tg_id": current_user.UserTgID,
-		"gender":     gender,
+func SendMessageRaw(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chat_id,
+		ParseMode:   models.ParseModeHTML,
+		Text:        text,
+		ReplyMarkup: keyboard,
 	})
 
-	var keyboard models.ReplyMarkup
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "SendMessageRaw", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
+	}
+
+	return err
+}
+
+func SendMessage(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
+	return SendMessageRaw(ctx, b, chat_id, config.T(text), keyboard)
+}
+
+func SendMessageT(ctx context.Context, b *bot.Bot, chat_id int64, text string, data any, keyboard models.ReplyMarkup) error {
+	return SendMessageRaw(ctx, b, chat_id, config.TT(text, data), keyboard)
+}
+
+func SendMessageM(ctx context.Context, b *bot.Bot, update *models.Update, text string, keyboard models.ReplyMarkup) error {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	return SendMessage(ctx, b, chat_id, text, keyboard)
+}
+
+func SendMessageMT(ctx context.Context, b *bot.Bot, update *models.Update, text string, data any, keyboard models.ReplyMarkup) error {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	return SendMessageT(ctx, b, chat_id, text, data, keyboard)
+}
+
+func SendPhotoRaw(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
+	_, err := b.SendPhoto(ctx, &bot.SendPhotoParams{
+		ChatID:    chat_id,
+		ParseMode: models.ParseModeHTML,
+		Photo: &models.InputFileUpload{
+			Filename: filename,
+			Data:     file,
+		},
+		Caption:     text,
+		ReplyMarkup: keyboard,
+	})
+
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotoRaw", "bot.SendPhoto", "Ошибка отправки фотографии", err.Error())
+	}
+
+	return err
+}
+
+func SendPhoto(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
+	return SendPhotoRaw(ctx, b, chat_id, filename, file, config.T(text), keyboard)
+}
+
+func SendPhotoM(ctx context.Context, b *bot.Bot, update *models.Update, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	return SendPhoto(ctx, b, chat_id, filename, file, text, keyboard)
+}
+
+func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.User, bool) {
+	update_user := maps.Clone(update)
+	update_user["user_tg_id"] = user.UserTgID
+	return db.DB_UPDATE_User(update_user)
+}
+
+func UpdateGender(user *db.User_ReadJSON, gender db.Gender) (int, *db.User, bool) {
+	return UpdateCurrentUser(user, map[string]any{
+		"gender": gender,
+	})
+}
+
+func UpdateVisited(user *db.User_ReadJSON, is_visited_events bool) (int, *db.User, bool) {
+	return UpdateCurrentUser(user, map[string]any{
+		"is_visited_events": is_visited_events,
+	})
+}
+
+func UpdateStep(user *db.User_ReadJSON, step int) (int, *db.User, bool) {
+	return UpdateCurrentUser(user, map[string]any{
+		"step": step,
+	})
+}
+
+func ITE[T any](cond bool, a, b T) T {
+	if cond {
+		return a
+	}
+	return b
+}
+
+func SendMainMenu(ctx context.Context, current_user *db.User_ReadJSON, b *bot.Bot, update *models.Update) {
 	if current_user.IsClubMember {
-		keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
+		SendMessageM(
+			ctx, b, update,
+			"main_menu", keyboards.Keyboard_MainMenuButtonsClubMember,
+		)
 	} else {
-		keyboard = keyboards.Keyboard_MainMenuButtonsDefault
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        config.T("main_menu"),
-		ReplyMarkup: keyboard,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
+		SendMessageM(
+			ctx, b, update,
+			"main_menu", keyboards.Keyboard_MainMenuButtonsDefault,
+		)
 	}
 }
 
-func WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, actually bool) {
-	db.DB_UPDATE_User(map[string]any{
-		"user_tg_id":        current_user.UserTgID,
-		"is_visited_events": actually,
-	})
-
-	var text string
-	var keyboard models.ReplyMarkup
-	if actually {
-		text = config.T("request.is_itmo")
-		keyboard = keyboards.InlineKbd_JoinClub
-	} else {
-		text = config.T("request.not_enough_visits")
-		keyboard = keyboards.Keyboard_WasntAtEvents
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
+func SetGender(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, gender db.Gender) {
+	UpdateGender(current_user, gender)
+	SendMainMenu(ctx, current_user, b, update)
 }
 
-func WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, cont bool) {
-	var text string
-	var keyboard models.ReplyMarkup
-
-	if cont {
-		text = config.T("request.is_itmo")
-		keyboard = keyboards.InlineKbd_JoinClub
-	} else {
-		text = config.T("main_menu")
-
-		if current_user.IsClubMember {
-			keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
-		} else {
-			keyboard = keyboards.Keyboard_MainMenuButtonsDefault
-		}
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
-}
-
-func JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
-	var text string
-	var keyboard models.ReplyMarkup
-	if current_user.IsSentRequest {
-		text = config.T("request.in_progress")
-		if current_user.IsClubMember {
-			keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
-		} else {
-			keyboard = keyboards.Keyboard_MainMenuButtonsDefault
-		}
-	} else if current_user.IsClubMember {
-		text = config.T("request.already_accepted")
-		keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
-	} else {
-		text = config.T("request.rules")
-		keyboard = keyboards.Keyboard_WasAtEvents
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
-}
-
-func SigningUpForActivity(ctx context.Context, b *bot.Bot, update *models.Update) {
-	var active_activities_list []db.Activity_ReadJSON
-
-	activities_list := db.DB_GET_Activities()
-
-	// TODO: Filter by query
-	for _, activity := range activities_list {
-		if activity.Status {
-			active_activities_list = append(active_activities_list, activity)
-		}
-	}
-
-	status, _ := db.DB_GET_AnimeRoulette_BY_Status(true)
-	has_roulette := status == db.DB_ANSWER_SUCCESS
-
-	var text string
-	var keyboard models.ReplyMarkup
-	if len(active_activities_list) > 0 || has_roulette {
-		text = config.T("events.list")
-		keyboard = keyboards.CreateInlineKbd_ActivitiesList(active_activities_list, update.Message.From.ID, has_roulette)
-	} else {
-		text = config.T("events.empty")
-	}
-
-	// TODO: Handle absence of calendar file
+func OpenCalendar() (*os.File, string) {
 	directory := config.ByUI("./img/calendar_activities")
-	files, err_dir := os.ReadDir(directory)
-	if err_dir != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.ReadDir", "Ошибка поиска файла календаря", err_dir.Error())
+	files, err := os.ReadDir(directory)
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.ReadDir", "Ошибка поиска файла календаря", err.Error())
+	}
+
+	if len(files) <= 0 {
+		return nil, ""
 	}
 
 	fileInfo := files[0]
 	filePath := filepath.Join(directory, fileInfo.Name())
 
 	file, err := os.Open(filePath)
-	if err == nil {
-		defer file.Close()
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.Open", "Ошибка чтения файла календаря", err.Error())
+		return nil, ""
+	}
 
-		inputFile := &models.InputFileUpload{
-			Filename: filepath.Base(filePath),
-			Data:     file,
-		}
+	return file, fileInfo.Name()
+}
 
-		_, err = b.SendPhoto(ctx, &bot.SendPhotoParams{
-			ChatID:      update.Message.From.ID,
-			ParseMode:   models.ParseModeHTML,
-			Photo:       inputFile,
-			Caption:     text,
-			ReplyMarkup: keyboard,
-		})
-		if err != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "b.SendPhoto(ctx, params_photo)", "Ошибка отправки фото файла календаря", err.Error())
-			return
-		}
+// ---
+
+func WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, actually bool) {
+	UpdateVisited(current_user, actually)
+
+	if actually {
+		SendMessageM(
+			ctx, b, update,
+			"request.is_itmo", keyboards.InlineKbd_JoinClub,
+		)
 	} else {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_SigningUpForActivity", "os.Stat", "Ошибка проверки наличия изображения мероприятий", err.Error())
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID:      update.Message.Chat.ID,
-			ParseMode:   models.ParseModeHTML,
-			Text:        text,
-			ReplyMarkup: keyboard,
-		})
-		if err != nil {
-			rr_debug.PrintLOG("botHandlers.go", "proccessCommand_Unknown", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-		}
+		SendMessageM(
+			ctx, b, update,
+			"request.not_enough_visits", keyboards.Keyboard_WasntAtEvents,
+		)
+	}
+
+}
+
+func WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, cont bool) {
+	if cont {
+		SendMessageM(
+			ctx, b, update,
+			"request.is_itmo", keyboards.InlineKbd_JoinClub,
+		)
+	} else {
+		SendMainMenu(ctx, current_user, b, update)
+	}
+}
+
+func JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
+	if current_user.IsSentRequest {
+		SendMessageM(
+			ctx, b, update,
+			"request.in_progress", nil,
+		)
+		SendMainMenu(ctx, current_user, b, update)
+	} else if current_user.IsClubMember {
+		SendMessageM(
+			ctx, b, update,
+			"request.already_accepted", nil,
+		)
+		SendMainMenu(ctx, current_user, b, update)
+	} else {
+		SendMessageM(
+			ctx, b, update,
+			"request.rules", keyboards.Keyboard_WasAtEvents,
+		)
+	}
+}
+
+func SigningUpForActivity(ctx context.Context, b *bot.Bot, update *models.Update) {
+	activities_list := db.DB_GET_Active_Activities()
+
+	status, _ := db.DB_GET_AnimeRoulette_BY_Status(true)
+	has_roulette := status == db.DB_ANSWER_SUCCESS
+
+	var text string
+	var keyboard models.ReplyMarkup
+	if len(activities_list) > 0 || has_roulette {
+		text = "events.list"
+		keyboard = keyboards.CreateInlineKbd_ActivitiesList(activities_list, update.Message.From.ID, has_roulette)
+	} else {
+		text = "events.empty"
+	}
+
+	file, name := OpenCalendar()
+	if file != nil {
+		SendPhotoM(
+			ctx, b, update,
+			name, file,
+			text, keyboard,
+		)
+		file.Close()
+	} else {
+		SendMessageM(
+			ctx, b, update,
+			text, keyboard,
+		)
 	}
 }
 
 func BackMainMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
-	db.DB_UPDATE_User(map[string]any{
-		"user_tg_id": update.Message.From.ID,
-		"step":       config.STEP_DEFAULT,
-	})
-
-	var keyboard models.ReplyMarkup
-	if current_user.IsClubMember {
-		keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
-	} else {
-		keyboard = keyboards.Keyboard_MainMenuButtonsDefault
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.From.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        config.T("main_menu"),
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_BackMeinMenu", "b.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
+	UpdateStep(current_user, config.STEP_DEFAULT)
+	SendMainMenu(ctx, current_user, b, update)
 }
 
 func LeaveClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
-	db.DB_UPDATE_User(map[string]any{
-		"user_tg_id": update.Message.From.ID,
-		"step":       config.STEP_USER_LEAVES_CLUB,
-	})
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.From.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        config.T("leave_reason"),
-		ReplyMarkup: keyboards.Keyboard_Skip,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_LeaveClub", "b.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
+	UpdateStep(current_user, config.STEP_USER_LEAVES_CLUB)
+	SendMessageM(
+		ctx, b, update,
+		"leave_reason", keyboards.Keyboard_Skip,
+	)
 }
 
 func MyActivities(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
-	var text string
-	var keyboard models.ReplyMarkup
-	if len(current_user.MyActivities) == 0 {
-		text = config.T("my_events.empty")
+	activities := db.DB_GET_User_Active_Activities(current_user.ID)
+	if len(activities) == 0 {
+		SendMessageM(
+			ctx, b, update,
+			"my_events.empty", nil,
+		)
 	} else {
-		var active_activities_list []*db.Activity
-		// TODO: Filter at db side
-		for _, activity := range current_user.MyActivities {
-			if activity.Status {
-				active_activities_list = append(active_activities_list, activity)
-			}
-		}
-
-		text = config.T("my_events.list")
-		keyboard = keyboards.CreateInlineKbd_MyActivitiesList(active_activities_list)
-	}
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.From.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_MyActivities", "b.SendMessage", "Ошибка отправки сообщения", err.Error())
+		SendMessageM(
+			ctx, b, update,
+			"my_events.list", keyboards.CreateInlineKbd_MyActivitiesList(activities),
+		)
 	}
 }
 
 func NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
-	var keyboard models.ReplyMarkup
-	if current_user.IsClubMember {
-		keyboard = keyboards.Keyboard_MainMenuButtonsClubMember
-	} else {
-		keyboard = keyboards.Keyboard_MainMenuButtonsDefault
-	}
-
-	db.DB_UPDATE_User(map[string]any{
-		"user_tg_id": update.Message.From.ID,
-		"step":       config.STEP_DEFAULT,
-	})
-
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.From.ID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        config.T("request.no_phone_number"),
-		ReplyMarkup: keyboard,
-	})
-	if err != nil {
-		rr_debug.PrintLOG("botHandlers.go", "proccessText_BackMeinMenu", "b.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
+	UpdateStep(current_user, config.STEP_DEFAULT)
+	SendMessageM(
+		ctx, b, update,
+		"request.no_phone_number", nil,
+	)
+	SendMainMenu(ctx, current_user, b, update)
 }

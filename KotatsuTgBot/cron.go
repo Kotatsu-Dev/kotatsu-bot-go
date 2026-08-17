@@ -104,7 +104,7 @@ func check_roulette(b *bot.Bot) {
 }
 
 func check_step(b *bot.Bot) {
-	rr_debug.PrintLOG("cron.go", "check_step", "INFO", "Начинаем проверку шагов", "")
+	// rr_debug.PrintLOG("cron.go", "check_step", "INFO", "Начинаем проверку шагов", "")
 
 	users_outdated := db.DB_GET_Users_BY_Step(config.STEP_ACTIVITY_OUTDATED)
 

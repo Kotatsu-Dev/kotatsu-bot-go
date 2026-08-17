@@ -141,6 +141,35 @@ func DB_GET_Activities() []Activity_ReadJSON {
 	return ActivityToReadSlice(activities)
 }
 
+func DB_GET_Active_Activities() []Activity_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var activities []Activity
+
+	db.Preload("Participants").Find(&activities, "status = ? AND date_meeting > ?", true, time.Now())
+
+	return ActivityToReadSlice(activities)
+}
+
+func DB_GET_User_Active_Activities(user_id uint) []Activity_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var activities []Activity
+	user := User{Model: gorm.Model{ID: user_id}}
+
+	db.Model(&user).
+		Association("MyActivities").
+		Find(&activities, "status = ? AND date_meeting > ?", true, time.Now())
+
+	return ActivityToReadSlice(activities)
+}
+
 func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	db := DB_Database()
 

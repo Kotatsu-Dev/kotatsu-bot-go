@@ -148,10 +148,6 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 							case config.STEP_APPOINTMENT_ITMO_ENTER_FULLNAME:
 								cb.ITMO_EnterFullName(ctx, b, update, user, "activity")
 
-							case config.STEP_ITMO_ENTER_SECRET_CODE:
-								// Should be unused
-								cb.EnterSecretCode(ctx, b, update, user, "itmo")
-
 							case config.STEP_NOITMO_ENTER_FULLNAME:
 								cb.NoITMO_EnterFullName(ctx, b, update, user, "join_club")
 
@@ -167,16 +163,13 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 							case config.STEP_APPOINTMENT_NOITMO_ENTER_PHONE:
 								cb.NoITMO_EnterPhoneNumber(ctx, b, update, user, "activity")
 
-							case config.STEP_NOITMO_ENTER_SECRET_CODE:
-								cb.EnterSecretCode(ctx, b, update, user, "no_itmo")
-
 							case config.STEP_USER_LEAVES_CLUB:
 								cb.LeavesClub(ctx, b, update, user)
 
-							case config.STEP_ANIME_RUOLETTE_ENTER_ENIGMATIC_TITLE:
+							case config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE:
 								roulette.EnterEnigmaticTitle(ctx, b, update, user)
 
-							case config.STEP_ANIME_RUOLETTE_ENTER_LINK_MY_ANIME_LIST:
+							case config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST:
 								roulette.EnterLinkMyAnimeList(ctx, b, update, user)
 
 							default:

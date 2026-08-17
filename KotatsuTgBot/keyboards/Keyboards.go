@@ -145,7 +145,7 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 
 var InlineKbd_PartnersList = DefaultInline().Row().Build()
 
-func CreateInlineKbd_MyActivitiesList(my_activities []*db.Activity) *models.InlineKeyboardMarkup {
+func CreateInlineKbd_MyActivitiesList(my_activities []db.Activity_ReadJSON) *models.InlineKeyboardMarkup {
 	k := DefaultInline()
 
 	for _, activity := range my_activities {
