@@ -2,6 +2,7 @@ package cb
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"maps"
 	"os"
@@ -89,6 +90,56 @@ func SendPhotoM(ctx context.Context, b *bot.Bot, update *models.Update, filename
 		chat_id = update.CallbackQuery.From.ID
 	}
 	return SendPhoto(ctx, b, chat_id, filename, file, text, keyboard)
+}
+
+func SendPhotosRaw(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
+	media_group := make([]models.InputMedia, len(files))
+	for i, file := range files {
+		if i == 0 {
+			media_group[i] = &models.InputMediaPhoto{
+				Media:           fmt.Sprintf("attach://photo_%d", i),
+				MediaAttachment: file,
+				ParseMode:       models.ParseModeHTML,
+				Caption:         text,
+			}
+		} else {
+			media_group[i] = &models.InputMediaPhoto{
+				Media:           fmt.Sprintf("attach://photo_%d", i),
+				MediaAttachment: file,
+			}
+		}
+	}
+	_, err := b.SendMediaGroup(ctx, &bot.SendMediaGroupParams{
+		ChatID: chat_id,
+		Media:  media_group,
+	})
+
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotosRaw", "bot.SendMediaGroup", "Ошибка отправки фотографии", err.Error())
+	}
+
+	return err
+}
+
+func SendPhotos(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
+	return SendPhotosRaw(ctx, b, chat_id, files, config.T(text))
+}
+
+func SendPhotosM(ctx context.Context, b *bot.Bot, update *models.Update, files []io.Reader, text string) error {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	return SendPhotos(ctx, b, chat_id, files, text)
+}
+
+func AnswerQuery(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+		CallbackQueryID: update.CallbackQuery.ID,
+		ShowAlert:       false,
+	})
 }
 
 func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.User, bool) {
