@@ -2,7 +2,7 @@ package roulette
 
 import (
 	"context"
-	. "rr/kotatsutgbot/cb"
+	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
@@ -48,6 +48,67 @@ func Main(ctx context.Context, b *bot.Bot, update *models.Update, current_user *
 	}
 }
 
+func RouletteInactive() Executor {
+	return SendMessageME(
+		"roulette.inactive", nil,
+	)
+}
+
+func StartMenu(is_participant bool) Executor {
+	return SendMessageME(
+		"roulette.menu", keyboards.CreateKeyboard_AnimeRouletteStart(is_participant),
+	)
+}
+
+func OngoingMenu(is_participant bool) Executor {
+	return SendMessageME(
+		"roulette.menu", keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant),
+	)
+}
+
+func AlreadyParticipant() Executor {
+	return SendMessageME(
+		"roulette.already_participant", keyboards.CreateKeyboard_AnimeRouletteStart(true),
+	)
+}
+
+func RegistrationEnd() Executor {
+	return SendMessageME(
+		"roulette.registration_end", nil,
+	)
+}
+
+func NotParticipant() Executor {
+	return SendMessageME(
+		"roulette.not_participant", keyboards.CreateKeyboard_AnimeRouletteStart(false),
+	)
+}
+
+func RouletteEnded() Executor {
+	return SendMessageME(
+		"roulette.ended", nil,
+	)
+}
+
+func NoTheme() Executor {
+	return SendMessageME(
+		"roulette.no_theme", nil,
+	)
+}
+
+func MainE(user *db.User_ReadJSON) Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			is_participant := check_is_participant(user, roulette)
+			return ITE(
+				roulette.AnnounceDate.After(time.Now()),
+				StartMenu(is_participant),
+				OngoingMenu(is_participant),
+			)
+		}).
+		Otherwise(RouletteInactive())
+}
+
 func Participate(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
@@ -89,6 +150,32 @@ func Participate(ctx context.Context, b *bot.Bot, update *models.Update, current
 	}
 }
 
+func ParticipateE(user *db.User_ReadJSON) Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			is_participant := check_is_participant(user, roulette)
+			now := time.Now()
+			if now.After(roulette.StartDate) && now.Before(roulette.AnnounceDate) {
+				if is_participant {
+					return AlreadyParticipant()
+				} else {
+					// TODO
+					db.DB_UPDATE_AnimeRoulette_ADD_Participants(user.ID)
+					return SendMessageME(
+						"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
+					)
+				}
+			} else {
+				return ITE(
+					is_participant,
+					AlreadyParticipant(),
+					RegistrationEnd(),
+				)
+			}
+		}).
+		Otherwise(RouletteInactive())
+}
+
 func CancelParticipate(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
@@ -114,6 +201,21 @@ func CancelParticipate(ctx context.Context, b *bot.Bot, update *models.Update, c
 			"roulette.inactive", nil,
 		)
 	}
+}
+
+func CancelParticipateE(user *db.User_ReadJSON) Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			if check_is_participant(user, roulette) {
+				db.DB_UPDATE_AnimeRoulette_REMOVE_Participants(user.ID)
+				return SendMessageME(
+					"roulette.unregistered", keyboards.CreateKeyboard_AnimeRouletteStart(false),
+				)
+			} else {
+				return NotParticipant()
+			}
+		}).
+		Otherwise(RouletteInactive())
 }
 
 func AnimeWish(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
@@ -154,6 +256,30 @@ func AnimeWish(ctx context.Context, b *bot.Bot, update *models.Update, current_u
 	}
 }
 
+func AnimeWishE(user *db.User_ReadJSON) Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			now := time.Now()
+			if now.After(roulette.StartDate) && now.Before(roulette.AnnounceDate) {
+				return NoTheme()
+			} else if now.After(roulette.AnnounceDate) && now.Before(roulette.DistributionDate) {
+				return ITE(
+					check_is_participant(user, roulette),
+					Seq(
+						UpdateStepE(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE),
+						SendMessageME(
+							"roulette.send_title", keyboards.Keyboard_CancelAnimeRoulette,
+						),
+					),
+					NotParticipant(),
+				)
+			} else {
+				return RouletteEnded()
+			}
+		}).
+		Otherwise(RouletteInactive())
+}
+
 func LinkMyList(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
@@ -189,9 +315,39 @@ func LinkMyList(ctx context.Context, b *bot.Bot, update *models.Update, current_
 	}
 }
 
+func LinkMyListE(user *db.User_ReadJSON) Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			return ITE(
+				check_is_participant(user, roulette),
+				Seq(
+					UpdateStepE(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST),
+					ITE(
+						user.LinkMyAnimeList == "",
+						SendMessageME(
+							"roulette.send_list", nil,
+						),
+						SendMessageMTE(
+							"roulette.your_list", user,
+							keyboards.Keyboard_CancelAnimeRoulette,
+						),
+					),
+				),
+				NotParticipant(),
+			)
+		}).
+		Otherwise(RouletteInactive())
+}
+
 func Rules(ctx context.Context, b *bot.Bot, update *models.Update) {
 	SendMessageM(
 		ctx, b, update,
+		"roulette.rules", nil,
+	)
+}
+
+func RulesE() Executor {
+	return SendMessageME(
 		"roulette.rules", nil,
 	)
 }
@@ -236,4 +392,29 @@ func MainTheme(ctx context.Context, b *bot.Bot, update *models.Update) {
 			"roulette.inactive", nil,
 		)
 	}
+}
+
+func MainThemeE() Executor {
+	return GetActiveRoulette().
+		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+			now := time.Now()
+			if now.After(roulette.StartDate) && now.Before(roulette.AnnounceDate) {
+				return NoTheme()
+			} else if now.After(roulette.AnnounceDate) && now.Before(roulette.DistributionDate) {
+				return ITE(
+					roulette.Theme == "",
+					SendMessageME(
+						"roulette.almost_no_theme", nil,
+					),
+					SendMessageRawME(
+						roulette.Theme, nil,
+					),
+				)
+			} else if now.After(roulette.DistributionDate) && now.Before(roulette.EndDate) {
+				return RouletteEnded()
+			} else {
+				return RegistrationEnd()
+			}
+		}).
+		Otherwise(RouletteInactive())
 }

@@ -2,176 +2,15 @@ package cb
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"maps"
-	"os"
-	"path/filepath"
+	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
-	"rr/kotatsutgbot/rr_debug"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
-
-func SendMessageRaw(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      chat_id,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendMessageRaw", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
-
-	return err
-}
-
-func SendMessage(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
-	return SendMessageRaw(ctx, b, chat_id, config.T(text), keyboard)
-}
-
-func SendMessageT(ctx context.Context, b *bot.Bot, chat_id int64, text string, data any, keyboard models.ReplyMarkup) error {
-	return SendMessageRaw(ctx, b, chat_id, config.TT(text, data), keyboard)
-}
-
-func SendMessageM(ctx context.Context, b *bot.Bot, update *models.Update, text string, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendMessage(ctx, b, chat_id, text, keyboard)
-}
-
-func SendMessageMT(ctx context.Context, b *bot.Bot, update *models.Update, text string, data any, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendMessageT(ctx, b, chat_id, text, data, keyboard)
-}
-
-func SendPhotoRaw(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	_, err := b.SendPhoto(ctx, &bot.SendPhotoParams{
-		ChatID:    chat_id,
-		ParseMode: models.ParseModeHTML,
-		Photo: &models.InputFileUpload{
-			Filename: filename,
-			Data:     file,
-		},
-		Caption:     text,
-		ReplyMarkup: keyboard,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotoRaw", "bot.SendPhoto", "Ошибка отправки фотографии", err.Error())
-	}
-
-	return err
-}
-
-func SendPhoto(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	return SendPhotoRaw(ctx, b, chat_id, filename, file, config.T(text), keyboard)
-}
-
-func SendPhotoM(ctx context.Context, b *bot.Bot, update *models.Update, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendPhoto(ctx, b, chat_id, filename, file, text, keyboard)
-}
-
-func SendPhotosRaw(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
-	media_group := make([]models.InputMedia, len(files))
-	for i, file := range files {
-		if i == 0 {
-			media_group[i] = &models.InputMediaPhoto{
-				Media:           fmt.Sprintf("attach://photo_%d", i),
-				MediaAttachment: file,
-				ParseMode:       models.ParseModeHTML,
-				Caption:         text,
-			}
-		} else {
-			media_group[i] = &models.InputMediaPhoto{
-				Media:           fmt.Sprintf("attach://photo_%d", i),
-				MediaAttachment: file,
-			}
-		}
-	}
-	_, err := b.SendMediaGroup(ctx, &bot.SendMediaGroupParams{
-		ChatID: chat_id,
-		Media:  media_group,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotosRaw", "bot.SendMediaGroup", "Ошибка отправки фотографии", err.Error())
-	}
-
-	return err
-}
-
-func SendPhotos(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
-	return SendPhotosRaw(ctx, b, chat_id, files, config.T(text))
-}
-
-func SendPhotosM(ctx context.Context, b *bot.Bot, update *models.Update, files []io.Reader, text string) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendPhotos(ctx, b, chat_id, files, text)
-}
-
-func AnswerQuery(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	return b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
-		CallbackQueryID: update.CallbackQuery.ID,
-		ShowAlert:       false,
-	})
-}
-
-func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.User, bool) {
-	update_user := maps.Clone(update)
-	update_user["user_tg_id"] = user.UserTgID
-	return db.DB_UPDATE_User(update_user)
-}
-
-func UpdateGender(user *db.User_ReadJSON, gender db.Gender) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"gender": gender,
-	})
-}
-
-func UpdateVisited(user *db.User_ReadJSON, is_visited_events bool) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"is_visited_events": is_visited_events,
-	})
-}
-
-func UpdateStep(user *db.User_ReadJSON, step int) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"step": step,
-	})
-}
-
-func ITE[T any](cond bool, a, b T) T {
-	if cond {
-		return a
-	}
-	return b
-}
 
 func SendMainMenu(ctx context.Context, current_user *db.User_ReadJSON, b *bot.Bot, update *models.Update) {
 	if current_user.IsClubMember {
@@ -187,32 +26,27 @@ func SendMainMenu(ctx context.Context, current_user *db.User_ReadJSON, b *bot.Bo
 	}
 }
 
+func SendMainMenuE(user *db.User_ReadJSON) Executor {
+	return SendMessageME(
+		"main_menu",
+		ITE(
+			user.IsClubMember,
+			keyboards.Keyboard_MainMenuButtonsClubMember,
+			keyboards.Keyboard_MainMenuButtonsDefault,
+		),
+	)
+}
+
 func SetGender(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, gender db.Gender) {
 	UpdateGender(current_user, gender)
 	SendMainMenu(ctx, current_user, b, update)
 }
 
-func OpenCalendar() (*os.File, string) {
-	directory := config.ByUI("./img/calendar_activities")
-	files, err := os.ReadDir(directory)
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.ReadDir", "Ошибка поиска файла календаря", err.Error())
-	}
-
-	if len(files) <= 0 {
-		return nil, ""
-	}
-
-	fileInfo := files[0]
-	filePath := filepath.Join(directory, fileInfo.Name())
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.Open", "Ошибка чтения файла календаря", err.Error())
-		return nil, ""
-	}
-
-	return file, fileInfo.Name()
+func SetGenderE(user *db.User_ReadJSON, gender db.Gender) Executor {
+	return Seq(
+		UpdateGenderE(user, gender),
+		SendMainMenuE(user),
+	)
 }
 
 // ---
@@ -234,6 +68,21 @@ func WasAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current
 
 }
 
+func WasAtEventsE(current_user *db.User_ReadJSON, actually bool) Executor {
+	return Seq(
+		UpdateVisitedE(current_user, actually),
+		ITE(
+			actually,
+			SendMessageME(
+				"request.is_itmo", keyboards.InlineKbd_JoinClub,
+			),
+			SendMessageME(
+				"request.not_enough_visits", keyboards.Keyboard_WasntAtEvents,
+			),
+		),
+	)
+}
+
 func WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON, cont bool) {
 	if cont {
 		SendMessageM(
@@ -243,6 +92,14 @@ func WasntAtEvents(ctx context.Context, b *bot.Bot, update *models.Update, curre
 	} else {
 		SendMainMenu(ctx, current_user, b, update)
 	}
+}
+
+func WasntAtEventsE(user *db.User_ReadJSON, cont bool) Executor {
+	return ITE(
+		cont,
+		SendMessageME("request.is_itmo", keyboards.InlineKbd_JoinClub),
+		SendMainMenuE(user),
+	)
 }
 
 func JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
@@ -264,6 +121,28 @@ func JoinClub(ctx context.Context, b *bot.Bot, update *models.Update, current_us
 			"request.rules", keyboards.Keyboard_WasAtEvents,
 		)
 	}
+}
+
+func JoinClubE(user *db.User_ReadJSON) Executor {
+	if user.IsSentRequest {
+		return Seq(
+			SendMessageME(
+				"request.in_progress", nil,
+			),
+			SendMainMenuE(user),
+		)
+	}
+	if user.IsClubMember {
+		return Seq(
+			SendMessageME(
+				"request.already_accepted", nil,
+			),
+			SendMainMenuE(user),
+		)
+	}
+	return SendMessageME(
+		"request.rules", keyboards.Keyboard_WasAtEvents,
+	)
 }
 
 func SigningUpForActivity(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -297,9 +176,36 @@ func SigningUpForActivity(ctx context.Context, b *bot.Bot, update *models.Update
 	}
 }
 
+func SigningUpForActivityE(user *db.User_ReadJSON) Executor {
+	return GetActiveActivities().
+		Then(func(activities []db.Activity_ReadJSON) Executor {
+			return HasActiveRoulette().
+				Then(func(has_roulette bool) Executor {
+					text, keyboard := "events.empty", models.ReplyMarkup(nil)
+					if len(activities) > 0 || has_roulette {
+						text = "events.list"
+						keyboard = keyboards.CreateInlineKbd_ActivitiesList(activities, user.UserTgID, has_roulette)
+					}
+
+					return OpenCalendarE().
+						Then(func(file io.Reader) Executor {
+							return SendPhotoME(file, text, keyboard)
+						}).
+						Otherwise(SendMessageME(text, keyboard))
+				})
+		})
+}
+
 func BackMainMenu(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	UpdateStep(current_user, config.STEP_DEFAULT)
 	SendMainMenu(ctx, current_user, b, update)
+}
+
+func BackMainMenuE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		UpdateStepE(user, config.STEP_DEFAULT),
+		SendMainMenuE(user),
+	)
 }
 
 func LeaveClub(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
@@ -307,6 +213,15 @@ func LeaveClub(ctx context.Context, b *bot.Bot, update *models.Update, current_u
 	SendMessageM(
 		ctx, b, update,
 		"leave_reason", keyboards.Keyboard_Skip,
+	)
+}
+
+func LeaveClubE(current_user *db.User_ReadJSON) Executor {
+	return Seq(
+		UpdateStepE(current_user, config.STEP_USER_LEAVES_CLUB),
+		SendMessageME(
+			"leave_reason", keyboards.Keyboard_Skip,
+		),
 	)
 }
 
@@ -325,6 +240,21 @@ func MyActivities(ctx context.Context, b *bot.Bot, update *models.Update, curren
 	}
 }
 
+func MyActivitiesE(current_user *db.User_ReadJSON) Executor {
+	return GetActiveActivities().
+		Then(func(activities []db.Activity_ReadJSON) Executor {
+			return ITE(
+				len(activities) == 0,
+				SendMessageME(
+					"my_events.empty", nil,
+				),
+				SendMessageME(
+					"my_events.list", keyboards.CreateInlineKbd_MyActivitiesList(activities),
+				),
+			)
+		})
+}
+
 func NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	UpdateStep(current_user, config.STEP_DEFAULT)
 	SendMessageM(
@@ -332,4 +262,14 @@ func NoPhoneNumber(ctx context.Context, b *bot.Bot, update *models.Update, curre
 		"request.no_phone_number", nil,
 	)
 	SendMainMenu(ctx, current_user, b, update)
+}
+
+func NoPhoneNumberE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		UpdateStepE(user, config.STEP_DEFAULT),
+		SendMessageME(
+			"request.no_phone_number", nil,
+		),
+		SendMainMenuE(user),
+	)
 }

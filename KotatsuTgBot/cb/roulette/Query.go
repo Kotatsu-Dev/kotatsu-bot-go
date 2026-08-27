@@ -2,7 +2,7 @@ package roulette
 
 import (
 	"context"
-	. "rr/kotatsutgbot/cb"
+	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/db"
 
 	"github.com/go-telegram/bot"

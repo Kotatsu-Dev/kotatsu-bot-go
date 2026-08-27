@@ -15,6 +15,7 @@ package main
 
 import (
 	"rr/kotatsutgbot/cb"
+	"rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/cb/roulette"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
@@ -35,11 +36,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-// Удалить элемент массива
-func RemoveIndex(s []int64, index int) []int64 {
-	return append(s[:index], s[index+1:]...)
-}
 
 //
 // Главные процессы
@@ -284,10 +280,10 @@ func BotHandler_Command_Start(ctx context.Context, b *bot.Bot, update *models.Up
 	db_answer_code, user := db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		cb.SendMessageMT(
+		helpers.SendMessageMT(
 			ctx, b, update,
 			"welcome", update.Message.From,
-			cb.ITE(
+			helpers.ITE(
 				user.IsClubMember,
 				keyboards.Keyboard_MainMenuButtonsClubMember,
 				keyboards.Keyboard_MainMenuButtonsDefault,
@@ -427,7 +423,7 @@ func proccessText_Unknown(ctx context.Context, b *bot.Bot, update *models.Update
 		return
 	}
 
-	cb.SendMessageM(
+	helpers.SendMessageM(
 		ctx, b, update,
 		"unknown_command", nil,
 	)

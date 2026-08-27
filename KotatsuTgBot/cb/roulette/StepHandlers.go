@@ -3,7 +3,7 @@ package roulette
 import (
 	"context"
 	"regexp"
-	. "rr/kotatsutgbot/cb"
+	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"time"
