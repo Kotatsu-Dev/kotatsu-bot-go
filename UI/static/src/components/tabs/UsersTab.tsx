@@ -218,6 +218,13 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
   const api = useAPI();
   const user = props.value;
 
+  const isItmo = [
+    "student",
+    "employee",
+    "graduate_employee",
+    "student_employee",
+  ].includes(user.itmo_status ?? "");
+
   const acceptRequest = async () => {
     if (user.my_request) {
       await api.requests.accept({ id: user.my_request.id });
@@ -346,7 +353,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
           <DataList.Item>
             <DataList.ItemLabel>From ITMO</DataList.ItemLabel>
             <DataList.ItemValue>
-              {user.is_itmo ? (
+              {isItmo ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
                   Yes
@@ -474,14 +481,7 @@ export const UsersTab = () => {
     }
 
     return result;
-  }, [
-    users,
-    search,
-    clubFilter,
-    genderFilter,
-    itmoTraitFilter,
-    onlyRequests,
-  ]);
+  }, [users, search, clubFilter, genderFilter, itmoTraitFilter, onlyRequests]);
 
   const resetFilters = () => {
     setSearchInput("");
@@ -533,11 +533,11 @@ export const UsersTab = () => {
               >
                 <Text fontWeight={"medium"}>
                   Filters
-                  {activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}
+                  {activeFilterCount > 0
+                    ? ` · ${activeFilterCount} active`
+                    : ""}
                 </Text>
-                <Icon>
-                  {filtersOpen ? <FaChevronUp /> : <FaChevronDown />}
-                </Icon>
+                <Icon>{filtersOpen ? <FaChevronUp /> : <FaChevronDown />}</Icon>
               </Flex>
             </Collapsible.Trigger>
             <Collapsible.Content>
@@ -565,9 +565,7 @@ export const UsersTab = () => {
                         <RadioGroup.Item value="not_member">
                           <RadioGroup.ItemHiddenInput />
                           <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>
-                            Non-members
-                          </RadioGroup.ItemText>
+                          <RadioGroup.ItemText>Non-members</RadioGroup.ItemText>
                         </RadioGroup.Item>
                       </Group>
                     </RadioGroup.Root>

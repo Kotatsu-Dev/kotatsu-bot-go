@@ -505,7 +505,12 @@ const EventCard = (props: {
                             <Table.Cell>{user.full_name}</Table.Cell>
                             <Table.Cell>{user.user_name}</Table.Cell>
                             <Table.Cell>
-                              {user.is_itmo ? (
+                              {[
+                                "student",
+                                "employee",
+                                "graduate_employee",
+                                "student_employee",
+                              ].includes(user.itmo_status ?? "") ? (
                                 <Status.Root colorPalette={"green"}>
                                   <Status.Indicator />
                                   Yes
@@ -633,9 +638,7 @@ export const EventsTab = () => {
   const filteredEvents = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (needle.length === 0) return events;
-    return events.filter((event) =>
-      event.title.toLowerCase().includes(needle),
-    );
+    return events.filter((event) => event.title.toLowerCase().includes(needle));
   }, [events, search]);
 
   const upcoming = useMemo(
