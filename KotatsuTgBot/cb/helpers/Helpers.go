@@ -8,9 +8,11 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
+	"strconv"
 	"strings"
 	"time"
 
@@ -182,6 +184,12 @@ func QueryGuard(text string, executor Executor) *GuardS {
 	})(executor)
 }
 
+func StepGuard(user *db.User_ReadJSON, step int, executor Executor) *GuardS {
+	return Guard(func(ctx context.Context, b *bot.Bot, u *models.Update) bool {
+		return user.Step == step
+	})(executor)
+}
+
 type GetCurrentUser struct {
 	ChainedExecutorS[*db.User_ReadJSON, *GetCurrentUser]
 }
@@ -329,6 +337,80 @@ func HasActiveRoulette() ChainedExecutor[bool] {
 	return res
 }
 
+type ParseTextIntS struct {
+	ChainedExecutorS[int, *ParseTextIntS]
+}
+
+func (pti *ParseTextIntS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	res, err := strconv.Atoi(update.Message.Text)
+	if err != nil {
+		if pti.otherwise != nil {
+			return pti.otherwise.Execute(ctx, b, update)
+		}
+		return true, err
+	} else {
+		if pti.then != nil {
+			return pti.then(res).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+}
+
+func ParseTextInt() ChainedExecutor[int] {
+	res := &ParseTextIntS{}
+	res.self = res
+	return res
+}
+
+type MatchTextS struct {
+	ChainedExecutorS[string, *MatchTextS]
+	r *regexp.Regexp
+}
+
+func (mts *MatchTextS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	matched := mts.r.MatchString(update.Message.Text)
+	if matched {
+		if mts.then != nil {
+			return mts.then(update.Message.Text).Execute(ctx, b, update)
+		}
+		return true, nil
+	} else {
+		if mts.otherwise != nil {
+			return mts.otherwise.Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+}
+
+func MatchText(r *regexp.Regexp) ChainedExecutor[string] {
+	res := &MatchTextS{r: r}
+	res.self = res
+	return res
+}
+
+type GetContactS struct {
+	ChainedExecutorS[string, *GetContactS]
+}
+
+func (gc *GetContactS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	if update.Message != nil && update.Message.Contact != nil {
+		if gc.then != nil {
+			return gc.then(update.Message.Contact.PhoneNumber).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	if gc.otherwise != nil {
+		return gc.otherwise.Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func GetContact() ChainedExecutor[string] {
+	res := &GetContactS{}
+	res.self = res
+	return res
+}
+
 type EmptyS struct{}
 
 func (*EmptyS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
@@ -343,12 +425,24 @@ type FuncS struct {
 	f func() (bool, error)
 }
 
-func (fs *FuncS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	return fs.f()
+func (wc *FuncS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return wc.f()
 }
 
 func Func(f func() (bool, error)) Executor {
 	return &FuncS{f: f}
+}
+
+type WithCtxS struct {
+	f func(ctx context.Context, b *bot.Bot, update *models.Update) Executor
+}
+
+func (wc *WithCtxS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return wc.f(ctx, b, update).Execute(ctx, b, update)
+}
+
+func WithCtx(f func(ctx context.Context, b *bot.Bot, update *models.Update) Executor) Executor {
+	return &WithCtxS{f: f}
 }
 
 type GetActiveActivitiesS struct {
@@ -365,6 +459,82 @@ func (gaa *GetActiveActivitiesS) Execute(ctx context.Context, b *bot.Bot, update
 
 func GetActiveActivities() ChainedExecutor[[]db.Activity_ReadJSON] {
 	res := &GetActiveActivitiesS{}
+	res.self = res
+	return res
+}
+
+type GetActivityByIDS struct {
+	ChainedExecutorS[*db.Activity_ReadJSON, *GetActivityByIDS]
+	id uint
+}
+
+func (gai *GetActivityByIDS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	db_answer_code, activity := db.DB_GET_Activity_BY_ID(gai.id)
+	if db_answer_code == db.DB_ANSWER_SUCCESS {
+		if gai.then != nil {
+			return gai.then(activity).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	if gai.otherwise != nil {
+		return gai.otherwise.Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func GetActivityByID(id uint) ChainedExecutor[*db.Activity_ReadJSON] {
+	res := &GetActivityByIDS{id: id}
+	res.self = res
+	return res
+}
+
+type CreateRequestS struct {
+	ChainedExecutorS[*db.User_ReadJSON, *CreateRequestS]
+	user *db.User_ReadJSON
+}
+
+func (cr *CreateRequestS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	db_answer_code := db.DB_CREATE_Request(cr.user.ID)
+	if db_answer_code == db.DB_ANSWER_SUCCESS {
+		if cr.then != nil {
+			return cr.then(cr.user).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	if cr.otherwise != nil {
+		return cr.otherwise.Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+type AddParticipantS struct {
+	ChainedExecutorS[*db.Activity_ReadJSON, *AddParticipantS]
+	activity *db.Activity_ReadJSON
+	user     *db.User_ReadJSON
+}
+
+func (ap *AddParticipantS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	code := db.DB_UPDATE_Activity_ADD_Participants(ap.activity.ID, ap.user.ID)
+	if code == db.DB_ANSWER_SUCCESS {
+		if ap.then != nil {
+			return ap.then(ap.activity).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	if ap.otherwise != nil {
+		return ap.otherwise.Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
+	res := &AddParticipantS{activity: activity, user: user}
+	res.self = res
+	return res
+}
+
+func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
+	res := &CreateRequestS{user: user}
 	res.self = res
 	return res
 }

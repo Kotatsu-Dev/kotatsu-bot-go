@@ -55,6 +55,30 @@ func EnterEnigmaticTitle(ctx context.Context, b *bot.Bot, update *models.Update,
 	Main(ctx, b, update, current_user)
 }
 
+func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		UpdateStepE(user, config.STEP_DEFAULT),
+		GetActiveRoulette().
+			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+				now := time.Now()
+				if now.After(roulette.StartDate) && now.Before(roulette.AnnounceDate) {
+					return NoTheme()
+				} else if now.After(roulette.AnnounceDate) && now.Before(roulette.DistributionDate) {
+					return ITE(
+						check_is_participant(user, roulette),
+						SendMessageME(
+							"roulette.sent_title", nil,
+						),
+						NotParticipant(),
+					)
+				}
+				return RouletteEnded()
+			}).
+			Otherwise(RouletteInactive()),
+		MainE(user),
+	)
+}
+
 func EnterLinkMyAnimeList(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	UpdateStep(current_user, config.STEP_DEFAULT)
 
@@ -93,4 +117,33 @@ func EnterLinkMyAnimeList(ctx context.Context, b *bot.Bot, update *models.Update
 	}
 
 	Main(ctx, b, update, current_user)
+}
+
+func EnterLinkMyAnimeListE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		UpdateStepE(user, config.STEP_DEFAULT),
+		GetActiveRoulette().
+			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
+				return ITE(
+					check_is_participant(user, roulette),
+					MatchText(linkToListRegexp).
+						Then(func(text string) Executor {
+							return Seq(
+								UpdateUserE(user, map[string]any{
+									"link_my_anime_list": text,
+								}),
+								SendMessageME(
+									"roulette.sent_list", nil,
+								),
+							)
+						}).
+						Otherwise(SendMessageME(
+							"roulette.incorrect_list_format", nil,
+						)).(Executor),
+					NotParticipant(),
+				)
+			}).
+			Otherwise(RouletteInactive()),
+		MainE(user),
+	)
 }

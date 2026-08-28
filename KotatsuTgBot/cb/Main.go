@@ -3,6 +3,7 @@ package cb
 import (
 	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/cb/roulette"
+	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 )
 
@@ -30,5 +31,18 @@ var MAIN = GetCurrentUserE().
 			TextGuard("keyboard.my_events", MyActivitiesE(user)),
 			TextGuard("keyboard.to_main_menu", BackMainMenuE(user)),
 			TextGuard("keyboard.not_my_number", NoPhoneNumberE(user)),
+
+			StepGuard(user, config.STEP_ITMO_ENTER_ISU, ITMO_EnterISUE(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_ISU, ITMO_EnterISUE(user, "activity")),
+			StepGuard(user, config.STEP_ITMO_ENTER_FULLNAME, ITMO_EnterFullNameE(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_FULLNAME, ITMO_EnterFullNameE(user, "activity")),
+			StepGuard(user, config.STEP_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullNameE(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullNameE(user, "activity")),
+			StepGuard(user, config.STEP_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumberE(user, "join_club")),
+			StepGuard(user, config.STEP_CHANGING_PHONE, ChangePhoneNumberE(user)),
+			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumberE(user, "activity")),
+			StepGuard(user, config.STEP_USER_LEAVES_CLUB, LeavesClubE(user)),
+			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE, roulette.EnterEnigmaticTitleE(user)),
+			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST, roulette.EnterLinkMyAnimeListE(user)),
 		)
 	})
