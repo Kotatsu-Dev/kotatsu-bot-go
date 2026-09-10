@@ -496,6 +496,17 @@ type CreateRequestS struct {
 func (cr *CreateRequestS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
 	db_answer_code := db.DB_CREATE_Request(cr.user.ID)
 	if db_answer_code == db.DB_ANSWER_SUCCESS {
+		cont, err := UpdateUserE(cr.user, map[string]any{
+			"is_sent_request": true,
+		}).Execute(ctx, b, update)
+
+		if err != nil {
+			if cr.otherwise != nil {
+				return cr.otherwise.Execute(ctx, b, update)
+			}
+			return cont, err
+		}
+
 		if cr.then != nil {
 			return cr.then(cr.user).Execute(ctx, b, update)
 		}
