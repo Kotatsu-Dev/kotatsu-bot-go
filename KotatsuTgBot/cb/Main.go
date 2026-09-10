@@ -29,7 +29,6 @@ var MAIN = GetCurrentUserE().
 			TextGuard("keyboard.roulette_theme", roulette.MainThemeE()),
 			TextGuard("keyboard.roulette_list", roulette.LinkMyListE(user)),
 			TextGuard("keyboard.my_events", MyActivitiesE(user)),
-			TextGuard("keyboard.to_main_menu", BackMainMenuE(user)),
 			TextGuard("keyboard.not_my_number", NoPhoneNumberE(user)),
 
 			StepGuard(user, config.STEP_ITMO_ENTER_ISU, ITMO_EnterISUE(user, "join_club")),

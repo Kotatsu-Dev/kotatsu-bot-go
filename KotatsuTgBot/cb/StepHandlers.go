@@ -463,7 +463,7 @@ func LeavesClub(ctx context.Context, b *bot.Bot, update *models.Update, current_
 		ctx, b, config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 		"leave_notification", &map[string]any{
 			"user":   current_user,
-			"reason": ITE(update.Message.Text == "Пропустить", "", update.Message.Text),
+			"reason": ITE(update.Message.Text == config.T("keyboard.skip"), "", update.Message.Text),
 		}, nil,
 	)
 	SendMessageM(
@@ -484,7 +484,7 @@ func LeavesClubE(user *db.User_ReadJSON) Executor {
 				config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 				"leave_notification", &map[string]any{
 					"user":   user,
-					"reason": ITE(update.Message.Text == "Пропустить", "", update.Message.Text),
+					"reason": ITE(update.Message.Text == config.T("keyboard.skip"), "", update.Message.Text),
 				}, nil,
 			)
 		}),

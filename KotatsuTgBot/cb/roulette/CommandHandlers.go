@@ -191,7 +191,7 @@ func CancelParticipate(ctx context.Context, b *bot.Bot, update *models.Update, c
 		} else {
 			SendMessageM(
 				ctx, b, update,
-				"roulette.not_participant", keyboards.CreateKeyboard_AnimeRouletteStart(true),
+				"roulette.not_participant", keyboards.CreateKeyboard_AnimeRouletteStart(false),
 			)
 		}
 

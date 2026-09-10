@@ -324,7 +324,7 @@ func (har *HasActiveRouletteS) Execute(ctx context.Context, b *bot.Bot, update *
 		}).
 		Otherwise(Func(func() (bool, error) {
 			if har.then != nil {
-				return har.then(true).Execute(ctx, b, update)
+				return har.then(false).Execute(ctx, b, update)
 			}
 			return true, nil
 		})).
