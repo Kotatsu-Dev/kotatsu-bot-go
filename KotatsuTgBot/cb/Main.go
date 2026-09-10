@@ -46,3 +46,18 @@ var MAIN = GetCurrentUserE().
 			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST, roulette.EnterLinkMyAnimeListE(user)),
 		)
 	})
+
+	// TODO: Otherwise
+var CALLBACK_MAIN = GetCurrentUserE().
+	Then(func(user *db.User_ReadJSON) Executor {
+		return OneOf(
+			QueryGuard("JOIN_CLUB", JoinClubQueryE(user)),
+			QueryGuard("APPOINTMENT", AppointQueryE(user)),
+			QueryGuard("ACTIVITIES", ActivitiesQueryE(user)),
+			QueryGuard("MY_ACTIVITIES", ActivitiesQueryE(user)),
+			QueryGuard("ACTIVITY_SUBSCRIBE", SubscribeQueryE(user)),
+			QueryGuard("ACTIVITY_UNSUBSCRIBE", UnsubscribeQueryE(user)),
+			QueryGuard("RELEVANC_PHONE", RelevancePhoneQueryE(user)),
+			QueryGuard("ROULETTES", roulette.MainQueryE(user)),
+		)
+	})

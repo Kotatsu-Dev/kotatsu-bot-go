@@ -107,6 +107,78 @@ func JoinClubQuery(ctx context.Context, b *bot.Bot, update *models.Update, curre
 	}
 }
 
+func JoinClubQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		QueryDataE().
+			Then(func(data string) Executor {
+				switch data {
+				case "from_ITMO_student":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_ITMO_ENTER_ISU,
+							"itmo_status": db.Student,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+
+				case "from_ITMO_graduate":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_ITMO_ENTER_ISU,
+							"itmo_status": db.Graduate,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_ITMO_ENTER_ISU,
+							"itmo_status": db.Employee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_student_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_ITMO_ENTER_ISU,
+							"itmo_status": db.StudentEmployee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_graduate_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_ITMO_ENTER_ISU,
+							"itmo_status": db.GraduateEmployee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				default:
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_NOITMO_ENTER_FULLNAME,
+							"itmo_status": db.Guest,
+						}),
+						SendMessageME(
+							"request.enter_full_name", nil,
+						),
+					)
+				}
+			}),
+	)
+}
+
 func RelevancePhoneQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	AnswerQuery(ctx, b, update)
 
@@ -150,6 +222,55 @@ func RelevancePhoneQuery(ctx context.Context, b *bot.Bot, update *models.Update,
 	}
 }
 
+func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		GetActivityByID(uint(current_user.TempActivityID)).
+			Then(func(activity *db.Activity_ReadJSON) Executor {
+				return QueryDataE().
+					Then(func(data string) Executor {
+						if data == "yes" {
+							if activity.Status {
+								if activity.GuestRegistrationUntil != nil &&
+									!current_user.IsITMO &&
+									activity.GuestRegistrationUntil.Before(time.Now()) {
+									return Seq(
+										UpdateStepE(current_user, config.STEP_DEFAULT),
+										SendMessageME(
+											"events.registration_closed",
+											keyboards.ListEvents,
+										),
+									)
+								} else {
+									db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
+									return Seq(
+										UpdateStepE(current_user, config.STEP_DEFAULT),
+										SendMessageMTE(
+											"events.registered", activity,
+											keyboards.ListEvents,
+										),
+									)
+								}
+							} else {
+								return SendMessageME(
+									"events.non_existent",
+									keyboards.ListEvents,
+								)
+							}
+
+						} else {
+							return Seq(
+								UpdateStepE(current_user, config.STEP_CHANGING_PHONE),
+								SendMessageME(
+									"request.send_phone", keyboards.Keyboard_RequestContact,
+								),
+							)
+						}
+					})
+			}),
+	)
+}
+
 func UnsubscribeQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	AnswerQuery(ctx, b, update)
 
@@ -186,6 +307,38 @@ func UnsubscribeQuery(ctx context.Context, b *bot.Bot, update *models.Update, cu
 			)
 		}
 	}
+}
+
+func UnsubscribeQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		QueryDataUintE().
+			Then(func(activity_id uint64) Executor {
+				return GetActivityByID(uint(activity_id)).
+					Then(func(activity *db.Activity_ReadJSON) Executor {
+						db_answer_code_remove := db.DB_UPDATE_Activity_REMOVE_Participant(uint(activity_id), user.ID)
+						switch db_answer_code_remove {
+						case db.DB_ANSWER_SUCCESS:
+							return SendMessageMTE(
+								"events.unregistered", activity,
+								keyboards.ListEvents,
+							)
+
+						case db.DB_ANSWER_OBJECT_NOT_FOUND:
+							return SendMessageME(
+								"events.non_existent",
+								keyboards.ListEvents,
+							)
+
+						default:
+							return SendMessageME(
+								"events.not_registered",
+								keyboards.ListEvents,
+							)
+						}
+					})
+			}),
+	)
 }
 
 func SubscribeQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
@@ -243,6 +396,60 @@ func SubscribeQuery(ctx context.Context, b *bot.Bot, update *models.Update, curr
 	}
 }
 
+func SubscribeQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		QueryDataUintE().
+			Then(func(activity_id uint64) Executor {
+				return ITE(
+					user.IsFilledData,
+					ITE(user.IsITMO,
+						GetActivityByID(uint(activity_id)).
+							Then(func(activity *db.Activity_ReadJSON) Executor {
+								if activity.Status {
+									// Is ITMO = true
+									db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), user.ID)
+									return Seq(
+										SendMessageMTE(
+											"events.registered", activity,
+											keyboards.ListEvents,
+										),
+										UpdateStepE(user, config.STEP_DEFAULT),
+									)
+								} else {
+									return Seq(
+										SendMessageME(
+											"events.non_existent",
+											keyboards.ListEvents,
+										),
+										UpdateStepE(user, config.STEP_DEFAULT),
+									)
+								}
+							}).(Executor),
+						Seq(
+							SendMessageMTE(
+								"events.phone_number", user.PhoneNumber,
+								keyboards.InlineKbd_RelevancePhoneNumber,
+							),
+							UpdateUserE(user, map[string]any{
+								"step":             config.STEP_DEFAULT,
+								"temp_activity_id": int(activity_id),
+							}),
+						),
+					),
+					Seq(
+						SendMessageME(
+							"request.unknown", keyboards.InlineKbd_Appointment,
+						),
+						UpdateUserE(user, map[string]any{
+							"temp_activity_id": int(activity_id),
+						}),
+					),
+				)
+			}),
+	)
+}
+
 func ActivitiesQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
 	AnswerQuery(ctx, b, update)
 
@@ -294,6 +501,59 @@ func ActivitiesQuery(ctx context.Context, b *bot.Bot, update *models.Update, cur
 
 		UpdateStep(current_user, config.STEP_ACTIVITY)
 	}
+}
+
+func ActivitiesQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		QueryDataUintE().
+			Then(func(activity_id uint64) Executor {
+				return GetActivityByID(uint(activity_id)).
+					Then(func(activity *db.Activity_ReadJSON) Executor {
+						var formattedTime, formattedDate string
+						is_participant := check_is_participant(user, activity)
+
+						loc, _ := time.LoadLocation("Europe/Moscow")
+						formattedTime = activity.DateMeeting.In(loc).Format("15:04")
+						formattedDate = FormatDate(activity.DateMeeting.In(loc))
+
+						var files []io.Reader
+						if len(activity.PathsImages) != 0 {
+							files = make([]io.Reader, len(activity.PathsImages))
+							for i, path := range activity.PathsImages {
+								fileData, err := os.ReadFile(path)
+								if err != nil {
+									rr_debug.PrintLOG("botHandlers.go", "BotHandler_CallbackQuery_ACTIVITIES", "os.Open(output_image_path)", "Ошибка открытия файла", err.Error())
+									return Empty()
+								}
+
+								files[i] = bytes.NewReader(fileData)
+							}
+						}
+						return Seq(
+							ITE(len(files) > 0,
+								SendPhotosME(
+									files, "",
+								),
+								Empty(),
+							),
+							SendMessageMTE(
+								"events.format", &map[string]any{
+									"activity":      activity,
+									"formattedDate": formattedDate,
+									"formattedTime": formattedTime,
+								},
+								ITE(is_participant,
+									keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID)),
+									keyboards.CreateInlineKbd_SubscribeActivity(int(activity.ID)),
+								),
+							),
+							UpdateStepE(user, config.STEP_ACTIVITY),
+						)
+
+					})
+			}),
+	)
 }
 
 func AppointQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_user *db.User_ReadJSON) {
@@ -366,6 +626,78 @@ func AppointQuery(ctx context.Context, b *bot.Bot, update *models.Update, curren
 			"request.enter_full_name", nil,
 		)
 	}
+}
+
+func AppointQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		QueryDataE().
+			Then(func(data string) Executor {
+				switch data {
+				case "from_ITMO_student":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+							"itmo_status": db.Student,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+
+				case "from_ITMO_graduate":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+							"itmo_status": db.Graduate,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+							"itmo_status": db.Employee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_student_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+							"itmo_status": db.StudentEmployee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				case "from_ITMO_graduate_employee":
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
+							"itmo_status": db.GraduateEmployee,
+						}),
+						SendMessageME(
+							"request.enter_isu_number", nil,
+						),
+					)
+				default:
+					return Seq(
+						UpdateUserE(user, map[string]any{
+							"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
+							"itmo_status": db.Guest,
+						}),
+						SendMessageME(
+							"request.enter_full_name", nil,
+						),
+					)
+				}
+			}),
+	)
 }
 
 func FormatDate(t time.Time) string {

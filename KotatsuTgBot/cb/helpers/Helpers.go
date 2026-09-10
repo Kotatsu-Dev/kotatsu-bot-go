@@ -180,7 +180,7 @@ func TextGuard(text string, executor Executor) *GuardS {
 
 func QueryGuard(text string, executor Executor) *GuardS {
 	return Guard(func(ctx context.Context, b *bot.Bot, u *models.Update) bool {
-		return u != nil && u.InlineQuery != nil && strings.HasPrefix(u.InlineQuery.Query, text)
+		return u != nil && u.CallbackQuery != nil && strings.HasPrefix(u.CallbackQuery.Data, text)
 	})(executor)
 }
 
@@ -539,6 +539,82 @@ func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
 	return res
 }
 
+type AnswerQueryS struct{}
+
+func (*AnswerQueryS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	if update.CallbackQuery != nil {
+		b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+			CallbackQueryID: update.CallbackQuery.ID,
+			ShowAlert:       false,
+		})
+	}
+	return true, nil
+}
+
+func AnswerQueryE() Executor {
+	return &AnswerQueryS{}
+}
+
+type QueryDataS struct {
+	ChainedExecutorS[string, *QueryDataS]
+}
+
+func (qd *QueryDataS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	if update.CallbackQuery == nil {
+		if qd.otherwise != nil {
+			return qd.otherwise.Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	parts := strings.Split(update.CallbackQuery.Data, "::")
+	data := parts[1]
+
+	if qd.then != nil {
+		return qd.then(data).Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func QueryDataE() ChainedExecutor[string] {
+	res := &QueryDataS{}
+	res.self = res
+	return res
+}
+
+type QueryDataUintS struct {
+	ChainedExecutorS[uint64, *QueryDataUintS]
+}
+
+func (qdu *QueryDataUintS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	if update.CallbackQuery == nil {
+		if qdu.otherwise != nil {
+			return qdu.otherwise.Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	parts := strings.Split(update.CallbackQuery.Data, "::")
+	data := parts[1]
+	res, err := strconv.ParseUint(data, 10, 64)
+
+	if err != nil {
+		if qdu.otherwise != nil {
+			return qdu.otherwise.Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+
+	if qdu.then != nil {
+		return qdu.then(res).Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func QueryDataUintE() ChainedExecutor[uint64] {
+	res := &QueryDataUintS{}
+	res.self = res
+	return res
+}
+
 type OpenCalendarS struct {
 	ChainedExecutorS[io.Reader, *OpenCalendarS]
 }
@@ -632,8 +708,56 @@ func SendPhotoRawME(file io.Reader, text string, keyboard models.ReplyMarkup) Ex
 	return &SendPhotoMS{file: file, text: text, keyboard: keyboard}
 }
 
+type SendPhotosMS struct {
+	files []io.Reader
+	text  string
+}
+
+func (msg *SendPhotosMS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	media_group := make([]models.InputMedia, len(msg.files))
+	for i, file := range msg.files {
+		if i == 0 {
+			media_group[i] = &models.InputMediaPhoto{
+				Media:           fmt.Sprintf("attach://photo_%d", i),
+				MediaAttachment: file,
+				ParseMode:       models.ParseModeHTML,
+				Caption:         msg.text,
+			}
+		} else {
+			media_group[i] = &models.InputMediaPhoto{
+				Media:           fmt.Sprintf("attach://photo_%d", i),
+				MediaAttachment: file,
+			}
+		}
+	}
+	_, err := b.SendMediaGroup(ctx, &bot.SendMediaGroupParams{
+		ChatID: chat_id,
+		Media:  media_group,
+	})
+
+	if err != nil {
+		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotosRaw", "bot.SendMediaGroup", "Ошибка отправки фотографии", err.Error())
+	}
+
+	return true, err
+}
+
+func SendPhotosRawME(files []io.Reader, text string) Executor {
+	return &SendPhotosMS{files: files, text: text}
+}
+
 func SendPhotoME(file io.Reader, text string, keyboard models.ReplyMarkup) Executor {
 	return SendPhotoRawME(file, config.T(text), keyboard)
+}
+
+func SendPhotosME(files []io.Reader, text string) Executor {
+	return SendPhotosRawME(files, config.T(text))
 }
 
 func SendMessageRaw(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {

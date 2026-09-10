@@ -13,3 +13,10 @@ func MainQuery(ctx context.Context, b *bot.Bot, update *models.Update, current_u
 	AnswerQuery(ctx, b, update)
 	Main(ctx, b, update, current_user)
 }
+
+func MainQueryE(user *db.User_ReadJSON) Executor {
+	return Seq(
+		AnswerQueryE(),
+		MainE(user),
+	)
+}
