@@ -28,6 +28,9 @@ func EnterEnigmaticTitle(ctx context.Context, b *bot.Bot, update *models.Update,
 			)
 		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
 			if check_is_participant(current_user, current_anime_roulette) {
+				UpdateCurrentUser(current_user, map[string]any{
+					"enigmatic_title": update.Message.Text,
+				})
 				SendMessageM(
 					ctx, b, update,
 					"roulette.sent_title", nil,
@@ -66,8 +69,15 @@ func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
 				} else if now.After(roulette.AnnounceDate) && now.Before(roulette.DistributionDate) {
 					return ITE(
 						check_is_participant(user, roulette),
-						SendMessageME(
-							"roulette.sent_title", nil,
+						Seq(
+							WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
+								return UpdateUserE(user, map[string]any{
+									"enigmatic_title": update.Message.Text,
+								})
+							}),
+							SendMessageME(
+								"roulette.sent_title", nil,
+							),
 						),
 						NotParticipant(),
 					)
