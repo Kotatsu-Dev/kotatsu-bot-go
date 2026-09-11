@@ -167,13 +167,20 @@ func ITMO_EnterFullNameE(user *db.User_ReadJSON, action string) Executor {
 						)).(Executor),
 					GetActivityByID(uint(user.TempActivityID)).
 						Then(func(activity *db.Activity_ReadJSON) Executor {
-							return Seq(
-								AddParticipant(activity, user),
-								SendMessageMTE(
-									"events.registered", activity,
-									keyboards.ListEvents,
-								),
-							)
+							if activity.Status {
+								// No ITMO check since we 100% from ITMO here
+								return Seq(
+									AddParticipant(activity, user),
+									SendMessageMTE(
+										"events.registered", activity,
+										keyboards.ListEvents,
+									),
+								)
+							} else {
+								return SendMessageME(
+									"events.non_existent", keyboards.ListEvents,
+								)
+							}
 						}).
 						Otherwise(SendMessageME(
 							"events.non_existent", keyboards.ListEvents,
@@ -343,6 +350,12 @@ func NoITMO_EnterPhoneNumberE(user *db.User_ReadJSON, action string) Executor {
 					),
 					GetActivityByID(uint(user.TempActivityID)).
 						Then(func(activity *db.Activity_ReadJSON) Executor {
+							if !activity.Status {
+								return SendMessageME(
+									"events.non_existent",
+									keyboards.ListEvents,
+								)
+							}
 							// No itmo check since we 100% not from ITMO here
 							if activity.GuestRegistrationUntil != nil &&
 								activity.GuestRegistrationUntil.Before(time.Now()) {
