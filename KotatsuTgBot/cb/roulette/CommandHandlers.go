@@ -159,10 +159,11 @@ func ParticipateE(user *db.User_ReadJSON) Executor {
 				if is_participant {
 					return AlreadyParticipant()
 				} else {
-					// TODO
-					db.DB_UPDATE_AnimeRoulette_ADD_Participants(user.ID)
-					return SendMessageME(
-						"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
+					return Seq(
+						AddRouletteParticipant(user),
+						SendMessageME(
+							"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
+						),
 					)
 				}
 			} else {
@@ -207,9 +208,11 @@ func CancelParticipateE(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			if check_is_participant(user, roulette) {
-				db.DB_UPDATE_AnimeRoulette_REMOVE_Participants(user.ID)
-				return SendMessageME(
-					"roulette.unregistered", keyboards.CreateKeyboard_AnimeRouletteStart(false),
+				return Seq(
+					RemoveRouletteParticipant(user),
+					SendMessageME(
+						"roulette.unregistered", keyboards.CreateKeyboard_AnimeRouletteStart(false),
+					),
 				)
 			} else {
 				return NotParticipant()

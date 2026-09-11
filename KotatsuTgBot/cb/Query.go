@@ -242,8 +242,8 @@ func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
 										),
 									)
 								} else {
-									db.DB_UPDATE_Activity_ADD_Participants(uint(activity.ID), current_user.ID)
 									return Seq(
+										AddParticipant(activity, current_user),
 										UpdateStepE(current_user, config.STEP_DEFAULT),
 										SendMessageMTE(
 											"events.registered", activity,
@@ -408,8 +408,8 @@ func SubscribeQueryE(user *db.User_ReadJSON) Executor {
 							Then(func(activity *db.Activity_ReadJSON) Executor {
 								if activity.Status {
 									// Is ITMO = true
-									db.DB_UPDATE_Activity_ADD_Participants(uint(activity_id), user.ID)
 									return Seq(
+										AddParticipant(activity, user),
 										SendMessageMTE(
 											"events.registered", activity,
 											keyboards.ListEvents,

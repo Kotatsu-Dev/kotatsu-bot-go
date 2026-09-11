@@ -408,6 +408,20 @@ func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) Chai
 	})
 }
 
+func AddRouletteParticipant(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
+		code := db.DB_UPDATE_AnimeRoulette_ADD_Participants(user.ID)
+		return user, code == db.DB_ANSWER_SUCCESS
+	})
+}
+
+func RemoveRouletteParticipant(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
+		code := db.DB_UPDATE_AnimeRoulette_REMOVE_Participants(user.ID)
+		return user, code == db.DB_ANSWER_SUCCESS
+	})
+}
+
 func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
 		if db.DB_CREATE_Request(user.ID) != db.DB_ANSWER_SUCCESS {

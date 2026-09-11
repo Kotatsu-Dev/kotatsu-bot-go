@@ -363,10 +363,12 @@ func NoITMO_EnterPhoneNumberE(user *db.User_ReadJSON, action string) Executor {
 									"events.registration_closed", keyboards.ListEvents,
 								)
 							} else {
-								db.DB_UPDATE_Activity_ADD_Participants(activity.ID, user.ID)
-								return SendMessageMTE(
-									"events.registered", activity,
-									keyboards.ListEvents,
+								return Seq(
+									AddParticipant(activity, user),
+									SendMessageMTE(
+										"events.registered", activity,
+										keyboards.ListEvents,
+									),
 								)
 							}
 						}).
@@ -443,10 +445,11 @@ func ChangePhoneNumberE(user *db.User_ReadJSON) Executor {
 									"events.registration_closed", keyboards.ListEvents,
 								)
 							} else {
-								db.DB_UPDATE_Activity_ADD_Participants(activity.ID, user.ID)
-
-								return SendMessageME(
-									"events.saved_n_registered", keyboards.ListEvents,
+								return Seq(
+									AddParticipant(activity, user),
+									SendMessageME(
+										"events.saved_n_registered", keyboards.ListEvents,
+									),
 								)
 							}
 						} else {
