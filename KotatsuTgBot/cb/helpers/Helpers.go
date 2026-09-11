@@ -368,6 +368,12 @@ func GetActiveActivities() ChainedExecutor[[]db.Activity_ReadJSON] {
 	})
 }
 
+func GetUserActiveActivities(user *db.User_ReadJSON) ChainedExecutor[[]db.Activity_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) ([]db.Activity_ReadJSON, bool) {
+		return db.DB_GET_User_Active_Activities(user.ID), true
+	})
+}
+
 func GetActivityByID(id uint) ChainedExecutor[*db.Activity_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
 		code, activity := db.DB_GET_Activity_BY_ID(id)

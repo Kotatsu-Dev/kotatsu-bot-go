@@ -240,8 +240,8 @@ func MyActivities(ctx context.Context, b *bot.Bot, update *models.Update, curren
 	}
 }
 
-func MyActivitiesE(current_user *db.User_ReadJSON) Executor {
-	return GetActiveActivities().
+func MyActivitiesE(user *db.User_ReadJSON) Executor {
+	return GetUserActiveActivities(user).
 		Then(func(activities []db.Activity_ReadJSON) Executor {
 			return ITE(
 				len(activities) == 0,
