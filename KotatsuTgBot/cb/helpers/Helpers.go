@@ -50,6 +50,31 @@ func (ce *ChainedExecutorS[T, Self]) Otherwise(otherwise Executor) ChainedExecut
 	return ce.self
 }
 
+type SourceS[T any] struct {
+	ChainedExecutorS[T, *SourceS[T]]
+	get func(ctx context.Context, b *bot.Bot, update *models.Update) (T, bool)
+}
+
+func (s *SourceS[T]) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	value, ok := s.get(ctx, b, update)
+	if ok {
+		if s.then != nil {
+			return s.then(value).Execute(ctx, b, update)
+		}
+		return true, nil
+	}
+	if s.otherwise != nil {
+		return s.otherwise.Execute(ctx, b, update)
+	}
+	return true, nil
+}
+
+func Source[T any](get func(ctx context.Context, b *bot.Bot, update *models.Update) (T, bool)) ChainedExecutor[T] {
+	res := &SourceS[T]{get: get}
+	res.self = res
+	return res
+}
+
 type SendMessageS struct {
 	chat_id  int64
 	text     string
@@ -190,40 +215,22 @@ func StepGuard(user *db.User_ReadJSON, step int, executor Executor) *GuardS {
 	})(executor)
 }
 
-type GetCurrentUser struct {
-	ChainedExecutorS[*db.User_ReadJSON, *GetCurrentUser]
-}
-
-func (gcu *GetCurrentUser) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	var (
-		code int
-		user *db.User_ReadJSON
-	)
-	if update != nil && update.Message != nil && update.Message.From != nil {
-		code, user = db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
-	} else if update != nil && update.CallbackQuery != nil {
-		code, user = db.DB_GET_User_BY_UserTgID(update.CallbackQuery.From.ID)
-	} else {
-		// TODO: Log and return meaningful error
-		return true, nil
-	}
-	if code == db.DB_ANSWER_SUCCESS {
-		if gcu.then != nil {
-			return gcu.then(user).Execute(ctx, b, update)
-		}
-		return true, nil
-	} else {
-		if gcu.otherwise != nil {
-			return gcu.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-}
-
 func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
-	gcu := &GetCurrentUser{}
-	gcu.self = gcu
-	return gcu
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
+		var (
+			code int
+			user *db.User_ReadJSON
+		)
+		if update != nil && update.Message != nil && update.Message.From != nil {
+			code, user = db.DB_GET_User_BY_UserTgID(update.Message.From.ID)
+		} else if update != nil && update.CallbackQuery != nil {
+			code, user = db.DB_GET_User_BY_UserTgID(update.CallbackQuery.From.ID)
+		} else {
+			// TODO: Log and return meaningful error
+			return nil, false
+		}
+		return user, code == db.DB_ANSWER_SUCCESS
+	})
 }
 
 type SeqS []Executor
@@ -285,130 +292,40 @@ func UpdateStepE(user *db.User_ReadJSON, step int) Executor {
 	})
 }
 
-type GetActiveRouletteS struct {
-	ChainedExecutorS[*db.AnimeRoulette_ReadJSON, *GetActiveRouletteS]
-}
-
-func (gar *GetActiveRouletteS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
-	if code == db.DB_ANSWER_SUCCESS {
-		if gar.then != nil {
-			return gar.then(roulette).Execute(ctx, b, update)
-		}
-		return true, nil
-	} else {
-		if gar.otherwise != nil {
-			return gar.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-}
-
 func GetActiveRoulette() ChainedExecutor[*db.AnimeRoulette_ReadJSON] {
-	res := &GetActiveRouletteS{}
-	res.self = res
-	return res
-}
-
-type HasActiveRouletteS struct {
-	ChainedExecutorS[bool, *HasActiveRouletteS]
-}
-
-func (har *HasActiveRouletteS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	return GetActiveRoulette().
-		Then(func(ar *db.AnimeRoulette_ReadJSON) Executor {
-			if har.then != nil {
-				return har.then(true)
-			}
-			return Empty()
-		}).
-		Otherwise(Func(func() (bool, error) {
-			if har.then != nil {
-				return har.then(false).Execute(ctx, b, update)
-			}
-			return true, nil
-		})).
-		Execute(ctx, b, update)
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.AnimeRoulette_ReadJSON, bool) {
+		code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
+		return roulette, code == db.DB_ANSWER_SUCCESS
+	})
 }
 
 func HasActiveRoulette() ChainedExecutor[bool] {
-	res := &HasActiveRouletteS{}
-	res.self = res
-	return res
-}
-
-type ParseTextIntS struct {
-	ChainedExecutorS[int, *ParseTextIntS]
-}
-
-func (pti *ParseTextIntS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	res, err := strconv.Atoi(update.Message.Text)
-	if err != nil {
-		if pti.otherwise != nil {
-			return pti.otherwise.Execute(ctx, b, update)
-		}
-		return true, err
-	} else {
-		if pti.then != nil {
-			return pti.then(res).Execute(ctx, b, update)
-		}
-		return true, nil
-	}
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (bool, bool) {
+		code, _ := db.DB_GET_AnimeRoulette_BY_Status(true)
+		return code == db.DB_ANSWER_SUCCESS, true
+	})
 }
 
 func ParseTextInt() ChainedExecutor[int] {
-	res := &ParseTextIntS{}
-	res.self = res
-	return res
-}
-
-type MatchTextS struct {
-	ChainedExecutorS[string, *MatchTextS]
-	r *regexp.Regexp
-}
-
-func (mts *MatchTextS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	matched := mts.r.MatchString(update.Message.Text)
-	if matched {
-		if mts.then != nil {
-			return mts.then(update.Message.Text).Execute(ctx, b, update)
-		}
-		return true, nil
-	} else {
-		if mts.otherwise != nil {
-			return mts.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (int, bool) {
+		res, err := strconv.Atoi(update.Message.Text)
+		return res, err == nil
+	})
 }
 
 func MatchText(r *regexp.Regexp) ChainedExecutor[string] {
-	res := &MatchTextS{r: r}
-	res.self = res
-	return res
-}
-
-type GetContactS struct {
-	ChainedExecutorS[string, *GetContactS]
-}
-
-func (gc *GetContactS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	if update.Message != nil && update.Message.Contact != nil {
-		if gc.then != nil {
-			return gc.then(update.Message.Contact.PhoneNumber).Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-	if gc.otherwise != nil {
-		return gc.otherwise.Execute(ctx, b, update)
-	}
-	return true, nil
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (string, bool) {
+		return update.Message.Text, r.MatchString(update.Message.Text)
+	})
 }
 
 func GetContact() ChainedExecutor[string] {
-	res := &GetContactS{}
-	res.self = res
-	return res
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (string, bool) {
+		if update.Message != nil && update.Message.Contact != nil {
+			return update.Message.Contact.PhoneNumber, true
+		}
+		return "", false
+	})
 }
 
 type EmptyS struct{}
@@ -445,109 +362,36 @@ func WithCtx(f func(ctx context.Context, b *bot.Bot, update *models.Update) Exec
 	return &WithCtxS{f: f}
 }
 
-type GetActiveActivitiesS struct {
-	ChainedExecutorS[[]db.Activity_ReadJSON, *GetActiveActivitiesS]
-}
-
-func (gaa *GetActiveActivitiesS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	activities := db.DB_GET_Active_Activities()
-	if gaa.then != nil {
-		return gaa.then(activities).Execute(ctx, b, update)
-	}
-	return true, nil
-}
-
 func GetActiveActivities() ChainedExecutor[[]db.Activity_ReadJSON] {
-	res := &GetActiveActivitiesS{}
-	res.self = res
-	return res
-}
-
-type GetActivityByIDS struct {
-	ChainedExecutorS[*db.Activity_ReadJSON, *GetActivityByIDS]
-	id uint
-}
-
-func (gai *GetActivityByIDS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	db_answer_code, activity := db.DB_GET_Activity_BY_ID(gai.id)
-	if db_answer_code == db.DB_ANSWER_SUCCESS {
-		if gai.then != nil {
-			return gai.then(activity).Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-	if gai.otherwise != nil {
-		return gai.otherwise.Execute(ctx, b, update)
-	}
-	return true, nil
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) ([]db.Activity_ReadJSON, bool) {
+		return db.DB_GET_Active_Activities(), true
+	})
 }
 
 func GetActivityByID(id uint) ChainedExecutor[*db.Activity_ReadJSON] {
-	res := &GetActivityByIDS{id: id}
-	res.self = res
-	return res
-}
-
-type CreateRequestS struct {
-	ChainedExecutorS[*db.User_ReadJSON, *CreateRequestS]
-	user *db.User_ReadJSON
-}
-
-func (cr *CreateRequestS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	db_answer_code := db.DB_CREATE_Request(cr.user.ID)
-	if db_answer_code == db.DB_ANSWER_SUCCESS {
-		cont, err := UpdateUserE(cr.user, map[string]any{
-			"is_sent_request": true,
-		}).Execute(ctx, b, update)
-
-		if err != nil {
-			if cr.otherwise != nil {
-				return cr.otherwise.Execute(ctx, b, update)
-			}
-			return cont, err
-		}
-
-		if cr.then != nil {
-			return cr.then(cr.user).Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-	if cr.otherwise != nil {
-		return cr.otherwise.Execute(ctx, b, update)
-	}
-	return true, nil
-}
-
-type AddParticipantS struct {
-	ChainedExecutorS[*db.Activity_ReadJSON, *AddParticipantS]
-	activity *db.Activity_ReadJSON
-	user     *db.User_ReadJSON
-}
-
-func (ap *AddParticipantS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	code := db.DB_UPDATE_Activity_ADD_Participants(ap.activity.ID, ap.user.ID)
-	if code == db.DB_ANSWER_SUCCESS {
-		if ap.then != nil {
-			return ap.then(ap.activity).Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-	if ap.otherwise != nil {
-		return ap.otherwise.Execute(ctx, b, update)
-	}
-	return true, nil
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
+		code, activity := db.DB_GET_Activity_BY_ID(id)
+		return activity, code == db.DB_ANSWER_SUCCESS
+	})
 }
 
 func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
-	res := &AddParticipantS{activity: activity, user: user}
-	res.self = res
-	return res
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
+		code := db.DB_UPDATE_Activity_ADD_Participants(activity.ID, user.ID)
+		return activity, code == db.DB_ANSWER_SUCCESS
+	})
 }
 
 func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
-	res := &CreateRequestS{user: user}
-	res.self = res
-	return res
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
+		if db.DB_CREATE_Request(user.ID) != db.DB_ANSWER_SUCCESS {
+			return nil, false
+		}
+		UpdateUserE(user, map[string]any{
+			"is_sent_request": true,
+		}).Execute(ctx, b, update)
+		return user, true
+	})
 }
 
 type AnswerQueryS struct{}
@@ -566,68 +410,32 @@ func AnswerQueryE() Executor {
 	return &AnswerQueryS{}
 }
 
-type QueryDataS struct {
-	ChainedExecutorS[string, *QueryDataS]
-}
-
-func (qd *QueryDataS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+func queryData(update *models.Update) (string, bool) {
 	if update.CallbackQuery == nil {
-		if qd.otherwise != nil {
-			return qd.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
+		return "", false
 	}
-	parts := strings.Split(update.CallbackQuery.Data, "::")
-	data := parts[1]
-
-	if qd.then != nil {
-		return qd.then(data).Execute(ctx, b, update)
+	parts := strings.SplitN(update.CallbackQuery.Data, "::", 2)
+	if len(parts) < 2 {
+		return "", false
 	}
-	return true, nil
+	return parts[1], true
 }
 
 func QueryDataE() ChainedExecutor[string] {
-	res := &QueryDataS{}
-	res.self = res
-	return res
-}
-
-type QueryDataUintS struct {
-	ChainedExecutorS[uint64, *QueryDataUintS]
-}
-
-func (qdu *QueryDataUintS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	if update.CallbackQuery == nil {
-		if qdu.otherwise != nil {
-			return qdu.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-	parts := strings.Split(update.CallbackQuery.Data, "::")
-	data := parts[1]
-	res, err := strconv.ParseUint(data, 10, 64)
-
-	if err != nil {
-		if qdu.otherwise != nil {
-			return qdu.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-
-	if qdu.then != nil {
-		return qdu.then(res).Execute(ctx, b, update)
-	}
-	return true, nil
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (string, bool) {
+		return queryData(update)
+	})
 }
 
 func QueryDataUintE() ChainedExecutor[uint64] {
-	res := &QueryDataUintS{}
-	res.self = res
-	return res
-}
-
-type OpenCalendarS struct {
-	ChainedExecutorS[io.Reader, *OpenCalendarS]
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (uint64, bool) {
+		data, ok := queryData(update)
+		if !ok {
+			return 0, false
+		}
+		res, err := strconv.ParseUint(data, 10, 64)
+		return res, err == nil
+	})
 }
 
 func OpenCalendar() (*os.File, string) {
@@ -653,35 +461,22 @@ func OpenCalendar() (*os.File, string) {
 	return file, fileInfo.Name()
 }
 
-func (oc *OpenCalendarS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	file, _ := OpenCalendar()
-	if file == nil {
-		if oc.otherwise != nil {
-			return oc.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-
-	data, err := io.ReadAll(file)
-	file.Close()
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendarE", "io.ReadAll", "Ошибка чтения файла календаря", err.Error())
-		if oc.otherwise != nil {
-			return oc.otherwise.Execute(ctx, b, update)
-		}
-		return true, nil
-	}
-
-	if oc.then != nil {
-		return oc.then(bytes.NewReader(data)).Execute(ctx, b, update)
-	}
-	return true, nil
-}
-
 func OpenCalendarE() ChainedExecutor[io.Reader] {
-	res := &OpenCalendarS{}
-	res.self = res
-	return res
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (io.Reader, bool) {
+		file, _ := OpenCalendar()
+		if file == nil {
+			return nil, false
+		}
+		defer file.Close()
+
+		data, err := io.ReadAll(file)
+		if err != nil {
+			rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendarE", "io.ReadAll", "Ошибка чтения файла календаря", err.Error())
+			return nil, false
+		}
+
+		return bytes.NewReader(data), true
+	})
 }
 
 type SendPhotoMS struct {
