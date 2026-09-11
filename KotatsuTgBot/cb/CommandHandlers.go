@@ -276,7 +276,7 @@ func NoPhoneNumberE(user *db.User_ReadJSON) Executor {
 
 func ProccessRegistrationE() Executor {
 	return OneOf(
-		TextGuard("keyboard.continue", RegisetUserE().
+		TextGuard("keyboard.continue", CreateOrGetUserE().
 			Then(func(user *db.User_ReadJSON) Executor {
 				return SendMessageME("gender_select", keyboards.Keyboard_GenderSelect)
 			}).

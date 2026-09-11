@@ -239,7 +239,7 @@ func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
 	})
 }
 
-func RegisetUserE() ChainedExecutor[*db.User_ReadJSON] {
+func CreateOrGetUserE() ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
 		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 		user_to_add := db.User_CreateJSON{
@@ -249,7 +249,7 @@ func RegisetUserE() ChainedExecutor[*db.User_ReadJSON] {
 		}
 
 		code, user := db.DB_CREATE_User(&user_to_add)
-		return user, code == db.DB_ANSWER_SUCCESS
+		return user, code == db.DB_ANSWER_SUCCESS || code == db.DB_ANSWER_OBJECT_EXISTS
 	})
 }
 

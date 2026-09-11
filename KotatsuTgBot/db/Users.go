@@ -149,7 +149,7 @@ func DB_CREATE_User(user_to_add *User_CreateJSON) (int, *User_ReadJSON) {
 	var user User
 	db.Where("user_tg_id = ?", user_to_add.UserTgID).First(&user)
 	if user.ID != 0 {
-		return DB_ANSWER_OBJECT_EXISTS, nil
+		return DB_ANSWER_OBJECT_EXISTS, user.ToRead()
 	}
 
 	user = User{
