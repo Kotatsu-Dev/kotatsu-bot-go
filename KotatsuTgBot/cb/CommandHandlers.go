@@ -273,3 +273,21 @@ func NoPhoneNumberE(user *db.User_ReadJSON) Executor {
 		SendMainMenuE(user),
 	)
 }
+
+func ProccessRegistrationE() Executor {
+	return OneOf(
+		TextGuard("keyboard.continue", RegisetUserE().
+			Then(func(user *db.User_ReadJSON) Executor {
+				return SendMessageME("gender_select", keyboards.Keyboard_GenderSelect)
+			}).
+			Otherwise(SendMessageME("error.database", nil))),
+		WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
+			// TODO: Fix after merge with dev, avoiding conflict from editing locale
+			return SendMessageRawE(
+				update.Message.From.ID,
+				config.T("hello")+"\n"+config.T("personal_data"),
+				keyboards.Registration,
+			)
+		}),
+	)
+}

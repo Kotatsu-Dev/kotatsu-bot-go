@@ -139,7 +139,7 @@ func UserToReadSlice(users []User) []User_ReadJSON {
 }
 
 // Добавить пользователя
-func DB_CREATE_User(user_to_add *User_CreateJSON) int {
+func DB_CREATE_User(user_to_add *User_CreateJSON) (int, *User_ReadJSON) {
 
 	db := DB_Database()
 
@@ -149,13 +149,13 @@ func DB_CREATE_User(user_to_add *User_CreateJSON) int {
 	var user User
 	db.Where("user_tg_id = ?", user_to_add.UserTgID).First(&user)
 	if user.ID != 0 {
-		return DB_ANSWER_OBJECT_EXISTS
+		return DB_ANSWER_OBJECT_EXISTS, nil
 	}
 
 	user = User{
 		UserTgID:              user_to_add.UserTgID,
 		UserName:              user_to_add.UserName,
-		FullTgName:            user.FullTgName,
+		FullTgName:            user_to_add.FullTgName,
 		Step:                  config.STEP_DEFAULT,
 		IsClubMember:          false,
 		IsSubscribeNewsletter: false,
@@ -163,7 +163,7 @@ func DB_CREATE_User(user_to_add *User_CreateJSON) int {
 	}
 
 	db.Save(&user)
-	return DB_ANSWER_SUCCESS
+	return DB_ANSWER_SUCCESS, user.ToRead()
 }
 
 // Получить пользователя по TgID

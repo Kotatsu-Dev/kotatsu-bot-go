@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: otherwise
-var MAIN = GetCurrentUserE().
+var MAIN = PrivateMessagesGuard(GetCurrentUserE().
 	Then(func(user *db.User_ReadJSON) Executor {
 		return OneOf(
 			TextGuard("keyboard.gender_male", SetGenderE(user, "male")),
@@ -43,10 +43,12 @@ var MAIN = GetCurrentUserE().
 			StepGuard(user, config.STEP_USER_LEAVES_CLUB, LeavesClubE(user)),
 			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE, roulette.EnterEnigmaticTitleE(user)),
 			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST, roulette.EnterLinkMyAnimeListE(user)),
-		)
-	})
 
-	// TODO: Otherwise
+			SendMessageME("unknown_command", nil),
+		)
+	}).Otherwise(ProccessRegistrationE()))
+
+// Ignore unknown commands - it's either unregistered, either unauthorized
 var CALLBACK_MAIN = GetCurrentUserE().
 	Then(func(user *db.User_ReadJSON) Executor {
 		return OneOf(

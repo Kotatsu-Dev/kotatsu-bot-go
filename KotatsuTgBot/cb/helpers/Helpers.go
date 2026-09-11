@@ -193,6 +193,12 @@ func Guard(guard func(context.Context, *bot.Bot, *models.Update) bool) func(Exec
 	}
 }
 
+func PrivateMessagesGuard(exectutor Executor) *GuardS {
+	return Guard(func(ctx context.Context, b *bot.Bot, u *models.Update) bool {
+		return u != nil && u.Message != nil && u.Message.Chat.Type == models.ChatTypePrivate
+	})(exectutor)
+}
+
 func TextGuardRaw(text string, executor Executor) *GuardS {
 	return Guard(func(ctx context.Context, b *bot.Bot, u *models.Update) bool {
 		return u != nil && u.Message != nil && u.Message.Text == text
@@ -229,6 +235,20 @@ func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
 			// TODO: Log and return meaningful error
 			return nil, false
 		}
+		return user, code == db.DB_ANSWER_SUCCESS
+	})
+}
+
+func RegisetUserE() ChainedExecutor[*db.User_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
+		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
+		user_to_add := db.User_CreateJSON{
+			UserTgID:   update.Message.From.ID,
+			UserName:   update.Message.From.Username,
+			FullTgName: full_tg_name,
+		}
+
+		code, user := db.DB_CREATE_User(&user_to_add)
 		return user, code == db.DB_ANSWER_SUCCESS
 	})
 }

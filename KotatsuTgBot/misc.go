@@ -21,7 +21,7 @@ func regUser(user_tg_id int64, full_tg_name string, user_name string) int {
 		FullTgName: full_tg_name,
 	}
 
-	db_answer_code := db.DB_CREATE_User(&user_to_add)
+	db_answer_code, _ := db.DB_CREATE_User(&user_to_add)
 	return db_answer_code
 }
 
