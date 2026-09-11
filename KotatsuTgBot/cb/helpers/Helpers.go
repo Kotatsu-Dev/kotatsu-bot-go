@@ -232,7 +232,7 @@ func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
 		} else if update != nil && update.CallbackQuery != nil {
 			code, user = db.DB_GET_User_BY_UserTgID(update.CallbackQuery.From.ID)
 		} else {
-			// TODO: Log and return meaningful error
+			rr_debug.PrintLOG("Helpers.go", "GetCurrentUserE", "malformed update", "Update has neither Message.From nor CallbackQuery", "")
 			return nil, false
 		}
 		return user, code == db.DB_ANSWER_SUCCESS
@@ -273,25 +273,20 @@ func Seq(seq ...Executor) Executor {
 	return SeqS(seq)
 }
 
-type UpdateUserS struct {
-	user   *db.User_ReadJSON
-	update map[string]any
-}
-
 func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.User, bool) {
 	update_user := maps.Clone(update)
 	update_user["user_tg_id"] = user.UserTgID
 	return db.DB_UPDATE_User(update_user)
 }
 
-func (ups *UpdateUserS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	UpdateCurrentUser(ups.user, ups.update)
-	// TODO: Fail on update
-	return true, nil
-}
-
-func UpdateUserE(user *db.User_ReadJSON, update map[string]any) Executor {
-	return &UpdateUserS{user: user, update: update}
+func UpdateUserE(user *db.User_ReadJSON, update map[string]any) ChainedExecutor[*db.User_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, upd *models.Update) (*db.User_ReadJSON, bool) {
+		code, updated, _ := UpdateCurrentUser(user, update)
+		if code != db.DB_ANSWER_SUCCESS {
+			return nil, false
+		}
+		return updated.ToRead(), true
+	})
 }
 
 func UpdateGenderE(user *db.User_ReadJSON, gender db.Gender) Executor {
@@ -427,10 +422,13 @@ func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
 		if db.DB_CREATE_Request(user.ID) != db.DB_ANSWER_SUCCESS {
 			return nil, false
 		}
-		UpdateUserE(user, map[string]any{
+		code, updated, _ := UpdateCurrentUser(user, map[string]any{
 			"is_sent_request": true,
-		}).Execute(ctx, b, update)
-		return user, true
+		})
+		if code != db.DB_ANSWER_SUCCESS {
+			return nil, false
+		}
+		return updated.ToRead(), true
 	})
 }
 

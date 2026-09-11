@@ -153,7 +153,7 @@ func ITMO_EnterFullNameE(user *db.User_ReadJSON, action string) Executor {
 							return Seq(
 								SendMessageTE(
 									config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
-									"request.notification", user, // TODO: Updated user
+									"request.notification", user,
 									nil,
 								),
 								SendMessageME(
@@ -335,7 +335,7 @@ func NoITMO_EnterPhoneNumberE(user *db.User_ReadJSON, action string) Executor {
 								return Seq(
 									SendMessageTE(
 										config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
-										"request.notification", user, // TODO: Updated user
+										"request.notification", user,
 										nil,
 									),
 									SendMessageME(
