@@ -524,6 +524,27 @@ func OpenCalendarE() ChainedExecutor[io.Reader] {
 	})
 }
 
+type SendDocumentMS struct {
+	file_id string
+}
+
+func (msg *SendDocumentMS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	_, err := b.SendDocument(ctx, &bot.SendDocumentParams{
+		ChatID:   update.Message.From.ID,
+		Document: &models.InputFileString{Data: msg.file_id},
+	})
+
+	if err != nil {
+		rr_debug.PrintLOG("Helpers.go", "SendDocumentMS", "bot.SendDocument", "Ошибка отправки документа", err.Error())
+	}
+
+	return true, err
+}
+
+func SendDocumentME(file_id string) Executor {
+	return &SendDocumentMS{file_id: file_id}
+}
+
 type SendPhotoMS struct {
 	file     io.Reader
 	text     string
@@ -626,22 +647,8 @@ func SendMessageRaw(ctx context.Context, b *bot.Bot, chat_id int64, text string,
 	return err
 }
 
-func SendMessage(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
-	return SendMessageRaw(ctx, b, chat_id, config.T(text), keyboard)
-}
-
 func SendMessageT(ctx context.Context, b *bot.Bot, chat_id int64, text string, data any, keyboard models.ReplyMarkup) error {
 	return SendMessageRaw(ctx, b, chat_id, config.TT(text, data), keyboard)
-}
-
-func SendMessageM(ctx context.Context, b *bot.Bot, update *models.Update, text string, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendMessage(ctx, b, chat_id, text, keyboard)
 }
 
 func SendMessageMT(ctx context.Context, b *bot.Bot, update *models.Update, text string, data any, keyboard models.ReplyMarkup) error {
@@ -652,107 +659,6 @@ func SendMessageMT(ctx context.Context, b *bot.Bot, update *models.Update, text 
 		chat_id = update.CallbackQuery.From.ID
 	}
 	return SendMessageT(ctx, b, chat_id, text, data, keyboard)
-}
-
-func SendPhotoRaw(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	_, err := b.SendPhoto(ctx, &bot.SendPhotoParams{
-		ChatID:    chat_id,
-		ParseMode: models.ParseModeHTML,
-		Photo: &models.InputFileUpload{
-			Filename: filename,
-			Data:     file,
-		},
-		Caption:     text,
-		ReplyMarkup: keyboard,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotoRaw", "bot.SendPhoto", "Ошибка отправки фотографии", err.Error())
-	}
-
-	return err
-}
-
-func SendPhoto(ctx context.Context, b *bot.Bot, chat_id int64, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	return SendPhotoRaw(ctx, b, chat_id, filename, file, config.T(text), keyboard)
-}
-
-func SendPhotoM(ctx context.Context, b *bot.Bot, update *models.Update, filename string, file io.Reader, text string, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendPhoto(ctx, b, chat_id, filename, file, text, keyboard)
-}
-
-func SendPhotosRaw(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
-	media_group := make([]models.InputMedia, len(files))
-	for i, file := range files {
-		if i == 0 {
-			media_group[i] = &models.InputMediaPhoto{
-				Media:           fmt.Sprintf("attach://photo_%d", i),
-				MediaAttachment: file,
-				ParseMode:       models.ParseModeHTML,
-				Caption:         text,
-			}
-		} else {
-			media_group[i] = &models.InputMediaPhoto{
-				Media:           fmt.Sprintf("attach://photo_%d", i),
-				MediaAttachment: file,
-			}
-		}
-	}
-	_, err := b.SendMediaGroup(ctx, &bot.SendMediaGroupParams{
-		ChatID: chat_id,
-		Media:  media_group,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendPhotosRaw", "bot.SendMediaGroup", "Ошибка отправки фотографии", err.Error())
-	}
-
-	return err
-}
-
-func SendPhotos(ctx context.Context, b *bot.Bot, chat_id int64, files []io.Reader, text string) error {
-	return SendPhotosRaw(ctx, b, chat_id, files, config.T(text))
-}
-
-func SendPhotosM(ctx context.Context, b *bot.Bot, update *models.Update, files []io.Reader, text string) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendPhotos(ctx, b, chat_id, files, text)
-}
-
-func AnswerQuery(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	return b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
-		CallbackQueryID: update.CallbackQuery.ID,
-		ShowAlert:       false,
-	})
-}
-
-func UpdateGender(user *db.User_ReadJSON, gender db.Gender) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"gender": gender,
-	})
-}
-
-func UpdateVisited(user *db.User_ReadJSON, is_visited_events bool) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"is_visited_events": is_visited_events,
-	})
-}
-
-func UpdateStep(user *db.User_ReadJSON, step int) (int, *db.User, bool) {
-	return UpdateCurrentUser(user, map[string]any{
-		"step": step,
-	})
 }
 
 func ITE[T any](cond bool, a, b T) T {
