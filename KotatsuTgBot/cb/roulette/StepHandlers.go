@@ -6,7 +6,6 @@ import (
 	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
-	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -20,13 +19,13 @@ func EnterEnigmaticTitle(ctx context.Context, b *bot.Bot, update *models.Update,
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
-		now := time.Now()
-		if now.After(current_anime_roulette.StartDate) && now.Before(current_anime_roulette.AnnounceDate) {
+		switch GetRouletteState(current_anime_roulette) {
+		case RouletteStateRegistration:
 			SendMessageM(
 				ctx, b, update,
 				"roulette.no_theme", nil,
 			)
-		} else if now.After(current_anime_roulette.AnnounceDate) && now.Before(current_anime_roulette.DistributionDate) {
+		case RouletteStateWishing:
 			if check_is_participant(current_user, current_anime_roulette) {
 				UpdateCurrentUser(current_user, map[string]any{
 					"enigmatic_title": update.Message.Text,
@@ -41,7 +40,7 @@ func EnterEnigmaticTitle(ctx context.Context, b *bot.Bot, update *models.Update,
 					"roulette.not_participant", nil,
 				)
 			}
-		} else if now.After(current_anime_roulette.DistributionDate) && now.Before(current_anime_roulette.EndDate) {
+		default:
 			SendMessageM(
 				ctx, b, update,
 				"roulette.ended", nil,
@@ -63,11 +62,9 @@ func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
 		UpdateStepE(user, config.STEP_DEFAULT),
 		GetActiveRoulette().
 			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-				now := time.Now()
-				if now.After(roulette.StartDate) && now.Before(roulette.AnnounceDate) {
-					return NoTheme()
-				} else if now.After(roulette.AnnounceDate) && now.Before(roulette.DistributionDate) {
-					return ITE(
+				return OneOf(
+					RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
+					RouletteStateGuard(roulette, RouletteStateWishing, ITE(
 						check_is_participant(user, roulette),
 						Seq(
 							WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
@@ -80,9 +77,9 @@ func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
 							),
 						),
 						NotParticipant(),
-					)
-				}
-				return RouletteEnded()
+					)),
+					RouletteEnded(),
+				)
 			}).
 			Otherwise(RouletteInactive()),
 		MainE(user),
