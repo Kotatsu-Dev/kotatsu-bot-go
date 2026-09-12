@@ -14,7 +14,7 @@ var START_LINK = StartLink()
 // TODO: otherwise
 var MAIN = PrivateMessagesGuard(GetCurrentUser().
 	Then(func(user *db.User_ReadJSON) Executor {
-		return OneOf(
+		return FirstMatch(
 			TextGuard("keyboard.gender_male", SetGender(user, "male")),
 			TextGuard("keyboard.gender_female", SetGender(user, "female")),
 			TextGuard("keyboard.visited_enough", WasAtEvents(user, true)),
@@ -55,7 +55,7 @@ var MAIN = PrivateMessagesGuard(GetCurrentUser().
 // Ignore unknown commands - it's either unregistered, either unauthorized
 var CALLBACK_MAIN = GetCurrentUser().
 	Then(func(user *db.User_ReadJSON) Executor {
-		return OneOf(
+		return FirstMatch(
 			QueryGuard("JOIN_CLUB", JoinClubQuery(user)),
 			QueryGuard("APPOINTMENT", AppointQuery(user)),
 			QueryGuard("ACTIVITIES", ActivitiesQuery(user)),

@@ -23,13 +23,13 @@ func check_is_participant(user *db.User_ReadJSON, activity *db.Activity_ReadJSON
 }
 
 func JoinClubQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		QueryData().
 			Then(func(data string) Executor {
 				switch data {
 				case "from_ITMO_student":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Student,
@@ -40,7 +40,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 					)
 
 				case "from_ITMO_graduate":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Graduate,
@@ -50,7 +50,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Employee,
@@ -60,7 +60,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_student_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.StudentEmployee,
@@ -70,7 +70,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_graduate_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.GraduateEmployee,
@@ -80,7 +80,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				default:
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_NOITMO_ENTER_FULLNAME,
 							"itmo_status": db.Guest,
@@ -95,7 +95,7 @@ func JoinClubQuery(user *db.User_ReadJSON) Executor {
 }
 
 func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		GetActivityByID(uint(current_user.TempActivityID)).
 			Then(func(activity *db.Activity_ReadJSON) Executor {
@@ -106,7 +106,7 @@ func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 								if activity.GuestRegistrationUntil != nil &&
 									!current_user.IsITMO &&
 									activity.GuestRegistrationUntil.Before(time.Now()) {
-									return Seq(
+									return Do(
 										UpdateStep(current_user, config.STEP_DEFAULT),
 										SendMessageM(
 											"events.registration_closed",
@@ -114,7 +114,7 @@ func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 										),
 									)
 								} else {
-									return Seq(
+									return Do(
 										AddParticipant(activity, current_user),
 										UpdateStep(current_user, config.STEP_DEFAULT),
 										SendMessageMT(
@@ -131,7 +131,7 @@ func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 							}
 
 						} else {
-							return Seq(
+							return Do(
 								UpdateStep(current_user, config.STEP_CHANGING_PHONE),
 								SendMessageM(
 									"request.send_phone", keyboards.Keyboard_RequestContact,
@@ -144,7 +144,7 @@ func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 }
 
 func UnsubscribeQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
@@ -167,7 +167,7 @@ func UnsubscribeQuery(user *db.User_ReadJSON) Executor {
 }
 
 func SubscribeQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
@@ -178,7 +178,7 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 							Then(func(activity *db.Activity_ReadJSON) Executor {
 								if activity.Status {
 									// Is ITMO = true
-									return Seq(
+									return Do(
 										AddParticipant(activity, user),
 										SendMessageMT(
 											"events.registered", activity,
@@ -187,7 +187,7 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 										UpdateStep(user, config.STEP_DEFAULT),
 									)
 								} else {
-									return Seq(
+									return Do(
 										SendMessageM(
 											"events.non_existent",
 											keyboards.ListEvents,
@@ -196,7 +196,7 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 									)
 								}
 							}),
-						Seq(
+						Do(
 							SendMessageMT(
 								"events.phone_number", user.PhoneNumber,
 								keyboards.InlineKbd_RelevancePhoneNumber,
@@ -207,7 +207,7 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 							}),
 						),
 					),
-					Seq(
+					Do(
 						SendMessageM(
 							"request.unknown", keyboards.InlineKbd_Appointment,
 						),
@@ -243,7 +243,7 @@ func ShowActivity(user *db.User_ReadJSON, activity_id uint) Executor {
 					files[i] = bytes.NewReader(fileData)
 				}
 			}
-			return Seq(
+			return Do(
 				If(len(files) > 0,
 					SendPhotosM(
 						files, "",
@@ -268,7 +268,7 @@ func ShowActivity(user *db.User_ReadJSON, activity_id uint) Executor {
 }
 
 func ActivitiesQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
@@ -278,13 +278,13 @@ func ActivitiesQuery(user *db.User_ReadJSON) Executor {
 }
 
 func AppointQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		QueryData().
 			Then(func(data string) Executor {
 				switch data {
 				case "from_ITMO_student":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Student,
@@ -295,7 +295,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 					)
 
 				case "from_ITMO_graduate":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Graduate,
@@ -305,7 +305,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Employee,
@@ -315,7 +315,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_student_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.StudentEmployee,
@@ -325,7 +325,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				case "from_ITMO_graduate_employee":
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.GraduateEmployee,
@@ -335,7 +335,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 						),
 					)
 				default:
-					return Seq(
+					return Do(
 						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
 							"itmo_status": db.Guest,

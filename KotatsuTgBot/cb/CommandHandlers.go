@@ -51,7 +51,7 @@ func StartLink() Executor {
 }
 
 func SetGender(user *db.User_ReadJSON, gender db.Gender) Executor {
-	return Seq(
+	return Do(
 		UpdateGender(user, gender),
 		SendMainMenu(user),
 	)
@@ -60,7 +60,7 @@ func SetGender(user *db.User_ReadJSON, gender db.Gender) Executor {
 // ---
 
 func WasAtEvents(current_user *db.User_ReadJSON, actually bool) Executor {
-	return Seq(
+	return Do(
 		UpdateVisited(current_user, actually),
 		If(
 			actually,
@@ -84,7 +84,7 @@ func WasntAtEvents(user *db.User_ReadJSON, cont bool) Executor {
 
 func JoinClub(user *db.User_ReadJSON) Executor {
 	if user.IsSentRequest {
-		return Seq(
+		return Do(
 			SendMessageM(
 				"request.in_progress", nil,
 			),
@@ -92,7 +92,7 @@ func JoinClub(user *db.User_ReadJSON) Executor {
 		)
 	}
 	if user.IsClubMember {
-		return Seq(
+		return Do(
 			SendMessageM(
 				"request.already_accepted", nil,
 			),
@@ -125,14 +125,14 @@ func SigningUpForActivity(user *db.User_ReadJSON) Executor {
 }
 
 func BackMainMenu(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateStep(user, config.STEP_DEFAULT),
 		SendMainMenu(user),
 	)
 }
 
 func LeaveClub(current_user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateStep(current_user, config.STEP_USER_LEAVES_CLUB),
 		SendMessageM(
 			"leave_reason", keyboards.Keyboard_Skip,
@@ -156,7 +156,7 @@ func MyActivities(user *db.User_ReadJSON) Executor {
 }
 
 func NoPhoneNumber(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateStep(user, config.STEP_DEFAULT),
 		SendMessageM(
 			"request.no_phone_number", nil,
@@ -166,7 +166,7 @@ func NoPhoneNumber(user *db.User_ReadJSON) Executor {
 }
 
 func ProccessRegistration() Executor {
-	return OneOf(
+	return FirstMatch(
 		TextGuard("keyboard.continue", CreateOrGetUser().
 			Then(func(user *db.User_ReadJSON) Executor {
 				return SendMessageM("gender_select", keyboards.Keyboard_GenderSelect)
@@ -174,7 +174,7 @@ func ProccessRegistration() Executor {
 			Otherwise(SendMessageM("error.database", nil))),
 		WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
 			// TODO: Fix after merge with dev, avoiding conflict from editing locale
-			return Seq(
+			return Do(
 				SendDocumentM("CAACAgIAAx0CbgUG4QACCWpostfAVRPNDHNAWu8vcIbjv0nuagACrXQAAl8iQUmAFQIjshq4bTYE"),
 				SendMessageRaw(
 					update.Message.From.ID,
