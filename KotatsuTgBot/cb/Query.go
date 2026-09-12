@@ -115,8 +115,8 @@ func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 									)
 								} else {
 									return Do(
-										AddParticipant(activity, current_user),
 										UpdateStep(current_user, config.STEP_DEFAULT),
+										AddParticipant(activity, current_user),
 										SendMessageMT(
 											"events.registered", activity,
 											keyboards.ListEvents,
@@ -180,40 +180,40 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 									// Is ITMO = true
 									return Do(
 										AddParticipant(activity, user),
+										UpdateStep(user, config.STEP_DEFAULT),
 										SendMessageMT(
 											"events.registered", activity,
 											keyboards.ListEvents,
 										),
-										UpdateStep(user, config.STEP_DEFAULT),
 									)
 								} else {
 									return Do(
+										UpdateStep(user, config.STEP_DEFAULT),
 										SendMessageM(
 											"events.non_existent",
 											keyboards.ListEvents,
 										),
-										UpdateStep(user, config.STEP_DEFAULT),
 									)
 								}
 							}),
 						Do(
-							SendMessageMT(
-								"events.phone_number", user.PhoneNumber,
-								keyboards.InlineKbd_RelevancePhoneNumber,
-							),
 							UpdateUser(user, map[string]any{
 								"step":             config.STEP_DEFAULT,
 								"temp_activity_id": int(activity_id),
 							}),
+							SendMessageMT(
+								"events.phone_number", user.PhoneNumber,
+								keyboards.InlineKbd_RelevancePhoneNumber,
+							),
 						),
 					),
 					Do(
-						SendMessageM(
-							"request.unknown", keyboards.InlineKbd_Appointment,
-						),
 						UpdateUser(user, map[string]any{
 							"temp_activity_id": int(activity_id),
 						}),
+						SendMessageM(
+							"request.unknown", keyboards.InlineKbd_Appointment,
+						),
 					),
 				)
 			}),

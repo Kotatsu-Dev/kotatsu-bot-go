@@ -69,7 +69,7 @@ func Main(user *db.User_ReadJSON) Executor {
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			is_participant := check_is_participant(user, roulette)
 			return If(
-				GetRouletteState(roulette) == RouletteStateRegistration,
+				GetRouletteState(roulette) <= RouletteStateRegistration,
 				StartMenu(is_participant),
 				OngoingMenu(is_participant),
 			)

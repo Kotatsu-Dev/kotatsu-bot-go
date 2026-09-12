@@ -64,8 +64,11 @@ func ITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 								SendMainMenu(user),
 							)
 						}).
-						Otherwise(SendMessageM(
-							"error.generic", nil,
+						Otherwise(Do(
+							SendMessageM(
+								"error.generic", nil,
+							),
+							SendMainMenu(user),
 						)),
 					GetActivityByID(uint(user.TempActivityID)).
 						Then(func(activity *db.Activity_ReadJSON) Executor {
@@ -143,8 +146,11 @@ func NoITMO_EnterPhoneNumber(user *db.User_ReadJSON, action string) Executor {
 								SendMainMenu(user),
 							)
 						}).
-						Otherwise(SendMessageM(
-							"error.generic", nil,
+						Otherwise(Do(
+							SendMessageM(
+								"error.generic", nil,
+							),
+							SendMainMenu(user),
 						)),
 					GetActivityByID(uint(user.TempActivityID)).
 						Then(func(activity *db.Activity_ReadJSON) Executor {
@@ -201,8 +207,9 @@ func ChangePhoneNumber(user *db.User_ReadJSON) Executor {
 							} else {
 								return Do(
 									AddParticipant(activity, user),
-									SendMessageM(
-										"events.saved_n_registered", keyboards.ListEvents,
+									SendMessageMT(
+										"events.saved_n_registered", activity,
+										keyboards.ListEvents,
 									),
 								)
 							}

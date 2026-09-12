@@ -457,7 +457,8 @@ func RemoveRouletteParticipant(user *db.User_ReadJSON) ChainedExecutor[*db.User_
 
 func CreateRequest(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
-		if db.DB_CREATE_Request(user.ID) != db.DB_ANSWER_SUCCESS {
+		code := db.DB_CREATE_Request(user.ID)
+		if code != db.DB_ANSWER_SUCCESS && code != db.DB_ANSWER_OBJECT_EXISTS {
 			return nil, false
 		}
 		code, updated, _ := UpdateCurrentUser(user, map[string]any{

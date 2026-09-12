@@ -35,7 +35,7 @@ func BotHandler_Default(ctx context.Context, b *bot.Bot, update *models.Update) 
 
 	if update.Message != nil {
 		cb.MAIN.Execute(ctx, b, update)
-	} else {
+	} else if update.CallbackQuery != nil {
 		cb.CALLBACK_MAIN.Execute(ctx, b, update)
 	}
 }
