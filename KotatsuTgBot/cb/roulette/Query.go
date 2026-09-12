@@ -6,7 +6,7 @@ import (
 )
 
 func MainQuery(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		AnswerQuery(),
 		Main(user),
 	)

@@ -95,10 +95,6 @@ var Keyboard_CancelAnimeRoulette = Default().
 	TextT("keyboard.to_roulette_menu").
 	Build()
 
-var Keyboard_ToMainMenu = Default().
-	TextT("keyboard.to_main_menu").
-	Build()
-
 // For date formatting
 var date_format = "02.01 15:04"
 var loc, _ = time.LoadLocation("Europe/Moscow")
@@ -142,8 +138,6 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 
 	return k.Build()
 }
-
-var InlineKbd_PartnersList = DefaultInline().Row().Build()
 
 func CreateInlineKbd_MyActivitiesList(my_activities []db.Activity_ReadJSON) *models.InlineKeyboardMarkup {
 	k := DefaultInline()

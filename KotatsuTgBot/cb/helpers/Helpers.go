@@ -30,29 +30,10 @@ type ChainedExecutor[T any] interface {
 	Otherwise(Executor) ChainedExecutor[T]
 }
 
-type ChainedExecutorS[T any, Self ChainedExecutor[T]] struct {
+type SourceS[T any] struct {
+	get       func(ctx context.Context, b *bot.Bot, update *models.Update) (T, bool)
 	then      func(T) Executor
 	otherwise Executor
-	self      Self
-}
-
-func (ce *ChainedExecutorS[T, Self]) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
-	return ce.self.Execute(ctx, b, update)
-}
-
-func (ce *ChainedExecutorS[T, Self]) Then(then func(T) Executor) ChainedExecutor[T] {
-	ce.then = then
-	return ce.self
-}
-
-func (ce *ChainedExecutorS[T, Self]) Otherwise(otherwise Executor) ChainedExecutor[T] {
-	ce.otherwise = otherwise
-	return ce.self
-}
-
-type SourceS[T any] struct {
-	ChainedExecutorS[T, *SourceS[T]]
-	get func(ctx context.Context, b *bot.Bot, update *models.Update) (T, bool)
 }
 
 func (s *SourceS[T]) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
@@ -69,10 +50,20 @@ func (s *SourceS[T]) Execute(ctx context.Context, b *bot.Bot, update *models.Upd
 	return true, nil
 }
 
+func (s *SourceS[T]) Then(then func(T) Executor) ChainedExecutor[T] {
+	next := *s
+	next.then = then
+	return &next
+}
+
+func (s *SourceS[T]) Otherwise(otherwise Executor) ChainedExecutor[T] {
+	next := *s
+	next.otherwise = otherwise
+	return &next
+}
+
 func Source[T any](get func(ctx context.Context, b *bot.Bot, update *models.Update) (T, bool)) ChainedExecutor[T] {
-	res := &SourceS[T]{get: get}
-	res.self = res
-	return res
+	return &SourceS[T]{get: get}
 }
 
 type SendMessageS struct {
@@ -153,15 +144,15 @@ func SendMessageMT(text string, data any, keyboard models.ReplyMarkup) Executor 
 	return SendMessageRawM(config.TT(text, data), keyboard)
 }
 
-type OneOfS []Executor
+type FirstMatchS []Executor
 
-func (oos OneOfS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+func (fm FirstMatchS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
 	var (
 		err error
 		res bool
 	)
 
-	for _, x := range oos {
+	for _, x := range fm {
 		res, err = x.Execute(ctx, b, update)
 		if res {
 			return res, err
@@ -171,8 +162,47 @@ func (oos OneOfS) Execute(ctx context.Context, b *bot.Bot, update *models.Update
 	return res, err
 }
 
-func OneOf(executors ...Executor) Executor {
-	return OneOfS(executors)
+func FirstMatch(executors ...Executor) Executor {
+	return FirstMatchS(executors)
+}
+
+type Lazy0S struct {
+	f func() Executor
+}
+
+func (l *Lazy0S) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return l.f().Execute(ctx, b, update)
+}
+
+func Lazy0(f func() Executor) Executor {
+	return &Lazy0S{f: f}
+}
+
+type LazyS[A any] struct {
+	f func(A) Executor
+	a A
+}
+
+func (l *LazyS[A]) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return l.f(l.a).Execute(ctx, b, update)
+}
+
+func Lazy[A any](f func(A) Executor, a A) Executor {
+	return &LazyS[A]{f: f, a: a}
+}
+
+type Lazy2S[A, B any] struct {
+	f func(A, B) Executor
+	a A
+	b B
+}
+
+func (l *Lazy2S[A, B]) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return l.f(l.a, l.b).Execute(ctx, b, update)
+}
+
+func Lazy2[A, B any](f func(A, B) Executor, a A, b B) Executor {
+	return &Lazy2S[A, B]{f: f, a: a, b: b}
 }
 
 type GuardS struct {
@@ -253,14 +283,15 @@ func CreateOrGetUser() ChainedExecutor[*db.User_ReadJSON] {
 	})
 }
 
-type SeqS []Executor
+type DoS []Executor
 
-func (seq SeqS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+// Выполняет шаги по порядку, останавливаясь на первой ошибке
+func (do DoS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
 	var (
 		res bool
 		err error
 	)
-	for _, executor := range seq {
+	for _, executor := range do {
 		res, err = executor.Execute(ctx, b, update)
 		if err != nil {
 			return res, err
@@ -269,8 +300,8 @@ func (seq SeqS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) 
 	return res, err
 }
 
-func Seq(seq ...Executor) Executor {
-	return SeqS(seq)
+func Do(steps ...Executor) Executor {
+	return DoS(steps)
 }
 
 func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.User, bool) {

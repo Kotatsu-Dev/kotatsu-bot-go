@@ -83,8 +83,8 @@ func Participate(user *db.User_ReadJSON) Executor {
 			if check_is_participant(user, roulette) {
 				return AlreadyParticipant()
 			}
-			return OneOf(
-				RouletteStateGuard(roulette, RouletteStateRegistration, Seq(
+			return FirstMatch(
+				RouletteStateGuard(roulette, RouletteStateRegistration, Do(
 					AddRouletteParticipant(user),
 					SendMessageM(
 						"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
@@ -100,7 +100,7 @@ func CancelParticipate(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			if check_is_participant(user, roulette) {
-				return Seq(
+				return Do(
 					RemoveRouletteParticipant(user),
 					SendMessageM(
 						"roulette.unregistered", keyboards.CreateKeyboard_AnimeRouletteStart(false),
@@ -116,11 +116,11 @@ func CancelParticipate(user *db.User_ReadJSON) Executor {
 func AnimeWish(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-			return OneOf(
+			return FirstMatch(
 				RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
 				RouletteStateGuard(roulette, RouletteStateWishing, If(
 					check_is_participant(user, roulette),
-					Seq(
+					Do(
 						UpdateStep(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE),
 						SendMessageM(
 							"roulette.send_title", keyboards.Keyboard_CancelAnimeRoulette,
@@ -139,7 +139,7 @@ func LinkMyList(user *db.User_ReadJSON) Executor {
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			return If(
 				check_is_participant(user, roulette),
-				Seq(
+				Do(
 					UpdateStep(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST),
 					If(
 						user.LinkMyAnimeList == "",
@@ -167,7 +167,7 @@ func Rules() Executor {
 func MainTheme() Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-			return OneOf(
+			return FirstMatch(
 				RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
 				RouletteStateGuard(roulette, RouletteStateWishing, If(
 					roulette.Theme == "",

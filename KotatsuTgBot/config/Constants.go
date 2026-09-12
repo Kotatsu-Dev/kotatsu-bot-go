@@ -1,10 +1,6 @@
 package config
 
 const (
-	FILE_PHOTO_GEMFEST_PATH = "./img/templates/gemfest.jpg"
-)
-
-const (
 	// Steps
 	STEP_DEFAULT = iota // Меню 1
 	STEP_MESSAGE_SUPPORT

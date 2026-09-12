@@ -19,7 +19,7 @@ var fullNameRegexp = regexp.MustCompile(`^([А-Яа-яЁё]+)\s(([А-Яа-яЁё
 func ITMO_EnterISU(user *db.User_ReadJSON, action string) Executor {
 	return ParseTextInt().
 		Then(func(i int) Executor {
-			return Seq(
+			return Do(
 				UpdateUser(user, map[string]any{
 					"isu": strconv.Itoa(i),
 					"step": ITE(
@@ -41,7 +41,7 @@ func ITMO_EnterISU(user *db.User_ReadJSON, action string) Executor {
 func ITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 	return MatchText(fullNameRegexp).
 		Then(func(text string) Executor {
-			return Seq(
+			return Do(
 				UpdateUser(user, map[string]any{
 					"full_name":      text,
 					"step":           config.STEP_DEFAULT,
@@ -52,7 +52,7 @@ func ITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 					action == "join_club",
 					CreateRequest(user).
 						Then(func(user *db.User_ReadJSON) Executor {
-							return Seq(
+							return Do(
 								SendMessageT(
 									config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 									"request.notification", user,
@@ -71,7 +71,7 @@ func ITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 						Then(func(activity *db.Activity_ReadJSON) Executor {
 							if activity.Status {
 								// No ITMO check since we 100% from ITMO here
-								return Seq(
+								return Do(
 									AddParticipant(activity, user),
 									SendMessageMT(
 										"events.registered", activity,
@@ -98,7 +98,7 @@ func ITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 func NoITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 	return MatchText(fullNameRegexp).
 		Then(func(text string) Executor {
-			return Seq(
+			return Do(
 				UpdateUser(user, map[string]any{
 					"full_name": text,
 					"step": ITE(
@@ -120,7 +120,7 @@ func NoITMO_EnterFullName(user *db.User_ReadJSON, action string) Executor {
 func NoITMO_EnterPhoneNumber(user *db.User_ReadJSON, action string) Executor {
 	return GetContact().
 		Then(func(contact string) Executor {
-			return Seq(
+			return Do(
 				UpdateUser(user, map[string]any{
 					"phone_number":   contact,
 					"step":           config.STEP_DEFAULT,
@@ -131,7 +131,7 @@ func NoITMO_EnterPhoneNumber(user *db.User_ReadJSON, action string) Executor {
 					action == "join_club",
 					CreateRequest(user).
 						Then(func(user *db.User_ReadJSON) Executor {
-							return Seq(
+							return Do(
 								SendMessageT(
 									config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
 									"request.notification", user,
@@ -161,7 +161,7 @@ func NoITMO_EnterPhoneNumber(user *db.User_ReadJSON, action string) Executor {
 									"events.registration_closed", keyboards.ListEvents,
 								)
 							} else {
-								return Seq(
+								return Do(
 									AddParticipant(activity, user),
 									SendMessageMT(
 										"events.registered", activity,
@@ -184,7 +184,7 @@ func NoITMO_EnterPhoneNumber(user *db.User_ReadJSON, action string) Executor {
 func ChangePhoneNumber(user *db.User_ReadJSON) Executor {
 	return GetContact().
 		Then(func(contact string) Executor {
-			return Seq(
+			return Do(
 				UpdateUser(user, map[string]any{
 					"phone_number": contact,
 					"step":         config.STEP_DEFAULT,
@@ -199,7 +199,7 @@ func ChangePhoneNumber(user *db.User_ReadJSON) Executor {
 									"events.registration_closed", keyboards.ListEvents,
 								)
 							} else {
-								return Seq(
+								return Do(
 									AddParticipant(activity, user),
 									SendMessageM(
 										"events.saved_n_registered", keyboards.ListEvents,
@@ -224,7 +224,7 @@ func ChangePhoneNumber(user *db.User_ReadJSON) Executor {
 }
 
 func LeavesClub(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateUser(user, map[string]any{
 			"is_club_member":  false,
 			"is_sent_request": false,

@@ -9,14 +9,16 @@ import (
 )
 
 var bundle *i18n.Bundle
+var localizer *i18n.Localizer
 
 func Localizer() *i18n.Localizer {
 	if bundle == nil {
 		bundle = i18n.NewBundle(language.Russian)
 		bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 		bundle.LoadMessageFile(path.Join(GetConfig().LOCALES_DIR, "ru.toml"))
+		localizer = i18n.NewLocalizer(bundle, "ru")
 	}
-	return i18n.NewLocalizer(bundle, "ru")
+	return localizer
 }
 
 func T(message string) string {

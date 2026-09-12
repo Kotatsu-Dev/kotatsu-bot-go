@@ -14,15 +14,15 @@ import (
 var linkToListRegexp = regexp.MustCompile(`^((https://)?anilist\.co/user/[A-Za-z0-9]+(/)?|(https://)?myanimelist\.net/profile/[A-Za-z0-9]+|(https://)?shikimori.one/[^/]+)$`)
 
 func EnterEnigmaticTitle(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateStep(user, config.STEP_DEFAULT),
 		GetActiveRoulette().
 			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-				return OneOf(
+				return FirstMatch(
 					RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
 					RouletteStateGuard(roulette, RouletteStateWishing, If(
 						check_is_participant(user, roulette),
-						Seq(
+						Do(
 							WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
 								return UpdateUser(user, map[string]any{
 									"enigmatic_title": update.Message.Text,
@@ -43,7 +43,7 @@ func EnterEnigmaticTitle(user *db.User_ReadJSON) Executor {
 }
 
 func EnterLinkMyAnimeList(user *db.User_ReadJSON) Executor {
-	return Seq(
+	return Do(
 		UpdateStep(user, config.STEP_DEFAULT),
 		GetActiveRoulette().
 			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
@@ -51,7 +51,7 @@ func EnterLinkMyAnimeList(user *db.User_ReadJSON) Executor {
 					check_is_participant(user, roulette),
 					MatchText(linkToListRegexp).
 						Then(func(text string) Executor {
-							return Seq(
+							return Do(
 								UpdateUser(user, map[string]any{
 									"link_my_anime_list": text,
 								}),
