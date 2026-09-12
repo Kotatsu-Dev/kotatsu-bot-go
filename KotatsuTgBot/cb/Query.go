@@ -220,55 +220,59 @@ func SubscribeQueryE(user *db.User_ReadJSON) Executor {
 	)
 }
 
+func ShowActivityE(user *db.User_ReadJSON, activity_id uint) Executor {
+	return GetActivityByID(activity_id).
+		Then(func(activity *db.Activity_ReadJSON) Executor {
+			var formattedTime, formattedDate string
+			is_participant := check_is_participant(user, activity)
+
+			loc, _ := time.LoadLocation("Europe/Moscow")
+			formattedTime = activity.DateMeeting.In(loc).Format("15:04")
+			formattedDate = FormatDate(activity.DateMeeting.In(loc))
+
+			var files []io.Reader
+			if len(activity.PathsImages) != 0 {
+				files = make([]io.Reader, len(activity.PathsImages))
+				for i, path := range activity.PathsImages {
+					fileData, err := os.ReadFile(path)
+					if err != nil {
+						rr_debug.PrintLOG("Query.go", "ShowActivityE", "os.ReadFile(path)", "Ошибка открытия файла", err.Error())
+						return Empty()
+					}
+
+					files[i] = bytes.NewReader(fileData)
+				}
+			}
+			return Seq(
+				ITE(len(files) > 0,
+					SendPhotosME(
+						files, "",
+					),
+					Empty(),
+				),
+				SendMessageMTE(
+					"events.format", &map[string]any{
+						"activity":      activity,
+						"formattedDate": formattedDate,
+						"formattedTime": formattedTime,
+					},
+					ITE(is_participant,
+						keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID)),
+						keyboards.CreateInlineKbd_SubscribeActivity(int(activity.ID)),
+					),
+				),
+				UpdateStepE(user, config.STEP_ACTIVITY),
+			)
+
+		})
+}
+
 func ActivitiesQueryE(user *db.User_ReadJSON) Executor {
 	return Seq(
 		AnswerQueryE(),
 		QueryDataUintE().
 			Then(func(activity_id uint64) Executor {
-				return GetActivityByID(uint(activity_id)).
-					Then(func(activity *db.Activity_ReadJSON) Executor {
-						var formattedTime, formattedDate string
-						is_participant := check_is_participant(user, activity)
-
-						loc, _ := time.LoadLocation("Europe/Moscow")
-						formattedTime = activity.DateMeeting.In(loc).Format("15:04")
-						formattedDate = FormatDate(activity.DateMeeting.In(loc))
-
-						var files []io.Reader
-						if len(activity.PathsImages) != 0 {
-							files = make([]io.Reader, len(activity.PathsImages))
-							for i, path := range activity.PathsImages {
-								fileData, err := os.ReadFile(path)
-								if err != nil {
-									rr_debug.PrintLOG("botHandlers.go", "BotHandler_CallbackQuery_ACTIVITIES", "os.Open(output_image_path)", "Ошибка открытия файла", err.Error())
-									return Empty()
-								}
-
-								files[i] = bytes.NewReader(fileData)
-							}
-						}
-						return Seq(
-							ITE(len(files) > 0,
-								SendPhotosME(
-									files, "",
-								),
-								Empty(),
-							),
-							SendMessageMTE(
-								"events.format", &map[string]any{
-									"activity":      activity,
-									"formattedDate": formattedDate,
-									"formattedTime": formattedTime,
-								},
-								ITE(is_participant,
-									keyboards.CreateInlineKbd_UnsubscribeActivity(int(activity.ID)),
-									keyboards.CreateInlineKbd_SubscribeActivity(int(activity.ID)),
-								),
-							),
-							UpdateStepE(user, config.STEP_ACTIVITY),
-						)
-
-					})
+				return ShowActivityE(user, uint(activity_id))
 			}),
 	)
 }

@@ -473,8 +473,30 @@ func QueryDataE() ChainedExecutor[string] {
 }
 
 func QueryDataUintE() ChainedExecutor[uint64] {
+	return parseUintE(queryData)
+}
+
+func commandArg(command string) func(update *models.Update) (string, bool) {
+	return func(update *models.Update) (string, bool) {
+		if update.Message == nil {
+			return "", false
+		}
+		arg, found := strings.CutPrefix(update.Message.Text, command+" ")
+		if !found {
+			return "", false
+		}
+		arg = strings.TrimSpace(arg)
+		return arg, arg != ""
+	}
+}
+
+func CommandArgUintE(command string) ChainedExecutor[uint64] {
+	return parseUintE(commandArg(command))
+}
+
+func parseUintE(get func(update *models.Update) (string, bool)) ChainedExecutor[uint64] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (uint64, bool) {
-		data, ok := queryData(update)
+		data, ok := get(update)
 		if !ok {
 			return 0, false
 		}

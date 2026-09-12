@@ -7,6 +7,10 @@ import (
 	"rr/kotatsutgbot/db"
 )
 
+var START = StartE()
+
+var START_LINK = StartLinkE()
+
 // TODO: otherwise
 var MAIN = PrivateMessagesGuard(GetCurrentUserE().
 	Then(func(user *db.User_ReadJSON) Executor {

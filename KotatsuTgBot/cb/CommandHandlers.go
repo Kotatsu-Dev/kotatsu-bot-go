@@ -7,20 +7,47 @@ import (
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
+	"rr/kotatsutgbot/rr_debug"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
 
-func SendMainMenuE(user *db.User_ReadJSON) Executor {
-	return SendMessageME(
-		"main_menu",
-		ITE(
-			user.IsClubMember,
-			keyboards.Keyboard_MainMenuButtonsClubMember,
-			keyboards.Keyboard_MainMenuButtonsDefault,
-		),
+func MainMenuKeyboard(user *db.User_ReadJSON) models.ReplyMarkup {
+	return ITE(
+		user.IsClubMember,
+		keyboards.Keyboard_MainMenuButtonsClubMember,
+		keyboards.Keyboard_MainMenuButtonsDefault,
 	)
+}
+
+func SendMainMenuE(user *db.User_ReadJSON) Executor {
+	return SendMessageME("main_menu", MainMenuKeyboard(user))
+}
+
+func StartE() Executor {
+	return GetCurrentUserE().
+		Then(func(user *db.User_ReadJSON) Executor {
+			return WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
+				return SendMessageMTE("welcome", update.Message.From, MainMenuKeyboard(user))
+			})
+		}).
+		Otherwise(ProccessRegistrationE())
+}
+
+func StartLinkE() Executor {
+	return GetCurrentUserE().
+		Then(func(user *db.User_ReadJSON) Executor {
+			return CommandArgUintE("/start").
+				Then(func(activity_id uint64) Executor {
+					return ShowActivityE(user, uint(activity_id))
+				}).
+				Otherwise(Func(func() (bool, error) {
+					rr_debug.PrintLOG("CommandHandlers.go", "StartLinkE", "CommandArgUintE", "Ошибка конвертации строки в uint", "")
+					return true, nil
+				}))
+		}).
+		Otherwise(ProccessRegistrationE())
 }
 
 func SetGenderE(user *db.User_ReadJSON, gender db.Gender) Executor {
