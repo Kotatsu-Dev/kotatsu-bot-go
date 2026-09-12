@@ -151,6 +151,10 @@ func Handler_API_AnimeRoulettes_UpdateObject(c *gin.Context) {
 		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
 		return
 
+	case db.DB_ANSWER_NOT_SUPPORTED:
+		Answer_BadRequest(c, ANSWER_INVALID_COMMAND().Code, ANSWER_INVALID_COMMAND().Message)
+		return
+
 	default:
 		Answer_BadRequest(c, ANSWER_DB_GENERAL_ERROR().Code, ANSWER_DB_GENERAL_ERROR().Message)
 		return

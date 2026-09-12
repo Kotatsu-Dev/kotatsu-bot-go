@@ -135,6 +135,8 @@ func Handler_API_Requests_UpdateObject_Choice(c *gin.Context) {
 		b, err := bot.New(config.GetConfig().CONFIG_BOT_TOKEN, opts...)
 		if err != nil {
 			rr_debug.PrintLOG("api_requests.go", "Handler_API_Requests_UpdateObject_Choise", "gotgbot.NewBot", "Ошибка инициализации бота", err.Error())
+			Answer_BadRequest(c, ANSWER_BOT_CONNECT_ERROR("").Code, ANSWER_BOT_CONNECT_ERROR("").Message+" Error: "+err.Error())
+			return
 		}
 
 		params := &bot.SendMessageParams{

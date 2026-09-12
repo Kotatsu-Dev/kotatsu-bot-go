@@ -11,6 +11,8 @@ import {
   Field,
   Fieldset,
   FileUpload,
+  Flex,
+  Box,
   Group,
   Heading,
   IconButton,
@@ -20,16 +22,29 @@ import {
   Status,
   Table,
   Tabs,
+  Text,
   Textarea,
 } from "@chakra-ui/react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { toaster } from "../ui/toaster";
 import { type Activity } from "../../api/activities";
-import { useEffect, useState } from "react";
+import type { User } from "../../api/users";
+import { useEffect, useMemo, useState } from "react";
 import { isFuture, isPast } from "date-fns";
 import { Workbook } from "exceljs";
-import { FaDownload, FaEye } from "react-icons/fa";
+import { FaDownload, FaEye, FaTimes } from "react-icons/fa";
 import { Calendar } from "../Calendar";
+import { PaginatedList } from "./PaginatedList";
+import { useDebounceValue } from "usehooks-ts";
+import { searchUsers } from "../../lib/userSearch";
+
+const PAGE_SIZE = 10;
+
+const sortByDateDesc = (list: Activity[]) =>
+  [...list].sort(
+    (a, b) =>
+      new Date(b.date_meeting).getTime() - new Date(a.date_meeting).getTime(),
+  );
 
 const exportExcel = async (event: Activity) => {
   const wb = new Workbook();
@@ -287,9 +302,73 @@ const EventEditDialog = (props: { value: Activity; reload: () => void }) => {
   );
 };
 
-const EventCard = (props: { value: Activity; reload: () => void }) => {
+const EventCard = (props: {
+  value: Activity;
+  reload: () => void;
+  allUsers: User[];
+}) => {
   const api = useAPI();
   const event = props.value;
+
+  // event.participants comes back with unreliable id/created_at (backend TODO in
+  // db/Activities.go ToRead()) — resolve each row via user_tg_id against the
+  // canonical user list instead of trusting participant.id directly.
+  const byTgId = useMemo(
+    () => new Map(props.allUsers.map((u) => [u.user_tg_id, u])),
+    [props.allUsers],
+  );
+
+  const participants = useMemo(() => {
+    const result: User[] = [];
+    for (const raw of event.participants) {
+      const user = byTgId.get(raw.user_tg_id);
+      if (user) result.push(user);
+    }
+    return result;
+  }, [event.participants, byTgId]);
+
+  const participantTgIds = useMemo(
+    () => new Set(participants.map((u) => u.user_tg_id)),
+    [participants],
+  );
+
+  const [participantSearchInput, setParticipantSearchInput] = useState("");
+  const [participantSearch, setParticipantSearch] = useDebounceValue("", 500);
+
+  const participantSearchResults = useMemo(() => {
+    if (participantSearch.trim().length === 0) return [];
+    return searchUsers(props.allUsers, participantSearch)
+      .filter((u) => !participantTgIds.has(u.user_tg_id))
+      .slice(0, 8);
+  }, [props.allUsers, participantSearch, participantTgIds]);
+
+  const addParticipant = async (user: User) => {
+    try {
+      await api.activities.addParticipant({
+        activityId: event.id,
+        userId: user.id,
+      });
+      toaster.success({ description: "Participant added" });
+      setParticipantSearchInput("");
+      setParticipantSearch("");
+      props.reload();
+    } catch (e) {
+      handleError(e);
+    }
+  };
+
+  const removeParticipant = async (user: User) => {
+    try {
+      await api.activities.removeParticipant({
+        activityId: event.id,
+        userId: user.id,
+      });
+      toaster.success({ description: "Participant removed" });
+      props.reload();
+    } catch (e) {
+      handleError(e);
+    }
+  };
 
   const deactivateEvent = async (event: Activity) => {
     try {
@@ -409,38 +488,106 @@ const EventCard = (props: { value: Activity; reload: () => void }) => {
                   <Dialog.Title>Signed up for "{event.title}"</Dialog.Title>
                 </Dialog.Header>
                 <Dialog.Body>
-                  <Table.Root>
-                    <Table.Header>
-                      <Table.Row>
-                        <Table.ColumnHeader>Name</Table.ColumnHeader>
-                        <Table.ColumnHeader>Telegram</Table.ColumnHeader>
-                        <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
-                        <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                      {event.participants.map((user) => (
-                        <Table.Row key={user.id}>
-                          <Table.Cell>{user.full_name}</Table.Cell>
-                          <Table.Cell>{user.user_name}</Table.Cell>
-                          <Table.Cell>
-                            {user.is_itmo ? (
-                              <Status.Root colorPalette={"green"}>
-                                <Status.Indicator />
-                                Yes
-                              </Status.Root>
-                            ) : (
-                              <Status.Root colorPalette={"red"}>
-                                <Status.Indicator />
-                                No
-                              </Status.Root>
-                            )}
-                          </Table.Cell>
-                          <Table.Cell>{user.phone_number}</Table.Cell>
+                  <Box overflowX="auto">
+                    <Table.Root>
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>Name</Table.ColumnHeader>
+                          <Table.ColumnHeader>Telegram</Table.ColumnHeader>
+                          <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
+                          <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                          <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Root>
+                      </Table.Header>
+                      <Table.Body>
+                        {participants.map((user) => (
+                          <Table.Row key={user.id}>
+                            <Table.Cell>{user.full_name}</Table.Cell>
+                            <Table.Cell>{user.user_name}</Table.Cell>
+                            <Table.Cell>
+                              {[
+                                "student",
+                                "employee",
+                                "graduate_employee",
+                                "student_employee",
+                              ].includes(user.itmo_status ?? "") ? (
+                                <Status.Root colorPalette={"green"}>
+                                  <Status.Indicator />
+                                  Yes
+                                </Status.Root>
+                              ) : (
+                                <Status.Root colorPalette={"red"}>
+                                  <Status.Indicator />
+                                  No
+                                </Status.Root>
+                              )}
+                            </Table.Cell>
+                            <Table.Cell>{user.phone_number}</Table.Cell>
+                            <Table.Cell>
+                              <IconButton
+                                aria-label="Remove participant"
+                                size="xs"
+                                variant="ghost"
+                                onClick={() => removeParticipant(user)}
+                              >
+                                <FaTimes />
+                              </IconButton>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Box>
+
+                  <Stack gap={2} mt={4}>
+                    <Text fontWeight={"medium"}>Add participant</Text>
+                    <Input
+                      placeholder="Search by name, ISU, phone, @username or Telegram ID"
+                      value={participantSearchInput}
+                      onChange={(e) => {
+                        setParticipantSearchInput(e.currentTarget.value);
+                        setParticipantSearch(e.currentTarget.value);
+                      }}
+                    />
+                    {participantSearchResults.length > 0 ? (
+                      <Stack gap={1}>
+                        {participantSearchResults.map((user) => (
+                          <Flex
+                            key={user.id}
+                            justify={"space-between"}
+                            align={"center"}
+                            gap={2}
+                            px={2}
+                            py={1}
+                            borderRadius={"md"}
+                            cursor={"pointer"}
+                            _hover={{ bg: "bg.muted" }}
+                            onClick={() => addParticipant(user)}
+                          >
+                            <Stack gap={0}>
+                              <Text>
+                                {user.full_name ||
+                                  (user.user_name
+                                    ? `@${user.user_name}`
+                                    : `Telegram ID ${user.user_tg_id}`)}
+                              </Text>
+                              <Text fontSize={"sm"} color={"fg.muted"}>
+                                {[
+                                  user.isu,
+                                  user.phone_number,
+                                  user.user_name ? `@${user.user_name}` : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </Text>
+                            </Stack>
+                          </Flex>
+                        ))}
+                      </Stack>
+                    ) : participantSearchInput.trim().length > 0 ? (
+                      <Text color={"fg.muted"}>No users found</Text>
+                    ) : null}
+                  </Stack>
                 </Dialog.Body>
                 <Dialog.CloseTrigger asChild>
                   <CloseButton size="sm" />
@@ -467,7 +614,10 @@ type Inputs = {
 export const EventsTab = () => {
   const api = useAPI();
   const [events, setEvents] = useState<Activity[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useDebounceValue("", 500);
   const { register, handleSubmit, reset, control } = useForm<Inputs>();
 
   const createEvent: SubmitHandler<Inputs> = async (data, event) => {
@@ -485,13 +635,34 @@ export const EventsTab = () => {
     }
   };
 
-  const upcoming = events.filter(
-    (event) => isFuture(event.date_meeting) && event.status,
+  const filteredEvents = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (needle.length === 0) return events;
+    return events.filter((event) => event.title.toLowerCase().includes(needle));
+  }, [events, search]);
+
+  const upcoming = useMemo(
+    () =>
+      sortByDateDesc(
+        filteredEvents.filter(
+          (event) => isFuture(event.date_meeting) && event.status,
+        ),
+      ),
+    [filteredEvents],
   );
-  const past = events.filter(
-    (event) => isPast(event.date_meeting) && event.status,
+  const past = useMemo(
+    () =>
+      sortByDateDesc(
+        filteredEvents.filter(
+          (event) => isPast(event.date_meeting) && event.status,
+        ),
+      ),
+    [filteredEvents],
   );
-  const inactive = events.filter((event) => !event.status);
+  const inactive = useMemo(
+    () => sortByDateDesc(filteredEvents.filter((event) => !event.status)),
+    [filteredEvents],
+  );
 
   const loadEvents = async () => {
     try {
@@ -501,8 +672,17 @@ export const EventsTab = () => {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      setAllUsers(await api.users.getAll());
+    } catch (e) {
+      handleError(e);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
+    loadUsers();
   }, []);
 
   return (
@@ -583,6 +763,14 @@ export const EventsTab = () => {
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
+        <Input
+          placeholder="Search by event title"
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.currentTarget.value);
+            setSearch(e.currentTarget.value);
+          }}
+        />
         <Tabs.Root fitted variant={"enclosed"} defaultValue={"upcoming"}>
           <Tabs.List>
             <Tabs.Trigger value="upcoming">Upcoming</Tabs.Trigger>
@@ -590,25 +778,46 @@ export const EventsTab = () => {
             <Tabs.Trigger value="inactive">Inactive</Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="upcoming">
-            <Stack>
-              {upcoming.map((event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+            <PaginatedList
+              items={upcoming}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="past">
-            <Stack>
-              {past.map((event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+            <PaginatedList
+              items={past}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
+              )}
+            />
           </Tabs.Content>
           <Tabs.Content value="inactive">
-            <Stack>
-              {inactive.map((event) => (
-                <EventCard key={event.id} value={event} reload={loadEvents} />
-              ))}
-            </Stack>
+            <PaginatedList
+              items={inactive}
+              pageSize={PAGE_SIZE}
+              render={(event) => (
+                <EventCard
+                  key={event.id}
+                  value={event}
+                  reload={loadEvents}
+                  allUsers={allUsers}
+                />
+              )}
+            />
           </Tabs.Content>
         </Tabs.Root>
       </Stack>

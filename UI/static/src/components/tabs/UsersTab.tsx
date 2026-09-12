@@ -4,20 +4,23 @@ import {
   Card,
   Checkbox,
   CloseButton,
+  Collapsible,
   Container,
   DataList,
   Dialog,
   Field,
   Fieldset,
+  Flex,
   Group,
   Heading,
+  Icon,
   Input,
   Link,
   Portal,
   RadioGroup,
   Stack,
   Status,
-  Tabs,
+  Text,
 } from "@chakra-ui/react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "../ui/toaster";
@@ -25,8 +28,16 @@ import type { User } from "@/api/users";
 import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
-import Fuse from "fuse.js";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import {
+  genders,
+  itmoStatuses as statuses,
+  itmoTraits,
+  traitsOf,
+  type ItmoTrait,
+} from "../../constants/users";
+import { searchUsers } from "../../lib/userSearch";
 
 type Inputs = {
   full_name: string;
@@ -36,21 +47,10 @@ type Inputs = {
   itmo_status: string;
 };
 
-const genders = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "", label: "Unknown" },
-];
+const PAGE_SIZE = 10;
 
-const statuses = [
-  { value: "guest", label: "Guest" },
-  { value: "student", label: "Student" },
-  { value: "graduate", label: "Graduate" },
-  { value: "employee", label: "Employee" },
-  { value: "student_employee", label: "Student and employee" },
-  { value: "graduate_employee", label: "Graduate and employee" },
-  { value: "", label: "Unknown" },
-];
+type ClubFilter = "all" | "member" | "not_member";
+type GenderFilter = "all" | "male" | "female" | "unknown";
 
 const UserEditDialog = (props: { value: User; reload: () => void }) => {
   const api = useAPI();
@@ -69,7 +69,7 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
     try {
       await api.users.update({ ...data, user_tg_id: props.value.user_tg_id });
       toaster.success({
-        description: "Event successfully created!",
+        description: "User successfully edited!",
       });
       console.log(data);
       setOpen(false);
@@ -218,6 +218,13 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
   const api = useAPI();
   const user = props.value;
 
+  const isItmo = [
+    "student",
+    "employee",
+    "graduate_employee",
+    "student_employee",
+  ].includes(user.itmo_status ?? "");
+
   const acceptRequest = async () => {
     if (user.my_request) {
       await api.requests.accept({ id: user.my_request.id });
@@ -346,7 +353,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
           <DataList.Item>
             <DataList.ItemLabel>From ITMO</DataList.ItemLabel>
             <DataList.ItemValue>
-              {user.is_itmo ? (
+              {isItmo ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
                   Yes
@@ -433,34 +440,63 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
 export const UsersTab = () => {
   const api = useAPI();
   const [users, setUsers] = useState<User[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useDebounceValue("", 500);
+  const [clubFilter, setClubFilter] = useState<ClubFilter>("all");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
+  const [itmoTraitFilter, setItmoTraitFilter] = useState<string[]>([]);
+  const [onlyRequests, setOnlyRequests] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const currentUsers = useMemo(
-    () =>
-      search.length == 0
-        ? users
-        : new Fuse(users, {
-            keys: [
-              "user_name",
-              "full_tg_name",
-              "isu",
-              "full_name",
-              "phone_number",
-            ],
-          })
-            .search(search)
-            .map((e) => e.item),
-    [users, search],
-  );
+  const activeFilterCount =
+    (clubFilter !== "all" ? 1 : 0) +
+    (genderFilter !== "all" ? 1 : 0) +
+    (itmoTraitFilter.length > 0 ? 1 : 0) +
+    (onlyRequests ? 1 : 0);
 
-  const members = useMemo(
-    () => currentUsers.filter((user) => user.is_club_member),
-    [currentUsers],
-  );
-  const requests = useMemo(
-    () => currentUsers.filter((user) => !!user.my_request),
-    [currentUsers],
-  );
+  const currentUsers = useMemo(() => {
+    let result = searchUsers(users, search);
+
+    if (clubFilter !== "all") {
+      const wanted = clubFilter === "member";
+      result = result.filter((user) => user.is_club_member === wanted);
+    }
+
+    if (genderFilter !== "all") {
+      const wanted = genderFilter === "unknown" ? "" : genderFilter;
+      result = result.filter((user) => (user.gender ?? "") === wanted);
+    }
+
+    if (itmoTraitFilter.length > 0) {
+      result = result.filter((user) => {
+        const traits = traitsOf(user.itmo_status);
+        return itmoTraitFilter.every((trait) =>
+          traits.includes(trait as ItmoTrait),
+        );
+      });
+    }
+
+    if (onlyRequests) {
+      result = result.filter((user) => !!user.my_request);
+    }
+
+    return result;
+  }, [users, search, clubFilter, genderFilter, itmoTraitFilter, onlyRequests]);
+
+  const resetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setClubFilter("all");
+    setGenderFilter("all");
+    setItmoTraitFilter([]);
+    setOnlyRequests(false);
+  };
+
+  const toggleItmoTrait = (trait: string, checked: boolean) => {
+    setItmoTraitFilter((current) =>
+      checked ? [...current, trait] : current.filter((t) => t !== trait),
+    );
+  };
 
   const loadUsers = useCallback(async () => {
     setUsers(await api.users.getAll());
@@ -471,47 +507,165 @@ export const UsersTab = () => {
   }, []);
 
   return (
-    <Container maxW={"lg"}>
+    <Container maxW={"lg"} mb={5}>
       <Stack>
         <Heading textAlign={"center"}>User management</Heading>
         <Input
-          defaultValue={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
+          placeholder="Search by name, ISU, phone, @username or Telegram ID"
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.currentTarget.value);
+            setSearch(e.currentTarget.value);
+          }}
         />
-        <Tabs.Root fitted variant={"enclosed"} defaultValue={"all"}>
-          <Tabs.List>
-            <Tabs.Trigger value="all">Everybody</Tabs.Trigger>
-            <Tabs.Trigger value="members">Members</Tabs.Trigger>
-            <Tabs.Trigger value="requests">Requests</Tabs.Trigger>
-          </Tabs.List>
-          <Tabs.Content value="all">
-            <PaginatedList
-              items={currentUsers}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-          <Tabs.Content value="members">
-            <PaginatedList
-              items={members}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-          <Tabs.Content value="requests">
-            <PaginatedList
-              items={requests}
-              pageSize={5}
-              render={(user) => (
-                <UserCard key={user.id} value={user} reload={loadUsers} />
-              )}
-            />
-          </Tabs.Content>
-        </Tabs.Root>
+        <Card.Root>
+          <Collapsible.Root
+            open={filtersOpen}
+            onOpenChange={({ open }) => setFiltersOpen(open)}
+          >
+            <Collapsible.Trigger asChild>
+              <Flex
+                align={"center"}
+                justify={"space-between"}
+                cursor={"pointer"}
+                px={3}
+                py={2}
+              >
+                <Text fontWeight={"medium"}>
+                  Filters
+                  {activeFilterCount > 0
+                    ? ` · ${activeFilterCount} active`
+                    : ""}
+                </Text>
+                <Icon>{filtersOpen ? <FaChevronUp /> : <FaChevronDown />}</Icon>
+              </Flex>
+            </Collapsible.Trigger>
+            <Collapsible.Content>
+              <Card.Body p={3} pt={0}>
+                <Stack gap={3}>
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>Membership</Text>
+                    <RadioGroup.Root
+                      value={clubFilter}
+                      onValueChange={({ value }) =>
+                        setClubFilter((value as ClubFilter) ?? "all")
+                      }
+                    >
+                      <Group gap={3} wrap={"wrap"}>
+                        <RadioGroup.Item value="all">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="member">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Members</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="not_member">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Non-members</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      </Group>
+                    </RadioGroup.Root>
+                    <Checkbox.Root
+                      checked={onlyRequests}
+                      onCheckedChange={({ checked }) =>
+                        setOnlyRequests(!!checked)
+                      }
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>Request</Checkbox.Label>
+                    </Checkbox.Root>
+                  </Stack>
+
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>Gender</Text>
+                    <RadioGroup.Root
+                      value={genderFilter}
+                      onValueChange={({ value }) =>
+                        setGenderFilter((value as GenderFilter) ?? "all")
+                      }
+                    >
+                      <Group gap={3} wrap={"wrap"}>
+                        <RadioGroup.Item value="all">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>All</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="male">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Male</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="female">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Female</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                        <RadioGroup.Item value="unknown">
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>Unknown</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      </Group>
+                    </RadioGroup.Root>
+                  </Stack>
+
+                  <Stack gap={1}>
+                    <Text fontWeight={"medium"}>ITMO status</Text>
+                    <Group gap={3} wrap={"wrap"}>
+                      {itmoTraits.map((trait) => (
+                        <Checkbox.Root
+                          key={trait.value}
+                          checked={itmoTraitFilter.includes(trait.value)}
+                          onCheckedChange={({ checked }) =>
+                            toggleItmoTrait(trait.value, !!checked)
+                          }
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Control />
+                          <Checkbox.Label>{trait.label}</Checkbox.Label>
+                        </Checkbox.Root>
+                      ))}
+                    </Group>
+                    {itmoTraitFilter.length > 0 ? (
+                      <Text color={"fg.muted"}>
+                        ITMO: all checked traits must match at once
+                      </Text>
+                    ) : null}
+                  </Stack>
+
+                  <Flex justify={"flex-end"}>
+                    <Button variant={"outline"} onClick={resetFilters}>
+                      Reset filters
+                    </Button>
+                  </Flex>
+                </Stack>
+              </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        </Card.Root>
+
+        <Text textAlign={"center"} color={"fg.muted"}>
+          Showing {currentUsers.length} of {users.length} users
+        </Text>
+
+        {currentUsers.length === 0 ? (
+          <Text textAlign={"center"} py={6}>
+            No users match these filters
+          </Text>
+        ) : (
+          <PaginatedList
+            items={currentUsers}
+            pageSize={PAGE_SIZE}
+            render={(user) => (
+              <UserCard key={user.id} value={user} reload={loadUsers} />
+            )}
+          />
+        )}
       </Stack>
     </Container>
   );
