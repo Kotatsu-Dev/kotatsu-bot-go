@@ -316,26 +316,17 @@ func UnsubscribeQueryE(user *db.User_ReadJSON) Executor {
 			Then(func(activity_id uint64) Executor {
 				return GetActivityByID(uint(activity_id)).
 					Then(func(activity *db.Activity_ReadJSON) Executor {
-						db_answer_code_remove := db.DB_UPDATE_Activity_REMOVE_Participant(uint(activity_id), user.ID)
-						switch db_answer_code_remove {
-						case db.DB_ANSWER_SUCCESS:
-							return SendMessageMTE(
-								"events.unregistered", activity,
-								keyboards.ListEvents,
-							)
-
-						case db.DB_ANSWER_OBJECT_NOT_FOUND:
-							return SendMessageME(
-								"events.non_existent",
-								keyboards.ListEvents,
-							)
-
-						default:
-							return SendMessageME(
+						return RemoveParticipant(activity, user).
+							Then(func(activity *db.Activity_ReadJSON) Executor {
+								return SendMessageMTE(
+									"events.unregistered", activity,
+									keyboards.ListEvents,
+								)
+							}).
+							Otherwise(SendMessageME(
 								"events.not_registered",
 								keyboards.ListEvents,
-							)
-						}
+							))
 					})
 			}),
 	)

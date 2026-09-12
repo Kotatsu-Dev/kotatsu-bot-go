@@ -403,6 +403,13 @@ func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) Chai
 	})
 }
 
+func RemoveParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
+		code := db.DB_UPDATE_Activity_REMOVE_Participant(activity.ID, user.ID)
+		return activity, code == db.DB_ANSWER_SUCCESS
+	})
+}
+
 func AddRouletteParticipant(user *db.User_ReadJSON) ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
 		code := db.DB_UPDATE_AnimeRoulette_ADD_Participants(user.ID)
