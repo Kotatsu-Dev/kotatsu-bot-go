@@ -5,9 +5,9 @@ import (
 	"rr/kotatsutgbot/db"
 )
 
-func MainQueryE(user *db.User_ReadJSON) Executor {
+func MainQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		MainE(user),
+		AnswerQuery(),
+		Main(user),
 	)
 }

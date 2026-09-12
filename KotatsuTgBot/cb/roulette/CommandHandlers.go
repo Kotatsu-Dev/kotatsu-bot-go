@@ -17,58 +17,58 @@ func check_is_participant(user *db.User_ReadJSON, roulette *db.AnimeRoulette_Rea
 }
 
 func RouletteInactive() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.inactive", nil,
 	)
 }
 
 func StartMenu(is_participant bool) Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.menu", keyboards.CreateKeyboard_AnimeRouletteStart(is_participant),
 	)
 }
 
 func OngoingMenu(is_participant bool) Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.menu", keyboards.CreateKeyboard_AnimeRouletteMenu(is_participant),
 	)
 }
 
 func AlreadyParticipant() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.already_participant", keyboards.CreateKeyboard_AnimeRouletteStart(true),
 	)
 }
 
 func RegistrationEnd() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.registration_end", nil,
 	)
 }
 
 func NotParticipant() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.not_participant", keyboards.CreateKeyboard_AnimeRouletteStart(false),
 	)
 }
 
 func RouletteEnded() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.ended", nil,
 	)
 }
 
 func NoTheme() Executor {
-	return SendMessageME(
+	return SendMessageM(
 		"roulette.no_theme", nil,
 	)
 }
 
-func MainE(user *db.User_ReadJSON) Executor {
+func Main(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			is_participant := check_is_participant(user, roulette)
-			return ITE(
+			return If(
 				GetRouletteState(roulette) == RouletteStateRegistration,
 				StartMenu(is_participant),
 				OngoingMenu(is_participant),
@@ -77,7 +77,7 @@ func MainE(user *db.User_ReadJSON) Executor {
 		Otherwise(RouletteInactive())
 }
 
-func ParticipateE(user *db.User_ReadJSON) Executor {
+func Participate(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			if check_is_participant(user, roulette) {
@@ -86,7 +86,7 @@ func ParticipateE(user *db.User_ReadJSON) Executor {
 			return OneOf(
 				RouletteStateGuard(roulette, RouletteStateRegistration, Seq(
 					AddRouletteParticipant(user),
-					SendMessageME(
+					SendMessageM(
 						"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
 					),
 				)),
@@ -96,13 +96,13 @@ func ParticipateE(user *db.User_ReadJSON) Executor {
 		Otherwise(RouletteInactive())
 }
 
-func CancelParticipateE(user *db.User_ReadJSON) Executor {
+func CancelParticipate(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			if check_is_participant(user, roulette) {
 				return Seq(
 					RemoveRouletteParticipant(user),
-					SendMessageME(
+					SendMessageM(
 						"roulette.unregistered", keyboards.CreateKeyboard_AnimeRouletteStart(false),
 					),
 				)
@@ -113,16 +113,16 @@ func CancelParticipateE(user *db.User_ReadJSON) Executor {
 		Otherwise(RouletteInactive())
 }
 
-func AnimeWishE(user *db.User_ReadJSON) Executor {
+func AnimeWish(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			return OneOf(
 				RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
-				RouletteStateGuard(roulette, RouletteStateWishing, ITE(
+				RouletteStateGuard(roulette, RouletteStateWishing, If(
 					check_is_participant(user, roulette),
 					Seq(
-						UpdateStepE(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE),
-						SendMessageME(
+						UpdateStep(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE),
+						SendMessageM(
 							"roulette.send_title", keyboards.Keyboard_CancelAnimeRoulette,
 						),
 					),
@@ -134,19 +134,19 @@ func AnimeWishE(user *db.User_ReadJSON) Executor {
 		Otherwise(RouletteInactive())
 }
 
-func LinkMyListE(user *db.User_ReadJSON) Executor {
+func LinkMyList(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-			return ITE(
+			return If(
 				check_is_participant(user, roulette),
 				Seq(
-					UpdateStepE(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST),
-					ITE(
+					UpdateStep(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST),
+					If(
 						user.LinkMyAnimeList == "",
-						SendMessageME(
+						SendMessageM(
 							"roulette.send_list", nil,
 						),
-						SendMessageMTE(
+						SendMessageMT(
 							"roulette.your_list", user,
 							keyboards.Keyboard_CancelAnimeRoulette,
 						),
@@ -158,23 +158,23 @@ func LinkMyListE(user *db.User_ReadJSON) Executor {
 		Otherwise(RouletteInactive())
 }
 
-func RulesE() Executor {
-	return SendMessageME(
+func Rules() Executor {
+	return SendMessageM(
 		"roulette.rules", nil,
 	)
 }
 
-func MainThemeE() Executor {
+func MainTheme() Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			return OneOf(
 				RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
-				RouletteStateGuard(roulette, RouletteStateWishing, ITE(
+				RouletteStateGuard(roulette, RouletteStateWishing, If(
 					roulette.Theme == "",
-					SendMessageME(
+					SendMessageM(
 						"roulette.almost_no_theme", nil,
 					),
-					SendMessageRawME(
+					SendMessageRawM(
 						roulette.Theme, nil,
 					),
 				)),

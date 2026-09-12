@@ -21,90 +21,90 @@ func MainMenuKeyboard(user *db.User_ReadJSON) models.ReplyMarkup {
 	)
 }
 
-func SendMainMenuE(user *db.User_ReadJSON) Executor {
-	return SendMessageME("main_menu", MainMenuKeyboard(user))
+func SendMainMenu(user *db.User_ReadJSON) Executor {
+	return SendMessageM("main_menu", MainMenuKeyboard(user))
 }
 
-func StartE() Executor {
-	return GetCurrentUserE().
+func Start() Executor {
+	return GetCurrentUser().
 		Then(func(user *db.User_ReadJSON) Executor {
 			return WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
-				return SendMessageMTE("welcome", update.Message.From, MainMenuKeyboard(user))
+				return SendMessageMT("welcome", update.Message.From, MainMenuKeyboard(user))
 			})
 		}).
-		Otherwise(ProccessRegistrationE())
+		Otherwise(ProccessRegistration())
 }
 
-func StartLinkE() Executor {
-	return GetCurrentUserE().
+func StartLink() Executor {
+	return GetCurrentUser().
 		Then(func(user *db.User_ReadJSON) Executor {
-			return CommandArgUintE("/start").
+			return CommandArgUint("/start").
 				Then(func(activity_id uint64) Executor {
-					return ShowActivityE(user, uint(activity_id))
+					return ShowActivity(user, uint(activity_id))
 				}).
 				Otherwise(Func(func() (bool, error) {
-					rr_debug.PrintLOG("CommandHandlers.go", "StartLinkE", "CommandArgUintE", "Ошибка конвертации строки в uint", "")
+					rr_debug.PrintLOG("CommandHandlers.go", "StartLink", "CommandArgUint", "Ошибка конвертации строки в uint", "")
 					return true, nil
 				}))
 		}).
-		Otherwise(ProccessRegistrationE())
+		Otherwise(ProccessRegistration())
 }
 
-func SetGenderE(user *db.User_ReadJSON, gender db.Gender) Executor {
+func SetGender(user *db.User_ReadJSON, gender db.Gender) Executor {
 	return Seq(
-		UpdateGenderE(user, gender),
-		SendMainMenuE(user),
+		UpdateGender(user, gender),
+		SendMainMenu(user),
 	)
 }
 
 // ---
 
-func WasAtEventsE(current_user *db.User_ReadJSON, actually bool) Executor {
+func WasAtEvents(current_user *db.User_ReadJSON, actually bool) Executor {
 	return Seq(
-		UpdateVisitedE(current_user, actually),
-		ITE(
+		UpdateVisited(current_user, actually),
+		If(
 			actually,
-			SendMessageME(
+			SendMessageM(
 				"request.is_itmo", keyboards.InlineKbd_JoinClub,
 			),
-			SendMessageME(
+			SendMessageM(
 				"request.not_enough_visits", keyboards.Keyboard_WasntAtEvents,
 			),
 		),
 	)
 }
 
-func WasntAtEventsE(user *db.User_ReadJSON, cont bool) Executor {
-	return ITE(
+func WasntAtEvents(user *db.User_ReadJSON, cont bool) Executor {
+	return If(
 		cont,
-		SendMessageME("request.is_itmo", keyboards.InlineKbd_JoinClub),
-		SendMainMenuE(user),
+		SendMessageM("request.is_itmo", keyboards.InlineKbd_JoinClub),
+		SendMainMenu(user),
 	)
 }
 
-func JoinClubE(user *db.User_ReadJSON) Executor {
+func JoinClub(user *db.User_ReadJSON) Executor {
 	if user.IsSentRequest {
 		return Seq(
-			SendMessageME(
+			SendMessageM(
 				"request.in_progress", nil,
 			),
-			SendMainMenuE(user),
+			SendMainMenu(user),
 		)
 	}
 	if user.IsClubMember {
 		return Seq(
-			SendMessageME(
+			SendMessageM(
 				"request.already_accepted", nil,
 			),
-			SendMainMenuE(user),
+			SendMainMenu(user),
 		)
 	}
-	return SendMessageME(
+	return SendMessageM(
 		"request.rules", keyboards.Keyboard_WasAtEvents,
 	)
 }
 
-func SigningUpForActivityE(user *db.User_ReadJSON) Executor {
+func SigningUpForActivity(user *db.User_ReadJSON) Executor {
 	return GetActiveActivities().
 		Then(func(activities []db.Activity_ReadJSON) Executor {
 			return HasActiveRoulette().
@@ -115,68 +115,68 @@ func SigningUpForActivityE(user *db.User_ReadJSON) Executor {
 						keyboard = keyboards.CreateInlineKbd_ActivitiesList(activities, user.UserTgID, has_roulette)
 					}
 
-					return OpenCalendarE().
+					return OpenCalendar().
 						Then(func(file io.Reader) Executor {
-							return SendPhotoME(file, text, keyboard)
+							return SendPhotoM(file, text, keyboard)
 						}).
-						Otherwise(SendMessageME(text, keyboard))
+						Otherwise(SendMessageM(text, keyboard))
 				})
 		})
 }
 
-func BackMainMenuE(user *db.User_ReadJSON) Executor {
+func BackMainMenu(user *db.User_ReadJSON) Executor {
 	return Seq(
-		UpdateStepE(user, config.STEP_DEFAULT),
-		SendMainMenuE(user),
+		UpdateStep(user, config.STEP_DEFAULT),
+		SendMainMenu(user),
 	)
 }
 
-func LeaveClubE(current_user *db.User_ReadJSON) Executor {
+func LeaveClub(current_user *db.User_ReadJSON) Executor {
 	return Seq(
-		UpdateStepE(current_user, config.STEP_USER_LEAVES_CLUB),
-		SendMessageME(
+		UpdateStep(current_user, config.STEP_USER_LEAVES_CLUB),
+		SendMessageM(
 			"leave_reason", keyboards.Keyboard_Skip,
 		),
 	)
 }
 
-func MyActivitiesE(user *db.User_ReadJSON) Executor {
+func MyActivities(user *db.User_ReadJSON) Executor {
 	return GetUserActiveActivities(user).
 		Then(func(activities []db.Activity_ReadJSON) Executor {
-			return ITE(
+			return If(
 				len(activities) == 0,
-				SendMessageME(
+				SendMessageM(
 					"my_events.empty", nil,
 				),
-				SendMessageME(
+				SendMessageM(
 					"my_events.list", keyboards.CreateInlineKbd_MyActivitiesList(activities),
 				),
 			)
 		})
 }
 
-func NoPhoneNumberE(user *db.User_ReadJSON) Executor {
+func NoPhoneNumber(user *db.User_ReadJSON) Executor {
 	return Seq(
-		UpdateStepE(user, config.STEP_DEFAULT),
-		SendMessageME(
+		UpdateStep(user, config.STEP_DEFAULT),
+		SendMessageM(
 			"request.no_phone_number", nil,
 		),
-		SendMainMenuE(user),
+		SendMainMenu(user),
 	)
 }
 
-func ProccessRegistrationE() Executor {
+func ProccessRegistration() Executor {
 	return OneOf(
-		TextGuard("keyboard.continue", CreateOrGetUserE().
+		TextGuard("keyboard.continue", CreateOrGetUser().
 			Then(func(user *db.User_ReadJSON) Executor {
-				return SendMessageME("gender_select", keyboards.Keyboard_GenderSelect)
+				return SendMessageM("gender_select", keyboards.Keyboard_GenderSelect)
 			}).
-			Otherwise(SendMessageME("error.database", nil))),
+			Otherwise(SendMessageM("error.database", nil))),
 		WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
 			// TODO: Fix after merge with dev, avoiding conflict from editing locale
 			return Seq(
-				SendDocumentME("CAACAgIAAx0CbgUG4QACCWpostfAVRPNDHNAWu8vcIbjv0nuagACrXQAAl8iQUmAFQIjshq4bTYE"),
-				SendMessageRawE(
+				SendDocumentM("CAACAgIAAx0CbgUG4QACCWpostfAVRPNDHNAWu8vcIbjv0nuagACrXQAAl8iQUmAFQIjshq4bTYE"),
+				SendMessageRaw(
 					update.Message.From.ID,
 					config.T("hello")+"\n"+config.T("personal_data"),
 					keyboards.Registration,

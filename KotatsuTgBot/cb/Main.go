@@ -7,62 +7,62 @@ import (
 	"rr/kotatsutgbot/db"
 )
 
-var START = StartE()
+var START = Start()
 
-var START_LINK = StartLinkE()
+var START_LINK = StartLink()
 
 // TODO: otherwise
-var MAIN = PrivateMessagesGuard(GetCurrentUserE().
+var MAIN = PrivateMessagesGuard(GetCurrentUser().
 	Then(func(user *db.User_ReadJSON) Executor {
 		return OneOf(
-			TextGuard("keyboard.gender_male", SetGenderE(user, "male")),
-			TextGuard("keyboard.gender_female", SetGenderE(user, "female")),
-			TextGuard("keyboard.visited_enough", WasAtEventsE(user, true)),
-			TextGuard("keyboard.not_visited_enough", WasAtEventsE(user, false)),
-			TextGuard("keyboard.fill_back_later", WasntAtEventsE(user, false)),
-			TextGuard("keyboard.fill_now", WasntAtEventsE(user, true)),
-			TextGuard("keyboard.join_club", JoinClubE(user)),
-			TextGuard("keyboard.event_registration", SigningUpForActivityE(user)),
-			TextGuard("keyboard.to_main_menu", BackMainMenuE(user)),
-			TextGuard("keyboard.leave_club", LeaveClubE(user)),
-			TextGuard("keyboard.to_roulette_menu", roulette.MainE(user)),
-			TextGuard("keyboard.participate_roulette", roulette.ParticipateE(user)),
-			TextGuard("keyboard.leave_roulette", roulette.CancelParticipateE(user)),
-			TextGuard("keyboard.send_title", roulette.AnimeWishE(user)),
-			TextGuard("keyboard.roulette_rules", roulette.RulesE()),
-			TextGuard("keyboard.roulette_theme", roulette.MainThemeE()),
-			TextGuard("keyboard.roulette_list", roulette.LinkMyListE(user)),
-			TextGuard("keyboard.my_events", MyActivitiesE(user)),
-			TextGuard("keyboard.not_my_number", NoPhoneNumberE(user)),
+			TextGuard("keyboard.gender_male", SetGender(user, "male")),
+			TextGuard("keyboard.gender_female", SetGender(user, "female")),
+			TextGuard("keyboard.visited_enough", WasAtEvents(user, true)),
+			TextGuard("keyboard.not_visited_enough", WasAtEvents(user, false)),
+			TextGuard("keyboard.fill_back_later", WasntAtEvents(user, false)),
+			TextGuard("keyboard.fill_now", WasntAtEvents(user, true)),
+			TextGuard("keyboard.join_club", JoinClub(user)),
+			TextGuard("keyboard.event_registration", SigningUpForActivity(user)),
+			TextGuard("keyboard.to_main_menu", BackMainMenu(user)),
+			TextGuard("keyboard.leave_club", LeaveClub(user)),
+			TextGuard("keyboard.to_roulette_menu", roulette.Main(user)),
+			TextGuard("keyboard.participate_roulette", roulette.Participate(user)),
+			TextGuard("keyboard.leave_roulette", roulette.CancelParticipate(user)),
+			TextGuard("keyboard.send_title", roulette.AnimeWish(user)),
+			TextGuard("keyboard.roulette_rules", roulette.Rules()),
+			TextGuard("keyboard.roulette_theme", roulette.MainTheme()),
+			TextGuard("keyboard.roulette_list", roulette.LinkMyList(user)),
+			TextGuard("keyboard.my_events", MyActivities(user)),
+			TextGuard("keyboard.not_my_number", NoPhoneNumber(user)),
 
-			StepGuard(user, config.STEP_ITMO_ENTER_ISU, ITMO_EnterISUE(user, "join_club")),
-			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_ISU, ITMO_EnterISUE(user, "activity")),
-			StepGuard(user, config.STEP_ITMO_ENTER_FULLNAME, ITMO_EnterFullNameE(user, "join_club")),
-			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_FULLNAME, ITMO_EnterFullNameE(user, "activity")),
-			StepGuard(user, config.STEP_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullNameE(user, "join_club")),
-			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullNameE(user, "activity")),
-			StepGuard(user, config.STEP_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumberE(user, "join_club")),
-			StepGuard(user, config.STEP_CHANGING_PHONE, ChangePhoneNumberE(user)),
-			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumberE(user, "activity")),
-			StepGuard(user, config.STEP_USER_LEAVES_CLUB, LeavesClubE(user)),
-			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE, roulette.EnterEnigmaticTitleE(user)),
-			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST, roulette.EnterLinkMyAnimeListE(user)),
+			StepGuard(user, config.STEP_ITMO_ENTER_ISU, ITMO_EnterISU(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_ISU, ITMO_EnterISU(user, "activity")),
+			StepGuard(user, config.STEP_ITMO_ENTER_FULLNAME, ITMO_EnterFullName(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_ITMO_ENTER_FULLNAME, ITMO_EnterFullName(user, "activity")),
+			StepGuard(user, config.STEP_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullName(user, "join_club")),
+			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME, NoITMO_EnterFullName(user, "activity")),
+			StepGuard(user, config.STEP_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumber(user, "join_club")),
+			StepGuard(user, config.STEP_CHANGING_PHONE, ChangePhoneNumber(user)),
+			StepGuard(user, config.STEP_APPOINTMENT_NOITMO_ENTER_PHONE, NoITMO_EnterPhoneNumber(user, "activity")),
+			StepGuard(user, config.STEP_USER_LEAVES_CLUB, LeavesClub(user)),
+			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_ENIGMATIC_TITLE, roulette.EnterEnigmaticTitle(user)),
+			StepGuard(user, config.STEP_ANIME_RULETTE_ENTER_LINK_MY_ANIME_LIST, roulette.EnterLinkMyAnimeList(user)),
 
-			SendMessageME("unknown_command", nil),
+			SendMessageM("unknown_command", nil),
 		)
-	}).Otherwise(ProccessRegistrationE()))
+	}).Otherwise(ProccessRegistration()))
 
 // Ignore unknown commands - it's either unregistered, either unauthorized
-var CALLBACK_MAIN = GetCurrentUserE().
+var CALLBACK_MAIN = GetCurrentUser().
 	Then(func(user *db.User_ReadJSON) Executor {
 		return OneOf(
-			QueryGuard("JOIN_CLUB", JoinClubQueryE(user)),
-			QueryGuard("APPOINTMENT", AppointQueryE(user)),
-			QueryGuard("ACTIVITIES", ActivitiesQueryE(user)),
-			QueryGuard("MY_ACTIVITIES", ActivitiesQueryE(user)),
-			QueryGuard("ACTIVITY_SUBSCRIBE", SubscribeQueryE(user)),
-			QueryGuard("ACTIVITY_UNSUBSCRIBE", UnsubscribeQueryE(user)),
-			QueryGuard("RELEVANC_PHONE", RelevancePhoneQueryE(user)),
-			QueryGuard("ROULETTES", roulette.MainQueryE(user)),
+			QueryGuard("JOIN_CLUB", JoinClubQuery(user)),
+			QueryGuard("APPOINTMENT", AppointQuery(user)),
+			QueryGuard("ACTIVITIES", ActivitiesQuery(user)),
+			QueryGuard("MY_ACTIVITIES", ActivitiesQuery(user)),
+			QueryGuard("ACTIVITY_SUBSCRIBE", SubscribeQuery(user)),
+			QueryGuard("ACTIVITY_UNSUBSCRIBE", UnsubscribeQuery(user)),
+			QueryGuard("RELEVANC_PHONE", RelevancePhoneQuery(user)),
+			QueryGuard("ROULETTES", roulette.MainQuery(user)),
 		)
 	})

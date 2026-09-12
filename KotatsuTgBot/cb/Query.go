@@ -22,70 +22,70 @@ func check_is_participant(user *db.User_ReadJSON, activity *db.Activity_ReadJSON
 	return false
 }
 
-func JoinClubQueryE(user *db.User_ReadJSON) Executor {
+func JoinClubQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		QueryDataE().
+		AnswerQuery(),
+		QueryData().
 			Then(func(data string) Executor {
 				switch data {
 				case "from_ITMO_student":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Student,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 
 				case "from_ITMO_graduate":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Graduate,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.Employee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_student_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.StudentEmployee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_graduate_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_ITMO_ENTER_ISU,
 							"itmo_status": db.GraduateEmployee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				default:
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_NOITMO_ENTER_FULLNAME,
 							"itmo_status": db.Guest,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_full_name", nil,
 						),
 					)
@@ -94,12 +94,12 @@ func JoinClubQueryE(user *db.User_ReadJSON) Executor {
 	)
 }
 
-func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
+func RelevancePhoneQuery(current_user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
+		AnswerQuery(),
 		GetActivityByID(uint(current_user.TempActivityID)).
 			Then(func(activity *db.Activity_ReadJSON) Executor {
-				return QueryDataE().
+				return QueryData().
 					Then(func(data string) Executor {
 						if data == "yes" {
 							if activity.Status {
@@ -107,8 +107,8 @@ func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
 									!current_user.IsITMO &&
 									activity.GuestRegistrationUntil.Before(time.Now()) {
 									return Seq(
-										UpdateStepE(current_user, config.STEP_DEFAULT),
-										SendMessageME(
+										UpdateStep(current_user, config.STEP_DEFAULT),
+										SendMessageM(
 											"events.registration_closed",
 											keyboards.ListEvents,
 										),
@@ -116,15 +116,15 @@ func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
 								} else {
 									return Seq(
 										AddParticipant(activity, current_user),
-										UpdateStepE(current_user, config.STEP_DEFAULT),
-										SendMessageMTE(
+										UpdateStep(current_user, config.STEP_DEFAULT),
+										SendMessageMT(
 											"events.registered", activity,
 											keyboards.ListEvents,
 										),
 									)
 								}
 							} else {
-								return SendMessageME(
+								return SendMessageM(
 									"events.non_existent",
 									keyboards.ListEvents,
 								)
@@ -132,8 +132,8 @@ func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
 
 						} else {
 							return Seq(
-								UpdateStepE(current_user, config.STEP_CHANGING_PHONE),
-								SendMessageME(
+								UpdateStep(current_user, config.STEP_CHANGING_PHONE),
+								SendMessageM(
 									"request.send_phone", keyboards.Keyboard_RequestContact,
 								),
 							)
@@ -143,21 +143,21 @@ func RelevancePhoneQueryE(current_user *db.User_ReadJSON) Executor {
 	)
 }
 
-func UnsubscribeQueryE(user *db.User_ReadJSON) Executor {
+func UnsubscribeQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		QueryDataUintE().
+		AnswerQuery(),
+		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
 				return GetActivityByID(uint(activity_id)).
 					Then(func(activity *db.Activity_ReadJSON) Executor {
 						return RemoveParticipant(activity, user).
 							Then(func(activity *db.Activity_ReadJSON) Executor {
-								return SendMessageMTE(
+								return SendMessageMT(
 									"events.unregistered", activity,
 									keyboards.ListEvents,
 								)
 							}).
-							Otherwise(SendMessageME(
+							Otherwise(SendMessageM(
 								"events.not_registered",
 								keyboards.ListEvents,
 							))
@@ -166,52 +166,52 @@ func UnsubscribeQueryE(user *db.User_ReadJSON) Executor {
 	)
 }
 
-func SubscribeQueryE(user *db.User_ReadJSON) Executor {
+func SubscribeQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		QueryDataUintE().
+		AnswerQuery(),
+		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
-				return ITE(
+				return If(
 					user.IsFilledData,
-					ITE(user.IsITMO,
+					If(user.IsITMO,
 						GetActivityByID(uint(activity_id)).
 							Then(func(activity *db.Activity_ReadJSON) Executor {
 								if activity.Status {
 									// Is ITMO = true
 									return Seq(
 										AddParticipant(activity, user),
-										SendMessageMTE(
+										SendMessageMT(
 											"events.registered", activity,
 											keyboards.ListEvents,
 										),
-										UpdateStepE(user, config.STEP_DEFAULT),
+										UpdateStep(user, config.STEP_DEFAULT),
 									)
 								} else {
 									return Seq(
-										SendMessageME(
+										SendMessageM(
 											"events.non_existent",
 											keyboards.ListEvents,
 										),
-										UpdateStepE(user, config.STEP_DEFAULT),
+										UpdateStep(user, config.STEP_DEFAULT),
 									)
 								}
-							}).(Executor),
+							}),
 						Seq(
-							SendMessageMTE(
+							SendMessageMT(
 								"events.phone_number", user.PhoneNumber,
 								keyboards.InlineKbd_RelevancePhoneNumber,
 							),
-							UpdateUserE(user, map[string]any{
+							UpdateUser(user, map[string]any{
 								"step":             config.STEP_DEFAULT,
 								"temp_activity_id": int(activity_id),
 							}),
 						),
 					),
 					Seq(
-						SendMessageME(
+						SendMessageM(
 							"request.unknown", keyboards.InlineKbd_Appointment,
 						),
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"temp_activity_id": int(activity_id),
 						}),
 					),
@@ -220,7 +220,7 @@ func SubscribeQueryE(user *db.User_ReadJSON) Executor {
 	)
 }
 
-func ShowActivityE(user *db.User_ReadJSON, activity_id uint) Executor {
+func ShowActivity(user *db.User_ReadJSON, activity_id uint) Executor {
 	return GetActivityByID(activity_id).
 		Then(func(activity *db.Activity_ReadJSON) Executor {
 			var formattedTime, formattedDate string
@@ -236,7 +236,7 @@ func ShowActivityE(user *db.User_ReadJSON, activity_id uint) Executor {
 				for i, path := range activity.PathsImages {
 					fileData, err := os.ReadFile(path)
 					if err != nil {
-						rr_debug.PrintLOG("Query.go", "ShowActivityE", "os.ReadFile(path)", "Ошибка открытия файла", err.Error())
+						rr_debug.PrintLOG("Query.go", "ShowActivity", "os.ReadFile(path)", "Ошибка открытия файла", err.Error())
 						return Empty()
 					}
 
@@ -244,13 +244,13 @@ func ShowActivityE(user *db.User_ReadJSON, activity_id uint) Executor {
 				}
 			}
 			return Seq(
-				ITE(len(files) > 0,
-					SendPhotosME(
+				If(len(files) > 0,
+					SendPhotosM(
 						files, "",
 					),
 					Empty(),
 				),
-				SendMessageMTE(
+				SendMessageMT(
 					"events.format", &map[string]any{
 						"activity":      activity,
 						"formattedDate": formattedDate,
@@ -261,86 +261,86 @@ func ShowActivityE(user *db.User_ReadJSON, activity_id uint) Executor {
 						keyboards.CreateInlineKbd_SubscribeActivity(int(activity.ID)),
 					),
 				),
-				UpdateStepE(user, config.STEP_ACTIVITY),
+				UpdateStep(user, config.STEP_ACTIVITY),
 			)
 
 		})
 }
 
-func ActivitiesQueryE(user *db.User_ReadJSON) Executor {
+func ActivitiesQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		QueryDataUintE().
+		AnswerQuery(),
+		QueryDataUint().
 			Then(func(activity_id uint64) Executor {
-				return ShowActivityE(user, uint(activity_id))
+				return ShowActivity(user, uint(activity_id))
 			}),
 	)
 }
 
-func AppointQueryE(user *db.User_ReadJSON) Executor {
+func AppointQuery(user *db.User_ReadJSON) Executor {
 	return Seq(
-		AnswerQueryE(),
-		QueryDataE().
+		AnswerQuery(),
+		QueryData().
 			Then(func(data string) Executor {
 				switch data {
 				case "from_ITMO_student":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Student,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 
 				case "from_ITMO_graduate":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Graduate,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.Employee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_student_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.StudentEmployee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				case "from_ITMO_graduate_employee":
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_ITMO_ENTER_ISU,
 							"itmo_status": db.GraduateEmployee,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_isu_number", nil,
 						),
 					)
 				default:
 					return Seq(
-						UpdateUserE(user, map[string]any{
+						UpdateUser(user, map[string]any{
 							"step":        config.STEP_APPOINTMENT_NOITMO_ENTER_FULLNAME,
 							"itmo_status": db.Guest,
 						}),
-						SendMessageME(
+						SendMessageM(
 							"request.enter_full_name", nil,
 						),
 					)

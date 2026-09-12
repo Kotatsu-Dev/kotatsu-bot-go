@@ -96,7 +96,7 @@ func (msg *SendMessageS) Execute(ctx context.Context, b *bot.Bot, update *models
 	return true, err
 }
 
-func SendMessageRawE(chat_id int64, text string, keyboard models.ReplyMarkup) Executor {
+func SendMessageRaw(chat_id int64, text string, keyboard models.ReplyMarkup) Executor {
 	return &SendMessageS{
 		chat_id:  chat_id,
 		text:     text,
@@ -104,12 +104,12 @@ func SendMessageRawE(chat_id int64, text string, keyboard models.ReplyMarkup) Ex
 	}
 }
 
-func SendMessageE(chat_id int64, text string, keyboard models.ReplyMarkup) Executor {
-	return SendMessageRawE(chat_id, config.T(text), keyboard)
+func SendMessage(chat_id int64, text string, keyboard models.ReplyMarkup) Executor {
+	return SendMessageRaw(chat_id, config.T(text), keyboard)
 }
 
-func SendMessageTE(chat_id int64, text string, data any, keyboard models.ReplyMarkup) Executor {
-	return SendMessageRawE(chat_id, config.TT(text, data), keyboard)
+func SendMessageT(chat_id int64, text string, data any, keyboard models.ReplyMarkup) Executor {
+	return SendMessageRaw(chat_id, config.TT(text, data), keyboard)
 }
 
 type SendMessageMS struct {
@@ -138,19 +138,19 @@ func (msg *SendMessageMS) Execute(ctx context.Context, b *bot.Bot, update *model
 	return true, err
 }
 
-func SendMessageRawME(text string, keyboard models.ReplyMarkup) Executor {
+func SendMessageRawM(text string, keyboard models.ReplyMarkup) Executor {
 	return &SendMessageMS{
 		text:     text,
 		keyboard: keyboard,
 	}
 }
 
-func SendMessageME(text string, keyboard models.ReplyMarkup) Executor {
-	return SendMessageRawME(config.T(text), keyboard)
+func SendMessageM(text string, keyboard models.ReplyMarkup) Executor {
+	return SendMessageRawM(config.T(text), keyboard)
 }
 
-func SendMessageMTE(text string, data any, keyboard models.ReplyMarkup) Executor {
-	return SendMessageRawME(config.TT(text, data), keyboard)
+func SendMessageMT(text string, data any, keyboard models.ReplyMarkup) Executor {
+	return SendMessageRawM(config.TT(text, data), keyboard)
 }
 
 type OneOfS []Executor
@@ -221,7 +221,7 @@ func StepGuard(user *db.User_ReadJSON, step int, executor Executor) *GuardS {
 	})(executor)
 }
 
-func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
+func GetCurrentUser() ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
 		var (
 			code int
@@ -232,14 +232,14 @@ func GetCurrentUserE() ChainedExecutor[*db.User_ReadJSON] {
 		} else if update != nil && update.CallbackQuery != nil {
 			code, user = db.DB_GET_User_BY_UserTgID(update.CallbackQuery.From.ID)
 		} else {
-			rr_debug.PrintLOG("Helpers.go", "GetCurrentUserE", "malformed update", "Update has neither Message.From nor CallbackQuery", "")
+			rr_debug.PrintLOG("Helpers.go", "GetCurrentUser", "malformed update", "Update has neither Message.From nor CallbackQuery", "")
 			return nil, false
 		}
 		return user, code == db.DB_ANSWER_SUCCESS
 	})
 }
 
-func CreateOrGetUserE() ChainedExecutor[*db.User_ReadJSON] {
+func CreateOrGetUser() ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
 		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 		user_to_add := db.User_CreateJSON{
@@ -279,7 +279,7 @@ func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.
 	return db.DB_UPDATE_User(update_user)
 }
 
-func UpdateUserE(user *db.User_ReadJSON, update map[string]any) ChainedExecutor[*db.User_ReadJSON] {
+func UpdateUser(user *db.User_ReadJSON, update map[string]any) ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, upd *models.Update) (*db.User_ReadJSON, bool) {
 		code, updated, _ := UpdateCurrentUser(user, update)
 		if code != db.DB_ANSWER_SUCCESS {
@@ -289,20 +289,20 @@ func UpdateUserE(user *db.User_ReadJSON, update map[string]any) ChainedExecutor[
 	})
 }
 
-func UpdateGenderE(user *db.User_ReadJSON, gender db.Gender) Executor {
-	return UpdateUserE(user, map[string]any{
+func UpdateGender(user *db.User_ReadJSON, gender db.Gender) Executor {
+	return UpdateUser(user, map[string]any{
 		"gender": gender,
 	})
 }
 
-func UpdateVisitedE(user *db.User_ReadJSON, is_visited_events bool) Executor {
-	return UpdateUserE(user, map[string]any{
+func UpdateVisited(user *db.User_ReadJSON, is_visited_events bool) Executor {
+	return UpdateUser(user, map[string]any{
 		"is_visited_events": is_visited_events,
 	})
 }
 
-func UpdateStepE(user *db.User_ReadJSON, step int) Executor {
-	return UpdateUserE(user, map[string]any{
+func UpdateStep(user *db.User_ReadJSON, step int) Executor {
+	return UpdateUser(user, map[string]any{
 		"step": step,
 	})
 }
@@ -451,7 +451,7 @@ func (*AnswerQueryS) Execute(ctx context.Context, b *bot.Bot, update *models.Upd
 	return true, nil
 }
 
-func AnswerQueryE() Executor {
+func AnswerQuery() Executor {
 	return &AnswerQueryS{}
 }
 
@@ -466,14 +466,14 @@ func queryData(update *models.Update) (string, bool) {
 	return parts[1], true
 }
 
-func QueryDataE() ChainedExecutor[string] {
+func QueryData() ChainedExecutor[string] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (string, bool) {
 		return queryData(update)
 	})
 }
 
-func QueryDataUintE() ChainedExecutor[uint64] {
-	return parseUintE(queryData)
+func QueryDataUint() ChainedExecutor[uint64] {
+	return parseUint(queryData)
 }
 
 func commandArg(command string) func(update *models.Update) (string, bool) {
@@ -490,11 +490,11 @@ func commandArg(command string) func(update *models.Update) (string, bool) {
 	}
 }
 
-func CommandArgUintE(command string) ChainedExecutor[uint64] {
-	return parseUintE(commandArg(command))
+func CommandArgUint(command string) ChainedExecutor[uint64] {
+	return parseUint(commandArg(command))
 }
 
-func parseUintE(get func(update *models.Update) (string, bool)) ChainedExecutor[uint64] {
+func parseUint(get func(update *models.Update) (string, bool)) ChainedExecutor[uint64] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (uint64, bool) {
 		data, ok := get(update)
 		if !ok {
@@ -505,11 +505,11 @@ func parseUintE(get func(update *models.Update) (string, bool)) ChainedExecutor[
 	})
 }
 
-func OpenCalendar() (*os.File, string) {
+func openCalendar() (*os.File, string) {
 	directory := config.ByUI("./img/calendar_activities")
 	files, err := os.ReadDir(directory)
 	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.ReadDir", "Ошибка поиска файла календаря", err.Error())
+		rr_debug.PrintLOG("CommandHandlers.go", "openCalendar", "os.ReadDir", "Ошибка поиска файла календаря", err.Error())
 	}
 
 	if len(files) <= 0 {
@@ -521,16 +521,16 @@ func OpenCalendar() (*os.File, string) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "os.Open", "Ошибка чтения файла календаря", err.Error())
+		rr_debug.PrintLOG("CommandHandlers.go", "openCalendar", "os.Open", "Ошибка чтения файла календаря", err.Error())
 		return nil, ""
 	}
 
 	return file, fileInfo.Name()
 }
 
-func OpenCalendarE() ChainedExecutor[io.Reader] {
+func OpenCalendar() ChainedExecutor[io.Reader] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (io.Reader, bool) {
-		file, _ := OpenCalendar()
+		file, _ := openCalendar()
 		if file == nil {
 			return nil, false
 		}
@@ -538,7 +538,7 @@ func OpenCalendarE() ChainedExecutor[io.Reader] {
 
 		data, err := io.ReadAll(file)
 		if err != nil {
-			rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendarE", "io.ReadAll", "Ошибка чтения файла календаря", err.Error())
+			rr_debug.PrintLOG("CommandHandlers.go", "OpenCalendar", "io.ReadAll", "Ошибка чтения файла календаря", err.Error())
 			return nil, false
 		}
 
@@ -563,7 +563,7 @@ func (msg *SendDocumentMS) Execute(ctx context.Context, b *bot.Bot, update *mode
 	return true, err
 }
 
-func SendDocumentME(file_id string) Executor {
+func SendDocumentM(file_id string) Executor {
 	return &SendDocumentMS{file_id: file_id}
 }
 
@@ -598,7 +598,7 @@ func (msg *SendPhotoMS) Execute(ctx context.Context, b *bot.Bot, update *models.
 	return true, err
 }
 
-func SendPhotoRawME(file io.Reader, text string, keyboard models.ReplyMarkup) Executor {
+func SendPhotoRawM(file io.Reader, text string, keyboard models.ReplyMarkup) Executor {
 	return &SendPhotoMS{file: file, text: text, keyboard: keyboard}
 }
 
@@ -642,50 +642,30 @@ func (msg *SendPhotosMS) Execute(ctx context.Context, b *bot.Bot, update *models
 	return true, err
 }
 
-func SendPhotosRawME(files []io.Reader, text string) Executor {
+func SendPhotosRawM(files []io.Reader, text string) Executor {
 	return &SendPhotosMS{files: files, text: text}
 }
 
-func SendPhotoME(file io.Reader, text string, keyboard models.ReplyMarkup) Executor {
-	return SendPhotoRawME(file, config.T(text), keyboard)
+func SendPhotoM(file io.Reader, text string, keyboard models.ReplyMarkup) Executor {
+	return SendPhotoRawM(file, config.T(text), keyboard)
 }
 
-func SendPhotosME(files []io.Reader, text string) Executor {
-	return SendPhotosRawME(files, config.T(text))
+func SendPhotosM(files []io.Reader, text string) Executor {
+	return SendPhotosRawM(files, config.T(text))
 }
 
-func SendMessageRaw(ctx context.Context, b *bot.Bot, chat_id int64, text string, keyboard models.ReplyMarkup) error {
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      chat_id,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: keyboard,
-	})
-
-	if err != nil {
-		rr_debug.PrintLOG("CommandHandlers.go", "SendMessageRaw", "bot.SendMessage", "Ошибка отправки сообщения", err.Error())
-	}
-
-	return err
-}
-
-func SendMessageT(ctx context.Context, b *bot.Bot, chat_id int64, text string, data any, keyboard models.ReplyMarkup) error {
-	return SendMessageRaw(ctx, b, chat_id, config.TT(text, data), keyboard)
-}
-
-func SendMessageMT(ctx context.Context, b *bot.Bot, update *models.Update, text string, data any, keyboard models.ReplyMarkup) error {
-	var chat_id int64
-	if update.Message != nil {
-		chat_id = update.Message.From.ID
-	} else {
-		chat_id = update.CallbackQuery.From.ID
-	}
-	return SendMessageT(ctx, b, chat_id, text, data, keyboard)
-}
-
+// Значения: обе ветки должны быть одного типа
 func ITE[T any](cond bool, a, b T) T {
 	if cond {
 		return a
 	}
 	return b
+}
+
+// Исполнители: ветки могут быть любыми Executor'ами
+func If(cond bool, then, otherwise Executor) Executor {
+	if cond {
+		return then
+	}
+	return otherwise
 }

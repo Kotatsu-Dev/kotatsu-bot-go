@@ -13,22 +13,22 @@ import (
 
 var linkToListRegexp = regexp.MustCompile(`^((https://)?anilist\.co/user/[A-Za-z0-9]+(/)?|(https://)?myanimelist\.net/profile/[A-Za-z0-9]+|(https://)?shikimori.one/[^/]+)$`)
 
-func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
+func EnterEnigmaticTitle(user *db.User_ReadJSON) Executor {
 	return Seq(
-		UpdateStepE(user, config.STEP_DEFAULT),
+		UpdateStep(user, config.STEP_DEFAULT),
 		GetActiveRoulette().
 			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 				return OneOf(
 					RouletteStateGuard(roulette, RouletteStateRegistration, NoTheme()),
-					RouletteStateGuard(roulette, RouletteStateWishing, ITE(
+					RouletteStateGuard(roulette, RouletteStateWishing, If(
 						check_is_participant(user, roulette),
 						Seq(
 							WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
-								return UpdateUserE(user, map[string]any{
+								return UpdateUser(user, map[string]any{
 									"enigmatic_title": update.Message.Text,
 								})
 							}),
-							SendMessageME(
+							SendMessageM(
 								"roulette.sent_title", nil,
 							),
 						),
@@ -38,35 +38,35 @@ func EnterEnigmaticTitleE(user *db.User_ReadJSON) Executor {
 				)
 			}).
 			Otherwise(RouletteInactive()),
-		MainE(user),
+		Main(user),
 	)
 }
 
-func EnterLinkMyAnimeListE(user *db.User_ReadJSON) Executor {
+func EnterLinkMyAnimeList(user *db.User_ReadJSON) Executor {
 	return Seq(
-		UpdateStepE(user, config.STEP_DEFAULT),
+		UpdateStep(user, config.STEP_DEFAULT),
 		GetActiveRoulette().
 			Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
-				return ITE(
+				return If(
 					check_is_participant(user, roulette),
 					MatchText(linkToListRegexp).
 						Then(func(text string) Executor {
 							return Seq(
-								UpdateUserE(user, map[string]any{
+								UpdateUser(user, map[string]any{
 									"link_my_anime_list": text,
 								}),
-								SendMessageME(
+								SendMessageM(
 									"roulette.sent_list", nil,
 								),
 							)
 						}).
-						Otherwise(SendMessageME(
+						Otherwise(SendMessageM(
 							"roulette.incorrect_list_format", nil,
-						)).(Executor),
+						)),
 					NotParticipant(),
 				)
 			}).
 			Otherwise(RouletteInactive()),
-		MainE(user),
+		Main(user),
 	)
 }
