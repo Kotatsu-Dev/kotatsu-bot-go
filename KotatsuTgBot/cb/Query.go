@@ -15,7 +15,7 @@ import (
 
 func check_is_participant(user *db.User_ReadJSON, activity *db.Activity_ReadJSON) bool {
 	for _, participant := range activity.Participants {
-		if user.UserTgID == participant.UserTgID {
+		if user.ID == participant.UserID {
 			return true
 		}
 	}

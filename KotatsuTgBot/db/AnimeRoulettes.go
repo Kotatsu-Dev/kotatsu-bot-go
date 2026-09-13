@@ -81,35 +81,6 @@ func RequestToReadJson(req *Request) (res *Request_ReadJSON) {
 	return
 }
 
-func ParticipantsToReadJson(participants []User) (res []User_ReadJSON) {
-	for _, user := range participants {
-		res = append(res, User_ReadJSON{
-			ID:                    user.ID,
-			CreatedAt:             user.CreatedAt,
-			Step:                  user.Step,
-			UserTgID:              user.UserTgID,
-			LastMessageID:         user.LastMessageID,
-			UserName:              user.UserName,
-			FullTgName:            user.FullTgName,
-			ISU:                   user.ISU,
-			FullName:              user.FullName,
-			PhoneNumber:           user.PhoneNumber,
-			SecretCode:            user.SecretCode,
-			IsITMO:                user.IsITMO,
-			IsClubMember:          user.IsClubMember,
-			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
-			IsSentRequest:         user.IsSentRequest,
-			IsFilledData:          user.IsFilledData,
-			TempActivityID:        user.TempActivityID,
-			MyActivities:          user.MyActivities,
-			LinkMyAnimeList:       user.LinkMyAnimeList,
-			MyRequest:             RequestToReadJson(user.MyRequest),
-			EnigmaticTitle:        user.EnigmaticTitle,
-		})
-	}
-	return
-}
-
 // Добавить аниме рулетку
 func DB_CREATE_AnimeRoulette(anime_roulette_to_add *AnimeRoulette_CreateJSON) int {
 
@@ -160,7 +131,7 @@ func DB_GET_AnimeRoulette_BY_Theme(theme string) (int, *AnimeRoulette_ReadJSON) 
 		AnnounceDate:     anime_roulette.AnnounceDate,
 		DistributionDate: anime_roulette.DistributionDate,
 		EndDate:          anime_roulette.EndDate,
-		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
+		Participants:     UserToReadSlice(anime_roulette.Participants),
 	}
 
 	return DB_ANSWER_SUCCESS, &anime_roulette_read
@@ -193,7 +164,7 @@ func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) 
 		AnnounceDate:     anime_roulette.AnnounceDate,
 		DistributionDate: anime_roulette.DistributionDate,
 		EndDate:          anime_roulette.EndDate,
-		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
+		Participants:     UserToReadSlice(anime_roulette.Participants),
 	}
 
 	return DB_ANSWER_SUCCESS, &anime_roulette_read
@@ -226,7 +197,7 @@ func DB_GET_AnimeRoulettes() []AnimeRoulette_ReadJSON {
 			AnnounceDate:     anime_roulette.AnnounceDate,
 			DistributionDate: anime_roulette.DistributionDate,
 			EndDate:          anime_roulette.EndDate,
-			Participants:     ParticipantsToReadJson(anime_roulette.Participants),
+			Participants:     UserToReadSlice(anime_roulette.Participants),
 		}
 		anime_roulettes_list = append(anime_roulettes_list, current_anime_roulette)
 	}

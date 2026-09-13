@@ -99,7 +99,7 @@ var Keyboard_CancelAnimeRoulette = Default().
 var date_format = "02.01 15:04"
 var loc, _ = time.LoadLocation("Europe/Moscow")
 
-func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_id int64, has_roulette bool) *models.InlineKeyboardMarkup {
+func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user *db.User_ReadJSON, has_roulette bool) *models.InlineKeyboardMarkup {
 	k := DefaultInline()
 
 	for _, activity := range activities {
@@ -107,7 +107,7 @@ func CreateInlineKbd_ActivitiesList(activities []db.Activity_ReadJSON, user_tg_i
 		is_participant := false
 
 		for _, participant := range activity.Participants {
-			if participant.UserTgID == user_tg_id {
+			if participant.UserID == user.ID {
 				is_participant = true
 				break
 			}

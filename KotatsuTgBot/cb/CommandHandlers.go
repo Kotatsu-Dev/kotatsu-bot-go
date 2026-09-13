@@ -112,7 +112,7 @@ func SigningUpForActivity(user *db.User_ReadJSON) Executor {
 					text, keyboard := "events.empty", models.ReplyMarkup(nil)
 					if len(activities) > 0 || has_roulette {
 						text = "events.list"
-						keyboard = keyboards.CreateInlineKbd_ActivitiesList(activities, user.UserTgID, has_roulette)
+						keyboard = keyboards.CreateInlineKbd_ActivitiesList(activities, user, has_roulette)
 					}
 
 					return OpenCalendar().

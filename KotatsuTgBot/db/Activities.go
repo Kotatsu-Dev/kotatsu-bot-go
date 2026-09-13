@@ -18,7 +18,7 @@ import (
 type Activity struct {
 	gorm.Model
 	Title                  string         `json:"title"`
-	Participants           []*User        `json:"participants" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"`
+	Participants           []UserActivity `json:"participants" gorm:"constraint:OnDelete:CASCADE;"`
 	DateMeeting            time.Time      `json:"date_meeting"`
 	GuestRegistrationUntil *time.Time     `json:"guest_registration_until"`
 	Description            string         `json:"description"`
@@ -37,16 +37,16 @@ type Activity_CreateJSON struct {
 }
 
 type Activity_ReadJSON struct {
-	ID                     uint       `json:"id"`
-	CreatedAt              time.Time  `json:"created_at"`
-	Title                  string     `json:"title"`
-	Participants           []*User    `json:"participants"`
-	DateMeeting            time.Time  `json:"date_meeting"`
-	GuestRegistrationUntil *time.Time `json:"guest_registration_until"`
-	Description            string     `json:"description"`
-	Location               string     `json:"location"`
-	PathsImages            []string   `json:"paths_images"`
-	Status                 bool       `json:"status"`
+	ID                     uint                    `json:"id"`
+	CreatedAt              time.Time               `json:"created_at"`
+	Title                  string                  `json:"title"`
+	Participants           []UserActivity_ReadJSON `json:"participants"`
+	DateMeeting            time.Time               `json:"date_meeting"`
+	GuestRegistrationUntil *time.Time              `json:"guest_registration_until"`
+	Description            string                  `json:"description"`
+	Location               string                  `json:"location"`
+	PathsImages            []string                `json:"paths_images"`
+	Status                 bool                    `json:"status"`
 }
 
 func (activity *Activity) ToRead() *Activity_ReadJSON {
@@ -54,10 +54,7 @@ func (activity *Activity) ToRead() *Activity_ReadJSON {
 		ID:                     activity.ID,
 		CreatedAt:              activity.CreatedAt,
 		Title:                  activity.Title,
-		// TODO: participants copied raw ([]*User), not converted to User_ReadJSON like
-		// AnimeRoulette_ReadJSON does via ParticipantsToReadJson — id/created_at/etc
-		// serialize capitalized (gorm.Model has no json tag override), unreliable on the wire.
-		Participants:           activity.Participants,
+		Participants:           UserActivityToReadSlice(activity.Participants),
 		DateMeeting:            activity.DateMeeting,
 		GuestRegistrationUntil: activity.GuestRegistrationUntil,
 		Description:            activity.Description,
@@ -282,7 +279,7 @@ func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
 
 	userIndex := -1
 	for i, participant := range activity.Participants {
-		if participant.ID == user.ID {
+		if participant.UserID == user.ID {
 			userIndex = i
 			break
 		}
