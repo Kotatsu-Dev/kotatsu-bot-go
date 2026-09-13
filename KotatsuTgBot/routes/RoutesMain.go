@@ -57,6 +57,7 @@ func RunServer() {
 			activities.DELETE("/", Handler_API_Activities_DeleteObject_ALL)
 			activities.POST("/participants", Handler_API_Activities_AddParticipant)
 			activities.DELETE("/participants", Handler_API_Activities_RemoveParticipant)
+			activities.POST("/participant", Handler_API_Activities_UpdateParticipant)
 		}
 
 		requests := api.Group("/requests")

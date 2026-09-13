@@ -56,6 +56,17 @@ type Activity_Participant_Request struct {
 	UserID     uint `json:"user_id"`
 }
 
+// =========================================================================
+//
+//	Handler_API_Activities_UpdateParticipant
+//
+// =========================================================================
+type Activity_Participant_Visited_Request struct {
+	ActivityID uint `json:"activity_id"`
+	UserID     uint `json:"user_id"`
+	Visited    bool `json:"visited"`
+}
+
 // ----------------------------------------------
 //
 //	API ANIME_ROULETTES

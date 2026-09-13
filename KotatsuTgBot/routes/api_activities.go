@@ -291,6 +291,31 @@ func Handler_API_Activities_RemoveParticipant(c *gin.Context) {
 	}
 }
 
+func Handler_API_Activities_UpdateParticipant(c *gin.Context) {
+
+	var req Activity_Participant_Visited_Request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		rr_debug.PrintLOG("api_activities.go", "Handler_API_Activities_UpdateParticipant", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
+		Answer_BadRequest(c, ANSWER_INVALID_JSON().Code, ANSWER_INVALID_JSON().Message+" Error: "+err.Error())
+		return
+	}
+
+	db_answer_code := db.DB_UPDATE_UserActivity_Visited(req.UserID, req.ActivityID, req.Visited)
+	switch db_answer_code {
+	case db.DB_ANSWER_SUCCESS:
+		Answer_OK(c)
+		return
+
+	case db.DB_ANSWER_OBJECT_NOT_FOUND:
+		Answer_NotFound(c, ANSWER_OBJECT_NOT_FOUND().Code, ANSWER_OBJECT_NOT_FOUND().Message)
+		return
+
+	default:
+		Answer_BadRequest(c, ANSWER_DB_GENERAL_ERROR().Code, ANSWER_DB_GENERAL_ERROR().Message)
+		return
+	}
+}
+
 func removeAllContents(directory string) error {
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

@@ -2,6 +2,7 @@ import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
+  Checkbox,
   Clipboard,
   CloseButton,
   Container,
@@ -330,6 +331,23 @@ const EventCard = (props: {
     [participants],
   );
 
+  const visitedByUserId = useMemo(
+    () =>
+      new Map(
+        event.participants.map((raw) => [raw.user_id, raw.visited ?? false]),
+      ),
+    [event.participants],
+  );
+
+  // Отметки, ещё не подтверждённые ответом сервера
+  const [visitedOverrides, setVisitedOverrides] = useState(
+    new Map<number, boolean>(),
+  );
+
+  useEffect(() => {
+    setVisitedOverrides(new Map());
+  }, [event.participants]);
+
   const [participantSearchInput, setParticipantSearchInput] = useState("");
   const [participantSearch, setParticipantSearch] = useDebounceValue("", 500);
 
@@ -364,6 +382,28 @@ const EventCard = (props: {
       toaster.success({ description: "Participant removed" });
       props.reload();
     } catch (e) {
+      handleError(e);
+    }
+  };
+
+  const setParticipantVisited = async (user: User, visited: boolean) => {
+    setVisitedOverrides((prev) => new Map(prev).set(user.id, visited));
+    try {
+      await api.activities.setParticipantVisited({
+        activityId: event.id,
+        userId: user.id,
+        visited,
+      });
+      toaster.success({
+        description: visited ? "Marked as visited" : "Marked as not visited",
+      });
+      props.reload();
+    } catch (e) {
+      setVisitedOverrides((prev) => {
+        const next = new Map(prev);
+        next.delete(user.id);
+        return next;
+      });
       handleError(e);
     }
   };
@@ -494,6 +534,7 @@ const EventCard = (props: {
                           <Table.ColumnHeader>Telegram</Table.ColumnHeader>
                           <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
                           <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                          <Table.ColumnHeader>Visited</Table.ColumnHeader>
                           <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
                       </Table.Header>
@@ -521,6 +562,22 @@ const EventCard = (props: {
                               )}
                             </Table.Cell>
                             <Table.Cell>{user.phone_number}</Table.Cell>
+                            <Table.Cell>
+                              <Checkbox.Root
+                                aria-label="Visited"
+                                checked={
+                                  visitedOverrides.get(user.id) ??
+                                  visitedByUserId.get(user.id) ??
+                                  false
+                                }
+                                onCheckedChange={({ checked }) =>
+                                  setParticipantVisited(user, checked === true)
+                                }
+                              >
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                              </Checkbox.Root>
+                            </Table.Cell>
                             <Table.Cell>
                               <IconButton
                                 aria-label="Remove participant"

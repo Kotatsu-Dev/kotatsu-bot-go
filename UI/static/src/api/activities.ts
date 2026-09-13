@@ -79,5 +79,17 @@ export const createActivitiesApi = ($: AxiosInstance) => {
         data: { activity_id: props.activityId, user_id: props.userId },
       });
     },
+
+    async setParticipantVisited(props: {
+      activityId: number;
+      userId: number;
+      visited: boolean;
+    }) {
+      await $.post("/activities/participant", {
+        activity_id: props.activityId,
+        user_id: props.userId,
+        visited: props.visited,
+      });
+    },
   };
 };
