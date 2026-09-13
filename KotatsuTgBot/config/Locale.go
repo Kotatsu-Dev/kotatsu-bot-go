@@ -22,12 +22,18 @@ func Localizer() *i18n.Localizer {
 }
 
 func T(message string) string {
+	if message == "" {
+		return ""
+	}
 	return Localizer().MustLocalize(&i18n.LocalizeConfig{
 		MessageID: message,
 	})
 }
 
 func TT(message string, data any) string {
+	if message == "" {
+		return ""
+	}
 	return Localizer().MustLocalize(&i18n.LocalizeConfig{
 		MessageID:    message,
 		TemplateData: data,

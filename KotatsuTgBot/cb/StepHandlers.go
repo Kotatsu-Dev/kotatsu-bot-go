@@ -235,19 +235,22 @@ func LeavesClub(user *db.User_ReadJSON) Executor {
 		UpdateUser(user, map[string]any{
 			"is_club_member":  false,
 			"is_sent_request": false,
-		}),
-		WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
-			return SendMessageT(
-				config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
-				"leave_notification", &map[string]any{
-					"user":   user,
-					"reason": ITE(update.Message.Text == config.T("keyboard.skip"), "", update.Message.Text),
-				}, nil,
+		}).Then(func(user *db.User_ReadJSON) Executor {
+			return Do(
+				WithCtx(func(ctx context.Context, b *bot.Bot, update *models.Update) Executor {
+					return SendMessageT(
+						config.GetConfig().CONFIG_ID_CHAT_SUPPORT,
+						"leave_notification", &map[string]any{
+							"user":   user,
+							"reason": ITE(update.Message.Text == config.T("keyboard.skip"), "", update.Message.Text),
+						}, nil,
+					)
+				}),
+				SendMessageM(
+					"leave_response", nil,
+				),
+				SendMainMenu(user),
 			)
 		}),
-		SendMessageM(
-			"leave_response", nil,
-		),
-		SendMainMenu(user),
 	)
 }
