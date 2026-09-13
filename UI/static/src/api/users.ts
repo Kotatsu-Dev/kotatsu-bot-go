@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
 import { Request } from "./requests";
+import { UserActivity } from "./user_activities";
 
 export const User = z.object({
   id: z.int(),
@@ -33,7 +34,7 @@ export const User = z.object({
   is_sent_request: z.boolean(),
   is_filled_data: z.boolean(),
   temp_activity_id: z.int(),
-  my_activities: z.any().array().or(z.null()), // TODO
+  my_activities: UserActivity.array(),
   link_my_anime_list: z.string(),
   my_request: Request.or(z.null()),
   enigmatic_title: z.string(),

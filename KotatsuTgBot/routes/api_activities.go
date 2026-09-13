@@ -275,7 +275,7 @@ func Handler_API_Activities_RemoveParticipant(c *gin.Context) {
 		return
 	}
 
-	db_answer_code := db.DB_DELETE_UserActivity(req.ActivityID, req.UserID)
+	db_answer_code := db.DB_DELETE_UserActivity(req.UserID, req.ActivityID)
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
 		Answer_OK(c)

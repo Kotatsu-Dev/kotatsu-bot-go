@@ -436,7 +436,7 @@ func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) Chai
 
 func RemoveParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
-		code := db.DB_DELETE_UserActivity(activity.ID, user.ID)
+		code := db.DB_DELETE_UserActivity(user.ID, activity.ID)
 		return activity, code == db.DB_ANSWER_SUCCESS
 	})
 }

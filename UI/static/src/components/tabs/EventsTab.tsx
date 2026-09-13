@@ -46,7 +46,7 @@ const sortByDateDesc = (list: Activity[]) =>
       new Date(b.date_meeting).getTime() - new Date(a.date_meeting).getTime(),
   );
 
-const exportExcel = async (event: Activity) => {
+const exportExcel = async (event: Activity, byId: Map<number, User>) => {
   const wb = new Workbook();
   const sheet = wb.addWorksheet("СЗ");
   sheet.addRow([
@@ -69,7 +69,8 @@ const exportExcel = async (event: Activity) => {
     null,
     null,
   ]);
-  for (const [i, p] of event.participants.entries()) {
+  for (const [i, pId] of event.participants.entries()) {
+    const p = byId.get(pId.user_id)!;
     const names = p.full_name.split(/\s+/);
     sheet.addRow([
       i + 1,
@@ -310,25 +311,22 @@ const EventCard = (props: {
   const api = useAPI();
   const event = props.value;
 
-  // event.participants comes back with unreliable id/created_at (backend TODO in
-  // db/Activities.go ToRead()) — resolve each row via user_tg_id against the
-  // canonical user list instead of trusting participant.id directly.
-  const byTgId = useMemo(
-    () => new Map(props.allUsers.map((u) => [u.user_tg_id, u])),
+  const byId = useMemo(
+    () => new Map(props.allUsers.map((u) => [u.id, u])),
     [props.allUsers],
   );
 
   const participants = useMemo(() => {
     const result: User[] = [];
     for (const raw of event.participants) {
-      const user = byTgId.get(raw.user_tg_id);
+      const user = byId.get(raw.user_id);
       if (user) result.push(user);
     }
     return result;
-  }, [event.participants, byTgId]);
+  }, [event.participants, byId]);
 
-  const participantTgIds = useMemo(
-    () => new Set(participants.map((u) => u.user_tg_id)),
+  const participantIds = useMemo(
+    () => new Set(participants.map((u) => u.id)),
     [participants],
   );
 
@@ -338,9 +336,9 @@ const EventCard = (props: {
   const participantSearchResults = useMemo(() => {
     if (participantSearch.trim().length === 0) return [];
     return searchUsers(props.allUsers, participantSearch)
-      .filter((u) => !participantTgIds.has(u.user_tg_id))
+      .filter((u) => !participantIds.has(u.user_tg_id))
       .slice(0, 8);
-  }, [props.allUsers, participantSearch, participantTgIds]);
+  }, [props.allUsers, participantSearch, participantIds]);
 
   const addParticipant = async (user: User) => {
     try {
@@ -465,7 +463,7 @@ const EventCard = (props: {
         )}
         <EventEditDialog {...props} />
         <DownloadTrigger
-          data={() => exportExcel(event)}
+          data={() => exportExcel(event, byId)}
           fileName="СЗ.xlsx"
           mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           asChild
