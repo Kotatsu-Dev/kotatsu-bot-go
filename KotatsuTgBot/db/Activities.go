@@ -3,7 +3,7 @@ package db
 import (
 
 	//Внутренние пакеты проекта
-	"fmt"
+
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
@@ -229,68 +229,6 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	}
 
 	db.Save(&activity)
-	return DB_ANSWER_SUCCESS
-}
-
-func DB_UPDATE_Activity_ADD_Participants(activity_id uint, user_id uint) int {
-	db := DB_Database()
-
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-
-	var activity Activity
-
-	db.First(&activity, activity_id)
-	if activity.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	var user User
-	db.First(&user, user_id)
-	if user.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	db.Model(&activity).Association("Participants").Append(&user)
-	return DB_ANSWER_SUCCESS
-}
-
-func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
-	db := DB_Database()
-
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-
-	var activity Activity
-
-	db.Preload("Participants").First(&activity, activity_id)
-	if activity.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	var user User
-	db.First(&user, user_id)
-	if user.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	fmt.Println(user)
-	fmt.Println(activity)
-
-	userIndex := -1
-	for i, participant := range activity.Participants {
-		if participant.UserID == user.ID {
-			userIndex = i
-			break
-		}
-	}
-
-	if userIndex == -1 {
-		return DB_ANSWER_OBJECT_EXISTS
-	}
-
-	db.Model(&activity).Association("Participants").Delete(user)
-
 	return DB_ANSWER_SUCCESS
 }
 

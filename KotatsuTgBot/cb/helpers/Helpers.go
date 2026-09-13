@@ -429,14 +429,14 @@ func GetActivityByID(id uint) ChainedExecutor[*db.Activity_ReadJSON] {
 
 func AddParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
-		code := db.DB_UPDATE_Activity_ADD_Participants(activity.ID, user.ID)
+		code := db.DB_CREATE_UserActivity(&db.UserActivity_CreateJSON{ActivityID: activity.ID, UserID: user.ID})
 		return activity, code == db.DB_ANSWER_SUCCESS
 	})
 }
 
 func RemoveParticipant(activity *db.Activity_ReadJSON, user *db.User_ReadJSON) ChainedExecutor[*db.Activity_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.Activity_ReadJSON, bool) {
-		code := db.DB_UPDATE_Activity_REMOVE_Participant(activity.ID, user.ID)
+		code := db.DB_DELETE_UserActivity(activity.ID, user.ID)
 		return activity, code == db.DB_ANSWER_SUCCESS
 	})
 }

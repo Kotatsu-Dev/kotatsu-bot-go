@@ -3,6 +3,7 @@ package db
 import (
 	//Внутренние пакеты проекта
 
+	"fmt"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/rr_debug"
 
@@ -179,6 +180,8 @@ func DB_GET_User_BY_UserTgID(user_tg_id int64) (int, *User_ReadJSON) {
 	if user.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
+	fmt.Println(user)
+	fmt.Println(user.MyActivities)
 
 	return DB_ANSWER_SUCCESS, user.ToRead()
 }

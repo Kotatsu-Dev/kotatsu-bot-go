@@ -31,6 +31,7 @@ func DB_Init() {
 	db.AutoMigrate(&Activity{})
 	db.AutoMigrate(&AnimeRoulette{})
 	db.AutoMigrate(&Request{})
+	db.AutoMigrate(&UserActivity{})
 }
 
 // Функция коннекта к базе данных

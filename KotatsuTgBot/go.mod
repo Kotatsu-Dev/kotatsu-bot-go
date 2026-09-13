@@ -5,7 +5,6 @@ go 1.23.0
 toolchain go1.23.6
 
 require (
-	github.com/fogleman/gg v1.3.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-telegram/bot v1.14.0
 	gorm.io/driver/postgres v1.5.11
@@ -37,7 +36,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.26.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.5.5 // indirect
@@ -58,7 +56,6 @@ require (
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	golang.org/x/arch v0.18.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
-	golang.org/x/image v0.24.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect

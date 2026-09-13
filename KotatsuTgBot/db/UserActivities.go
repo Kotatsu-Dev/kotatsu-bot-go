@@ -1,7 +1,6 @@
 package db
 
 import (
-	//Внутренние пакеты проекта
 	"rr/kotatsutgbot/rr_debug"
 )
 
@@ -59,8 +58,8 @@ func DB_CREATE_UserActivity(user_activity_to_add *UserActivity_CreateJSON) int {
 	}
 
 	var user_activity UserActivity
-	result := db.Where("user_id = ? AND activity_id = ?", user_activity_to_add.UserID, user_activity_to_add.ActivityID).First(&user_activity)
-	if result.RowsAffected != 0 {
+	db.Where("user_id = ? AND activity_id = ?", user_activity_to_add.UserID, user_activity_to_add.ActivityID).First(&user_activity)
+	if user_activity.UserID != 0 {
 		return DB_ANSWER_OBJECT_EXISTS
 	}
 
