@@ -12,22 +12,17 @@
 package routes
 
 import (
-
-	//Внутренние пакеты проекта
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/rr_debug"
 
-	//Сторонние библиотеки
 	"github.com/gin-gonic/gin"
 
-	//Системные пакеты
 	"time"
 )
 
 // Получить все рулетки
 func Handler_API_AnimeRoulettes_GetList(c *gin.Context) {
-
 	list_anime_roulette := db.DB_GET_AnimeRoulettes()
 	answer := GetList_AnimeRoulettes_Answer{
 		ListAnimeRoulettes: list_anime_roulette,
@@ -36,9 +31,7 @@ func Handler_API_AnimeRoulettes_GetList(c *gin.Context) {
 	Answer_SendObject(c, answer)
 }
 
-// Получить активную рулетку
 func Handler_API_AnimeRoulettes_GetActive(c *gin.Context) {
-
 	db_answer_code, current_anime_roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
 
 	switch db_answer_code {
@@ -56,13 +49,10 @@ func Handler_API_AnimeRoulettes_GetActive(c *gin.Context) {
 	}
 }
 
-// Создать рулетку
 func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
-
 	json_data := new(Create_AnimeRoulettes)
 	err := c.ShouldBindJSON(&json_data)
 
-	//Проверка, JSON пришел или шляпа
 	if err != nil {
 		rr_debug.PrintLOG("api_anime_roulettes.go", "Handler_API_AnimeRoulettes_CreateObject", "c.ShouldBindJSON", "Неверные данные в запросе", err.Error())
 		if config.GetConfig().CONFIG_IS_DEBUG {
@@ -79,12 +69,9 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 		return
 	}
 
-	// Формат строки даты и времени
-
 	var start_date, announce_date, distribution_date, end_date time.Time
 
 	for index, stage := range json_data.Stages {
-		// Парсим строку в time.Time
 		end_date_stage, err_time := time.Parse(time.RFC3339, stage.EndDate)
 		if err_time != nil {
 			rr_debug.PrintLOG("api_anime_roulettes.go", "Handler_API_AnimeRoulettes_CreateObject", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
@@ -127,7 +114,6 @@ func Handler_API_AnimeRoulettes_CreateObject(c *gin.Context) {
 	}
 }
 
-// Обновить данные рулетки
 func Handler_API_AnimeRoulettes_UpdateObject(c *gin.Context) {
 	var update_json map[string]interface{}
 
@@ -161,9 +147,7 @@ func Handler_API_AnimeRoulettes_UpdateObject(c *gin.Context) {
 	}
 }
 
-// Удалить рулетки
 func Handler_API_AnimeRoulettes_DeleteObject_ALL(c *gin.Context) {
-
 	db_answer_code := db.DB_DELETE_AnimeRoulettes()
 	switch db_answer_code {
 	case db.DB_ANSWER_SUCCESS:
