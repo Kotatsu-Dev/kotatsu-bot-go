@@ -34,21 +34,13 @@ func StartCron(b *bot.Bot) {
 }
 
 func check_roulette(b *bot.Bot) {
-	db_answer_code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
-
 	now := time.Now()
 	a_hour_ago := now.Add(-1 * time.Minute)
 
-	if db_answer_code != db.DB_ANSWER_SUCCESS {
-		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
-		db_answer_code, roulette = db.DB_GET_AnimeRoulette_BY_Status(false)
-		if db_answer_code != db.DB_ANSWER_SUCCESS {
-			rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Точно нет", "")
-			return
-		}
-		if roulette.EndDate.After(a_hour_ago) && roulette.EndDate.Before(now) {
+	if db_answer_code, ended := db.DB_GET_AnimeRoulette_BY_Status(false); db_answer_code == db.DB_ANSWER_SUCCESS {
+		if ended.EndDate.After(a_hour_ago) && ended.EndDate.Before(now) {
 			rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рулетка закончилась", "")
-			for _, member := range roulette.Participants {
+			for _, member := range ended.Participants {
 				params := &bot.SendMessageParams{
 					ChatID: member.UserTgID,
 					Text:   config.T("roulette.messages.ended"),
@@ -57,6 +49,11 @@ func check_roulette(b *bot.Bot) {
 				b.SendMessage(context.TODO(), params)
 			}
 		}
+	}
+
+	db_answer_code, roulette := db.DB_GET_AnimeRoulette_BY_Status(true)
+	if db_answer_code != db.DB_ANSWER_SUCCESS {
+		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Нет рулетки", "")
 		return
 	}
 
@@ -72,14 +69,17 @@ func check_roulette(b *bot.Bot) {
 		}
 	} else if roulette.DistributionDate.After(a_hour_ago) && roulette.DistributionDate.Before(now) {
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Сбор названий закончился", "")
-		distr := rand.Perm(len(roulette.Participants))
-		distr32 := make([]int32, len(distr))
-		for i := range distr {
-			distr32[i] = int32(distr[i])
+		shuffled := make([]db.User_ReadJSON, len(roulette.Participants))
+		copy(shuffled, roulette.Participants)
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+		distr32 := make([]int32, len(shuffled))
+		for i, member := range shuffled {
+			distr32[i] = int32(member.ID)
 		}
 
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Перемудрили участников", "")
-		res := db.DB_UPDATE_AnimeRoulette_SET_Distribution(distr32)
+		res := db.DB_UPDATE_AnimeRoulette_SET_Distribution(roulette.ID, distr32)
 
 		if res != db.DB_ANSWER_SUCCESS {
 			rr_debug.PrintLOG("cron.go", "check_roulette", "ERROR", "Ошибка сохранения рулетки", fmt.Sprint(res))
@@ -87,9 +87,8 @@ func check_roulette(b *bot.Bot) {
 		}
 
 		rr_debug.PrintLOG("cron.go", "check_roulette", "INFO", "Рассылаем приглашения", "")
-		for _, j := range distr {
-			member := roulette.Participants[j]
-			next := roulette.Participants[distr[(j+1)%len(distr)]]
+		for i, member := range shuffled {
+			next := shuffled[(i+1)%len(shuffled)]
 			params := &bot.SendMessageParams{
 				ChatID: member.UserTgID,
 				Text:   config.TT("roulette.messages.selection_ended", next),

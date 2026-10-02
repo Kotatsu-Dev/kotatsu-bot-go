@@ -25,7 +25,7 @@ type AnimeRoulette struct {
 	EndDate          time.Time      `json:"end_date"`                                                                     // Дата окончания
 	Theme            string         `json:"theme"`                                                                        // Тема рулетки
 	Participants     []User         `json:"participants" gorm:"foreignKey:AnimeRouletteID;constraint:OnDelete:SET NULL;"` // Участники рулетки
-	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"`                                           // Распределение участников
+	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"`                                           // Распределение участников: ID пользователей по кругу, каждый получает тайтл следующего
 }
 
 type RouletteStages []RouletteStage
@@ -68,17 +68,26 @@ type AnimeRoulette_ReadJSON struct {
 	Distribution     *pq.Int32Array  `json:"distribution"`
 }
 
-func RequestToReadJson(req *Request) (res *Request_ReadJSON) {
-	if req != nil {
-		res = &Request_ReadJSON{
-			ID:        req.ID,
-			CreatedAt: req.CreatedAt,
-			Type:      req.Type,
-			Status:    req.Status,
-			UserID:    req.UserID,
-		}
+func (roulette *AnimeRoulette) ToRead() *AnimeRoulette_ReadJSON {
+	return &AnimeRoulette_ReadJSON{
+		ID:               roulette.ID,
+		CreatedAt:        roulette.CreatedAt,
+		Theme:            roulette.Theme,
+		StartDate:        roulette.StartDate,
+		AnnounceDate:     roulette.AnnounceDate,
+		DistributionDate: roulette.DistributionDate,
+		EndDate:          roulette.EndDate,
+		Participants:     UserToReadSlice(roulette.Participants),
+		Distribution:     roulette.Distribution,
 	}
-	return
+}
+
+func RouletteToReadSlice(roulettes []AnimeRoulette) []AnimeRoulette_ReadJSON {
+	res := make([]AnimeRoulette_ReadJSON, len(roulettes))
+	for i, roulette := range roulettes {
+		res[i] = *roulette.ToRead()
+	}
+	return res
 }
 
 // Добавить аниме рулетку
@@ -123,21 +132,9 @@ func DB_GET_AnimeRoulette_BY_Theme(theme string) (int, *AnimeRoulette_ReadJSON) 
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	anime_roulette_read := AnimeRoulette_ReadJSON{
-		ID:               anime_roulette.ID,
-		CreatedAt:        anime_roulette.CreatedAt,
-		Theme:            anime_roulette.Theme,
-		StartDate:        anime_roulette.StartDate,
-		AnnounceDate:     anime_roulette.AnnounceDate,
-		DistributionDate: anime_roulette.DistributionDate,
-		EndDate:          anime_roulette.EndDate,
-		Participants:     UserToReadSlice(anime_roulette.Participants),
-	}
-
-	return DB_ANSWER_SUCCESS, &anime_roulette_read
+	return DB_ANSWER_SUCCESS, anime_roulette.ToRead()
 }
 
-// Получить аниме рулетку по Status
 func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) {
 
 	db := DB_Database()
@@ -150,24 +147,14 @@ func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) 
 	if status {
 		db.Preload("Participants").Where("start_date < ?", now).Where("end_date > ?", now).First(&anime_roulette)
 	} else {
-		db.Preload("Participants").Where("start_date > ?", now).Or(db.Where("end_date < ?", now)).First(&anime_roulette)
+		// Последняя завершившаяся рулетка (будущие рулетки сюда не попадают)
+		db.Preload("Participants").Where("end_date < ?", now).Order("end_date desc").First(&anime_roulette)
 	}
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	anime_roulette_read := AnimeRoulette_ReadJSON{
-		ID:               anime_roulette.ID,
-		CreatedAt:        anime_roulette.CreatedAt,
-		Theme:            anime_roulette.Theme,
-		StartDate:        anime_roulette.StartDate,
-		AnnounceDate:     anime_roulette.AnnounceDate,
-		DistributionDate: anime_roulette.DistributionDate,
-		EndDate:          anime_roulette.EndDate,
-		Participants:     UserToReadSlice(anime_roulette.Participants),
-	}
-
-	return DB_ANSWER_SUCCESS, &anime_roulette_read
+	return DB_ANSWER_SUCCESS, anime_roulette.ToRead()
 }
 
 // Получить список аниме рулеток
@@ -182,27 +169,7 @@ func DB_GET_AnimeRoulettes() []AnimeRoulette_ReadJSON {
 
 	db.Preload("Participants").Find(&anime_roulettes)
 
-	anime_roulettes_list := make([]AnimeRoulette_ReadJSON, 0)
-	if len(anime_roulettes) <= 0 {
-		return anime_roulettes_list
-	}
-
-	for _, anime_roulette := range anime_roulettes {
-
-		current_anime_roulette := AnimeRoulette_ReadJSON{
-			ID:               anime_roulette.ID,
-			CreatedAt:        anime_roulette.CreatedAt,
-			Theme:            anime_roulette.Theme,
-			StartDate:        anime_roulette.StartDate,
-			AnnounceDate:     anime_roulette.AnnounceDate,
-			DistributionDate: anime_roulette.DistributionDate,
-			EndDate:          anime_roulette.EndDate,
-			Participants:     UserToReadSlice(anime_roulette.Participants),
-		}
-		anime_roulettes_list = append(anime_roulettes_list, current_anime_roulette)
-	}
-
-	return anime_roulettes_list
+	return RouletteToReadSlice(anime_roulettes)
 }
 
 func parseDate(value any, field *time.Time) {
@@ -269,7 +236,7 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]any) int {
 	return DB_ANSWER_SUCCESS
 }
 
-func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
+func DB_UPDATE_AnimeRoulette_SET_Distribution(roulette_id uint, distr []int32) int {
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -277,7 +244,7 @@ func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
 
 	var anime_roulette AnimeRoulette
 
-	db.First(&anime_roulette)
+	db.First(&anime_roulette, roulette_id)
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
