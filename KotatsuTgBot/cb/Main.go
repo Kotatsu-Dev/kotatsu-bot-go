@@ -29,7 +29,7 @@ var MAIN = PrivateMessagesGuard(GetCurrentUser().
 			TextGuard("keyboard.leave_roulette", Lazy(roulette.CancelParticipate, user)),
 			TextGuard("keyboard.send_title", Lazy(roulette.AnimeWish, user)),
 			TextGuard("keyboard.roulette_rules", Lazy0(roulette.Rules)),
-			TextGuard("keyboard.roulette_theme", Lazy0(roulette.MainTheme)),
+			TextGuard("keyboard.roulette_theme", Lazy(roulette.MainTheme, user)),
 			TextGuard("keyboard.roulette_list", Lazy(roulette.LinkMyList, user)),
 			TextGuard("keyboard.my_events", Lazy(MyActivities, user)),
 			TextGuard("keyboard.not_my_number", Lazy(NoPhoneNumber, user)),

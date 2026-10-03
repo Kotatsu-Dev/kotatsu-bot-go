@@ -13,18 +13,6 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func MainMenuKeyboard(user *db.User_ReadJSON) models.ReplyMarkup {
-	return ITE(
-		user.IsClubMember,
-		keyboards.Keyboard_MainMenuButtonsClubMember,
-		keyboards.Keyboard_MainMenuButtonsDefault,
-	)
-}
-
-func SendMainMenu(user *db.User_ReadJSON) Executor {
-	return SendMessageM("main_menu", MainMenuKeyboard(user))
-}
-
 func Start() Executor {
 	return GetCurrentUser().
 		Then(func(user *db.User_ReadJSON) Executor {

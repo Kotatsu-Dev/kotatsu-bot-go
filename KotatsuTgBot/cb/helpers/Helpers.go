@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
+	"rr/kotatsutgbot/keyboards"
 	"rr/kotatsutgbot/rr_debug"
 	"strconv"
 	"strings"
@@ -700,4 +701,16 @@ func If(cond bool, then, otherwise Executor) Executor {
 		return then
 	}
 	return otherwise
+}
+
+func MainMenuKeyboard(user *db.User_ReadJSON) models.ReplyMarkup {
+	return ITE(
+		user.IsClubMember,
+		keyboards.Keyboard_MainMenuButtonsClubMember,
+		keyboards.Keyboard_MainMenuButtonsDefault,
+	)
+}
+
+func SendMainMenu(user *db.User_ReadJSON) Executor {
+	return SendMessageM("main_menu", MainMenuKeyboard(user))
 }

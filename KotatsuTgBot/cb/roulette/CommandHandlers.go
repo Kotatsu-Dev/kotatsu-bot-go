@@ -16,9 +16,12 @@ func check_is_participant(user *db.User_ReadJSON, roulette *db.AnimeRoulette_Rea
 	return false
 }
 
-func RouletteInactive() Executor {
-	return SendMessageM(
-		"roulette.inactive", nil,
+func RouletteInactive(user *db.User_ReadJSON) Executor {
+	return Do(
+		SendMessageM(
+			"roulette.inactive", nil,
+		),
+		SendMainMenu(user),
 	)
 }
 
@@ -74,7 +77,7 @@ func Main(user *db.User_ReadJSON) Executor {
 				OngoingMenu(is_participant),
 			)
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }
 
 func Participate(user *db.User_ReadJSON) Executor {
@@ -93,7 +96,7 @@ func Participate(user *db.User_ReadJSON) Executor {
 				RegistrationEnd(),
 			)
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }
 
 func CancelParticipate(user *db.User_ReadJSON) Executor {
@@ -110,7 +113,7 @@ func CancelParticipate(user *db.User_ReadJSON) Executor {
 				return NotParticipant()
 			}
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }
 
 func AnimeWish(user *db.User_ReadJSON) Executor {
@@ -131,7 +134,7 @@ func AnimeWish(user *db.User_ReadJSON) Executor {
 				RouletteEnded(),
 			)
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }
 
 func LinkMyList(user *db.User_ReadJSON) Executor {
@@ -155,7 +158,7 @@ func LinkMyList(user *db.User_ReadJSON) Executor {
 				NotParticipant(),
 			)
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }
 
 func Rules() Executor {
@@ -164,7 +167,7 @@ func Rules() Executor {
 	)
 }
 
-func MainTheme() Executor {
+func MainTheme(user *db.User_ReadJSON) Executor {
 	return GetActiveRoulette().
 		Then(func(roulette *db.AnimeRoulette_ReadJSON) Executor {
 			return FirstMatch(
@@ -182,5 +185,5 @@ func MainTheme() Executor {
 				RegistrationEnd(),
 			)
 		}).
-		Otherwise(RouletteInactive())
+		Otherwise(RouletteInactive(user))
 }

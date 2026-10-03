@@ -36,8 +36,7 @@ func EnterEnigmaticTitle(user *db.User_ReadJSON) Executor {
 					)),
 					RouletteEnded(),
 				)
-			}).
-			Otherwise(RouletteInactive()),
+			}),
 		Main(user),
 	)
 }
@@ -65,8 +64,7 @@ func EnterLinkMyAnimeList(user *db.User_ReadJSON) Executor {
 						)),
 					NotParticipant(),
 				)
-			}).
-			Otherwise(RouletteInactive()),
+			}),
 		Main(user),
 	)
 }
