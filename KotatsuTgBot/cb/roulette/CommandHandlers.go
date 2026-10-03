@@ -89,6 +89,9 @@ func Participate(user *db.User_ReadJSON) Executor {
 			return FirstMatch(
 				RouletteStateGuard(roulette, RouletteStateRegistration, Do(
 					AddRouletteParticipant(user),
+					UpdateUser(user, map[string]any{
+						"enigmatic_title": "",
+					}),
 					SendMessageM(
 						"roulette.registered", keyboards.CreateKeyboard_AnimeRouletteStart(true),
 					),
