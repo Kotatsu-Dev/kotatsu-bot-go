@@ -25,7 +25,7 @@ type AnimeRoulette struct {
 	EndDate          time.Time      `json:"end_date"`                                                                     // Дата окончания
 	Theme            string         `json:"theme"`                                                                        // Тема рулетки
 	Participants     []User         `json:"participants" gorm:"foreignKey:AnimeRouletteID;constraint:OnDelete:SET NULL;"` // Участники рулетки
-	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"`                                           // Распределение участников
+	Distribution     *pq.Int32Array `json:"distribution" gorm:"type:integer[]"`                                           // Распределение участников: ID пользователей по кругу, каждый получает тайтл следующего
 }
 
 type RouletteStages []RouletteStage
@@ -68,46 +68,26 @@ type AnimeRoulette_ReadJSON struct {
 	Distribution     *pq.Int32Array  `json:"distribution"`
 }
 
-func RequestToReadJson(req *Request) (res *Request_ReadJSON) {
-	if req != nil {
-		res = &Request_ReadJSON{
-			ID:        req.ID,
-			CreatedAt: req.CreatedAt,
-			Type:      req.Type,
-			Status:    req.Status,
-			UserID:    req.UserID,
-		}
+func (roulette *AnimeRoulette) ToRead() *AnimeRoulette_ReadJSON {
+	return &AnimeRoulette_ReadJSON{
+		ID:               roulette.ID,
+		CreatedAt:        roulette.CreatedAt,
+		Theme:            roulette.Theme,
+		StartDate:        roulette.StartDate,
+		AnnounceDate:     roulette.AnnounceDate,
+		DistributionDate: roulette.DistributionDate,
+		EndDate:          roulette.EndDate,
+		Participants:     UserToReadSlice(roulette.Participants),
+		Distribution:     roulette.Distribution,
 	}
-	return
 }
 
-func ParticipantsToReadJson(participants []User) (res []User_ReadJSON) {
-	for _, user := range participants {
-		res = append(res, User_ReadJSON{
-			ID:                    user.ID,
-			CreatedAt:             user.CreatedAt,
-			Step:                  user.Step,
-			UserTgID:              user.UserTgID,
-			LastMessageID:         user.LastMessageID,
-			UserName:              user.UserName,
-			FullTgName:            user.FullTgName,
-			ISU:                   user.ISU,
-			FullName:              user.FullName,
-			PhoneNumber:           user.PhoneNumber,
-			SecretCode:            user.SecretCode,
-			IsITMO:                user.IsITMO,
-			IsClubMember:          user.IsClubMember,
-			IsSubscribeNewsletter: user.IsSubscribeNewsletter,
-			IsSentRequest:         user.IsSentRequest,
-			IsFilledData:          user.IsFilledData,
-			TempActivityID:        user.TempActivityID,
-			MyActivities:          user.MyActivities,
-			LinkMyAnimeList:       user.LinkMyAnimeList,
-			MyRequest:             RequestToReadJson(user.MyRequest),
-			EnigmaticTitle:        user.EnigmaticTitle,
-		})
+func RouletteToReadSlice(roulettes []AnimeRoulette) []AnimeRoulette_ReadJSON {
+	res := make([]AnimeRoulette_ReadJSON, len(roulettes))
+	for i, roulette := range roulettes {
+		res[i] = *roulette.ToRead()
 	}
-	return
+	return res
 }
 
 // Добавить аниме рулетку
@@ -152,21 +132,9 @@ func DB_GET_AnimeRoulette_BY_Theme(theme string) (int, *AnimeRoulette_ReadJSON) 
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	anime_roulette_read := AnimeRoulette_ReadJSON{
-		ID:               anime_roulette.ID,
-		CreatedAt:        anime_roulette.CreatedAt,
-		Theme:            anime_roulette.Theme,
-		StartDate:        anime_roulette.StartDate,
-		AnnounceDate:     anime_roulette.AnnounceDate,
-		DistributionDate: anime_roulette.DistributionDate,
-		EndDate:          anime_roulette.EndDate,
-		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
-	}
-
-	return DB_ANSWER_SUCCESS, &anime_roulette_read
+	return DB_ANSWER_SUCCESS, anime_roulette.ToRead()
 }
 
-// Получить аниме рулетку по Status
 func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) {
 
 	db := DB_Database()
@@ -179,24 +147,14 @@ func DB_GET_AnimeRoulette_BY_Status(status bool) (int, *AnimeRoulette_ReadJSON) 
 	if status {
 		db.Preload("Participants").Where("start_date < ?", now).Where("end_date > ?", now).First(&anime_roulette)
 	} else {
-		db.Preload("Participants").Where("start_date > ?", now).Or(db.Where("end_date < ?", now)).First(&anime_roulette)
+		// Последняя завершившаяся рулетка (будущие рулетки сюда не попадают)
+		db.Preload("Participants").Where("end_date < ?", now).Order("end_date desc").First(&anime_roulette)
 	}
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
 
-	anime_roulette_read := AnimeRoulette_ReadJSON{
-		ID:               anime_roulette.ID,
-		CreatedAt:        anime_roulette.CreatedAt,
-		Theme:            anime_roulette.Theme,
-		StartDate:        anime_roulette.StartDate,
-		AnnounceDate:     anime_roulette.AnnounceDate,
-		DistributionDate: anime_roulette.DistributionDate,
-		EndDate:          anime_roulette.EndDate,
-		Participants:     ParticipantsToReadJson(anime_roulette.Participants),
-	}
-
-	return DB_ANSWER_SUCCESS, &anime_roulette_read
+	return DB_ANSWER_SUCCESS, anime_roulette.ToRead()
 }
 
 // Получить список аниме рулеток
@@ -211,31 +169,21 @@ func DB_GET_AnimeRoulettes() []AnimeRoulette_ReadJSON {
 
 	db.Preload("Participants").Find(&anime_roulettes)
 
-	anime_roulettes_list := make([]AnimeRoulette_ReadJSON, 0)
-	if len(anime_roulettes) <= 0 {
-		return anime_roulettes_list
-	}
-
-	for _, anime_roulette := range anime_roulettes {
-
-		current_anime_roulette := AnimeRoulette_ReadJSON{
-			ID:               anime_roulette.ID,
-			CreatedAt:        anime_roulette.CreatedAt,
-			Theme:            anime_roulette.Theme,
-			StartDate:        anime_roulette.StartDate,
-			AnnounceDate:     anime_roulette.AnnounceDate,
-			DistributionDate: anime_roulette.DistributionDate,
-			EndDate:          anime_roulette.EndDate,
-			Participants:     ParticipantsToReadJson(anime_roulette.Participants),
-		}
-		anime_roulettes_list = append(anime_roulettes_list, current_anime_roulette)
-	}
-
-	return anime_roulettes_list
+	return RouletteToReadSlice(anime_roulettes)
 }
 
-// Обновляем аниме рулетку
-func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
+func parseDate(value any, field *time.Time) {
+	if v, ok := value.(string); ok {
+		v_date, err_time := time.Parse(time.RFC3339, v)
+		if err_time != nil {
+			rr_debug.PrintLOG("AnimeRoulettes.go", "parseDate", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
+		} else {
+			*field = v_date
+		}
+	}
+}
+
+func DB_UPDATE_AnimeRoulette(update_json map[string]any) int {
 
 	db := DB_Database()
 
@@ -244,17 +192,16 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 
 	var anime_roulette AnimeRoulette
 
-	roulette_id, ok := update_json["id"].(int64)
-	if ok {
-		db.First(&anime_roulette, roulette_id)
+	if roulette_id, ok := update_json["id"].(float64); ok {
+		db.First(&anime_roulette, int64(roulette_id))
 	} else {
-		db.First(&anime_roulette)
+		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
+
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	// Обновляем поля, если они присутствуют в карте
 	for key, value := range update_json {
 		switch key {
 		case "status":
@@ -272,46 +219,16 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 			return DB_ANSWER_NOT_SUPPORTED
 
 		case "start_date":
-			if v, ok := value.(string); ok {
-				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(time.RFC3339, v)
-				if err_time != nil {
-					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
-				}
-
-				anime_roulette.StartDate = v_date
-			}
+			parseDate(value, &anime_roulette.StartDate)
 
 		case "announce_date":
-			if v, ok := value.(string); ok {
-				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(time.RFC3339, v)
-				if err_time != nil {
-					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
-				}
+			parseDate(value, &anime_roulette.AnnounceDate)
 
-				anime_roulette.AnnounceDate = v_date
-			}
 		case "distribution_date":
-			if v, ok := value.(string); ok {
-				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(time.RFC3339, v)
-				if err_time != nil {
-					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
-				}
+			parseDate(value, &anime_roulette.DistributionDate)
 
-				anime_roulette.DistributionDate = v_date
-			}
 		case "end_date":
-			if v, ok := value.(string); ok {
-				// Парсим строку в time.Time
-				v_date, err_time := time.Parse(time.RFC3339, v)
-				if err_time != nil {
-					rr_debug.PrintLOG("api_anime_roulettes.go", "DB_UPDATE_AnimeRoulette", "DateMeeting Parse", "Ошибка при парсинге времени", err_time.Error())
-				}
-
-				anime_roulette.EndDate = v_date
-			}
+			parseDate(value, &anime_roulette.EndDate)
 		}
 	}
 
@@ -319,7 +236,7 @@ func DB_UPDATE_AnimeRoulette(update_json map[string]interface{}) int {
 	return DB_ANSWER_SUCCESS
 }
 
-func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
+func DB_UPDATE_AnimeRoulette_SET_Distribution(roulette_id uint, distr []int32) int {
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -327,7 +244,7 @@ func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
 
 	var anime_roulette AnimeRoulette
 
-	db.First(&anime_roulette)
+	db.First(&anime_roulette, roulette_id)
 	if anime_roulette.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
@@ -340,7 +257,6 @@ func DB_UPDATE_AnimeRoulette_SET_Distribution(distr []int32) int {
 
 // Добавляем пользователей в аниме рулетку
 func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
-
 	db := DB_Database()
 
 	sqlDB, _ := db.DB()
@@ -360,7 +276,6 @@ func DB_UPDATE_AnimeRoulette_ADD_Participants(user_id uint) int {
 		return DB_ANSWER_OBJECT_NOT_FOUND
 	}
 
-	// Добавить пользователя в массив Participants
 	res := db.Model(&anime_roulette).Association("Participants").Append(&user)
 	fmt.Println(res)
 	return DB_ANSWER_SUCCESS

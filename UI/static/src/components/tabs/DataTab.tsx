@@ -14,7 +14,7 @@ import {
   Table,
 } from "@chakra-ui/react";
 import { toaster } from "../ui/toaster";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { User } from "@/api/users";
 import type { Activity } from "@/api/activities";
 
@@ -24,15 +24,22 @@ export const DataTab = () => {
   const api = useAPI();
   const [openUsers, setOpenUsers] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [usersType, setUsersType] = useState<"members" | "subscribers">(
-    "members"
+    "members",
   );
   const [openEvents, setOpenEvents] = useState(false);
   const [events, setEvents] = useState<Activity[]>([]);
 
+  const byId = useMemo(
+      () => new Map(allUsers.map((user) => [user.id, user])),
+      [allUsers],
+    );
+
   const loadClubMembers = async () => {
     try {
       const users = await api.users.getAll();
+      setAllUsers(users);
       const clubMembers = users.filter((user) => user.is_club_member);
       if (clubMembers.length <= 0) {
         toaster.error({
@@ -91,7 +98,7 @@ export const DataTab = () => {
     }
   };
 
-  const downloadExcel = async (event: Activity) => {
+  const downloadExcel = async (event: Activity, byId: Map<number, User>) => {
     const wb = new Workbook();
     const sheet = wb.addWorksheet("СЗ");
     sheet.addRow([
@@ -114,7 +121,8 @@ export const DataTab = () => {
       null,
       null,
     ]);
-    for (const [i, p] of event.participants.entries()) {
+    for (const [i, pId] of event.participants.entries()) {
+      const p = byId.get(pId.user_id)!;
       const names = p.full_name.split(/\s+/);
       sheet.addRow([
         i + 1,
@@ -273,7 +281,10 @@ export const DataTab = () => {
                     {users.map((user) => (
                       <Table.Row key={user.id}>
                         <Table.Cell>
-                          <Link target="_blank" href={`https://t.me/${user.user_name}`}>
+                          <Link
+                            target="_blank"
+                            href={`https://t.me/${user.user_name}`}
+                          >
                             @{user.user_name}
                           </Link>
                         </Table.Cell>
@@ -349,7 +360,7 @@ export const DataTab = () => {
                       <Card.Footer>
                         <Button
                           variant={"outline"}
-                          onClick={() => downloadExcel(event)}
+                          onClick={() => downloadExcel(event, byId)}
                         >
                           Download signed up
                         </Button>

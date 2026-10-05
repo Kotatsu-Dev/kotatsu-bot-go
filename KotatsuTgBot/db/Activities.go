@@ -3,7 +3,7 @@ package db
 import (
 
 	//Внутренние пакеты проекта
-	"fmt"
+
 	"rr/kotatsutgbot/rr_debug"
 
 	//Сторонние библиотеки
@@ -18,7 +18,7 @@ import (
 type Activity struct {
 	gorm.Model
 	Title                  string         `json:"title"`
-	Participants           []*User        `json:"participants" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"`
+	Participants           []UserActivity `json:"participants" gorm:"constraint:OnDelete:CASCADE;"`
 	DateMeeting            time.Time      `json:"date_meeting"`
 	GuestRegistrationUntil *time.Time     `json:"guest_registration_until"`
 	Description            string         `json:"description"`
@@ -37,16 +37,16 @@ type Activity_CreateJSON struct {
 }
 
 type Activity_ReadJSON struct {
-	ID                     uint       `json:"id"`
-	CreatedAt              time.Time  `json:"created_at"`
-	Title                  string     `json:"title"`
-	Participants           []*User    `json:"participants"`
-	DateMeeting            time.Time  `json:"date_meeting"`
-	GuestRegistrationUntil *time.Time `json:"guest_registration_until"`
-	Description            string     `json:"description"`
-	Location               string     `json:"location"`
-	PathsImages            []string   `json:"paths_images"`
-	Status                 bool       `json:"status"`
+	ID                     uint                    `json:"id"`
+	CreatedAt              time.Time               `json:"created_at"`
+	Title                  string                  `json:"title"`
+	Participants           []UserActivity_ReadJSON `json:"participants"`
+	DateMeeting            time.Time               `json:"date_meeting"`
+	GuestRegistrationUntil *time.Time              `json:"guest_registration_until"`
+	Description            string                  `json:"description"`
+	Location               string                  `json:"location"`
+	PathsImages            []string                `json:"paths_images"`
+	Status                 bool                    `json:"status"`
 }
 
 func (activity *Activity) ToRead() *Activity_ReadJSON {
@@ -54,10 +54,7 @@ func (activity *Activity) ToRead() *Activity_ReadJSON {
 		ID:                     activity.ID,
 		CreatedAt:              activity.CreatedAt,
 		Title:                  activity.Title,
-		// TODO: participants copied raw ([]*User), not converted to User_ReadJSON like
-		// AnimeRoulette_ReadJSON does via ParticipantsToReadJson — id/created_at/etc
-		// serialize capitalized (gorm.Model has no json tag override), unreliable on the wire.
-		Participants:           activity.Participants,
+		Participants:           UserActivityToReadSlice(activity.Participants),
 		DateMeeting:            activity.DateMeeting,
 		GuestRegistrationUntil: activity.GuestRegistrationUntil,
 		Description:            activity.Description,
@@ -144,6 +141,35 @@ func DB_GET_Activities() []Activity_ReadJSON {
 	return ActivityToReadSlice(activities)
 }
 
+func DB_GET_Active_Activities() []Activity_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var activities []Activity
+
+	db.Preload("Participants").Find(&activities, "status = ? AND date_meeting > ?", true, time.Now())
+
+	return ActivityToReadSlice(activities)
+}
+
+func DB_GET_User_Active_Activities(user_id uint) []Activity_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var activities []Activity
+	user := User{Model: gorm.Model{ID: user_id}}
+
+	db.Model(&user).
+		Association("MyActivities").
+		Find(&activities, "status = ? AND date_meeting > ?", true, time.Now())
+
+	return ActivityToReadSlice(activities)
+}
+
 func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	db := DB_Database()
 
@@ -203,68 +229,6 @@ func DB_UPDATE_Activity(update_json map[string]interface{}) int {
 	}
 
 	db.Save(&activity)
-	return DB_ANSWER_SUCCESS
-}
-
-func DB_UPDATE_Activity_ADD_Participants(activity_id uint, user_id uint) int {
-	db := DB_Database()
-
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-
-	var activity Activity
-
-	db.First(&activity, activity_id)
-	if activity.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	var user User
-	db.First(&user, user_id)
-	if user.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	db.Model(&activity).Association("Participants").Append(&user)
-	return DB_ANSWER_SUCCESS
-}
-
-func DB_UPDATE_Activity_REMOVE_Participant(activity_id uint, user_id uint) int {
-	db := DB_Database()
-
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
-
-	var activity Activity
-
-	db.Preload("Participants").First(&activity, activity_id)
-	if activity.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	var user User
-	db.First(&user, user_id)
-	if user.ID == 0 {
-		return DB_ANSWER_OBJECT_NOT_FOUND
-	}
-
-	fmt.Println(user)
-	fmt.Println(activity)
-
-	userIndex := -1
-	for i, participant := range activity.Participants {
-		if participant.ID == user.ID {
-			userIndex = i
-			break
-		}
-	}
-
-	if userIndex == -1 {
-		return DB_ANSWER_OBJECT_EXISTS
-	}
-
-	db.Model(&activity).Association("Participants").Delete(user)
-
 	return DB_ANSWER_SUCCESS
 }
 

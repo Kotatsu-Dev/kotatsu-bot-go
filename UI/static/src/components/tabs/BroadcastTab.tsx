@@ -141,8 +141,8 @@ export const BroadcastTab = () => {
     loadUsers();
   }, []);
 
-  const byTgId = useMemo(
-    () => new Map(allUsers.map((user) => [user.user_tg_id, user])),
+  const byId = useMemo(
+    () => new Map(allUsers.map((user) => [user.id, user])),
     [allUsers],
   );
 
@@ -229,7 +229,7 @@ export const BroadcastTab = () => {
         const event = allEvents.find((e) => e.id === eventId);
         if (!event) continue;
         for (const participant of event.participants) {
-          const user = byTgId.get(participant.user_tg_id);
+          const user = byId.get(participant.user_id);
           if (user && !seen.has(user.user_tg_id)) {
             seen.add(user.user_tg_id);
             base.push(user);
@@ -241,7 +241,7 @@ export const BroadcastTab = () => {
         const roulette = allRoulettes.find((r) => r.id === rouletteId);
         if (!roulette?.participants) continue;
         for (const participant of roulette.participants) {
-          const user = byTgId.get(participant.user_tg_id) ?? participant;
+          const user = byId.get(participant.user_tg_id) ?? participant;
           if (!seen.has(user.user_tg_id)) {
             seen.add(user.user_tg_id);
             base.push(user);
@@ -291,13 +291,13 @@ export const BroadcastTab = () => {
     });
 
     for (const tgId of manualTgIds) {
-      const user = byTgId.get(tgId);
+      const user = byId.get(tgId);
       if (user) include(user, "Manually added");
     }
 
     return Array.from(map.values());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rules, manualTgIds, excludedTgIds, allEvents, allRoulettes, allUsers, byTgId]);
+  }, [rules, manualTgIds, excludedTgIds, allEvents, allRoulettes, allUsers, byId]);
 
   const recipientTgIds = useMemo(
     () => new Set(recipients.map((r) => r.user.user_tg_id)),

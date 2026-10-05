@@ -78,13 +78,10 @@ export const APIProvider = (props: { children: ReactNode[] | ReactNode }) => {
       if ("error" in result) {
         return;
       }
-      const base = import.meta.env.PROD
-        ? new URL("/", location.toString()).toString().slice(0, -1)
-        : `http://localhost:8006`;
 
       // TODO: Model check
       axios
-        .get(`${base}/api/login`, {
+        .get(`${BASE_URL}/api/login`, {
           headers: {
             Authorization: `Bearer ${result.id_token}`,
           },

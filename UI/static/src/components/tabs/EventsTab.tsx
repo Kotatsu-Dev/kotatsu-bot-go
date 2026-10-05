@@ -2,6 +2,7 @@ import { handleError, useAPI } from "../../api/api";
 import {
   Button,
   Card,
+  Checkbox,
   Clipboard,
   CloseButton,
   Container,
@@ -46,7 +47,7 @@ const sortByDateDesc = (list: Activity[]) =>
       new Date(b.date_meeting).getTime() - new Date(a.date_meeting).getTime(),
   );
 
-const exportExcel = async (event: Activity) => {
+const exportExcel = async (event: Activity, byId: Map<number, User>) => {
   const wb = new Workbook();
   const sheet = wb.addWorksheet("СЗ");
   sheet.addRow([
@@ -69,7 +70,8 @@ const exportExcel = async (event: Activity) => {
     null,
     null,
   ]);
-  for (const [i, p] of event.participants.entries()) {
+  for (const [i, pId] of event.participants.entries()) {
+    const p = byId.get(pId.user_id)!;
     const names = p.full_name.split(/\s+/);
     sheet.addRow([
       i + 1,
@@ -310,27 +312,41 @@ const EventCard = (props: {
   const api = useAPI();
   const event = props.value;
 
-  // event.participants comes back with unreliable id/created_at (backend TODO in
-  // db/Activities.go ToRead()) — resolve each row via user_tg_id against the
-  // canonical user list instead of trusting participant.id directly.
-  const byTgId = useMemo(
-    () => new Map(props.allUsers.map((u) => [u.user_tg_id, u])),
+  const byId = useMemo(
+    () => new Map(props.allUsers.map((u) => [u.id, u])),
     [props.allUsers],
   );
 
   const participants = useMemo(() => {
     const result: User[] = [];
     for (const raw of event.participants) {
-      const user = byTgId.get(raw.user_tg_id);
+      const user = byId.get(raw.user_id);
       if (user) result.push(user);
     }
     return result;
-  }, [event.participants, byTgId]);
+  }, [event.participants, byId]);
 
-  const participantTgIds = useMemo(
-    () => new Set(participants.map((u) => u.user_tg_id)),
+  const participantIds = useMemo(
+    () => new Set(participants.map((u) => u.id)),
     [participants],
   );
+
+  const visitedByUserId = useMemo(
+    () =>
+      new Map(
+        event.participants.map((raw) => [raw.user_id, raw.visited ?? false]),
+      ),
+    [event.participants],
+  );
+
+  // Отметки, ещё не подтверждённые ответом сервера
+  const [visitedOverrides, setVisitedOverrides] = useState(
+    new Map<number, boolean>(),
+  );
+
+  useEffect(() => {
+    setVisitedOverrides(new Map());
+  }, [event.participants]);
 
   const [participantSearchInput, setParticipantSearchInput] = useState("");
   const [participantSearch, setParticipantSearch] = useDebounceValue("", 500);
@@ -338,9 +354,9 @@ const EventCard = (props: {
   const participantSearchResults = useMemo(() => {
     if (participantSearch.trim().length === 0) return [];
     return searchUsers(props.allUsers, participantSearch)
-      .filter((u) => !participantTgIds.has(u.user_tg_id))
+      .filter((u) => !participantIds.has(u.user_tg_id))
       .slice(0, 8);
-  }, [props.allUsers, participantSearch, participantTgIds]);
+  }, [props.allUsers, participantSearch, participantIds]);
 
   const addParticipant = async (user: User) => {
     try {
@@ -366,6 +382,28 @@ const EventCard = (props: {
       toaster.success({ description: "Participant removed" });
       props.reload();
     } catch (e) {
+      handleError(e);
+    }
+  };
+
+  const setParticipantVisited = async (user: User, visited: boolean) => {
+    setVisitedOverrides((prev) => new Map(prev).set(user.id, visited));
+    try {
+      await api.activities.setParticipantVisited({
+        activityId: event.id,
+        userId: user.id,
+        visited,
+      });
+      toaster.success({
+        description: visited ? "Marked as visited" : "Marked as not visited",
+      });
+      props.reload();
+    } catch (e) {
+      setVisitedOverrides((prev) => {
+        const next = new Map(prev);
+        next.delete(user.id);
+        return next;
+      });
       handleError(e);
     }
   };
@@ -465,7 +503,7 @@ const EventCard = (props: {
         )}
         <EventEditDialog {...props} />
         <DownloadTrigger
-          data={() => exportExcel(event)}
+          data={() => exportExcel(event, byId)}
           fileName="СЗ.xlsx"
           mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           asChild
@@ -496,6 +534,7 @@ const EventCard = (props: {
                           <Table.ColumnHeader>Telegram</Table.ColumnHeader>
                           <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
                           <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                          <Table.ColumnHeader>Visited</Table.ColumnHeader>
                           <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
                       </Table.Header>
@@ -523,6 +562,22 @@ const EventCard = (props: {
                               )}
                             </Table.Cell>
                             <Table.Cell>{user.phone_number}</Table.Cell>
+                            <Table.Cell>
+                              <Checkbox.Root
+                                aria-label="Visited"
+                                checked={
+                                  visitedOverrides.get(user.id) ??
+                                  visitedByUserId.get(user.id) ??
+                                  false
+                                }
+                                onCheckedChange={({ checked }) =>
+                                  setParticipantVisited(user, checked === true)
+                                }
+                              >
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                              </Checkbox.Root>
+                            </Table.Cell>
                             <Table.Cell>
                               <IconButton
                                 aria-label="Remove participant"

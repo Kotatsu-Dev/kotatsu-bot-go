@@ -1,11 +1,12 @@
 import type { AxiosInstance } from "axios";
 import z from "zod";
+import { UserActivity } from "./user_activities";
 
 const Activity = z.object({
   id: z.int(),
   created_at: z.iso.datetime({ offset: true }),
   title: z.string(),
-  participants: z.any().array(), // TODO
+  participants: UserActivity.array(),
   date_meeting: z.iso.datetime({ offset: true }),
   guest_registration_until: z.iso.datetime({ offset: true }).or(z.null()),
   description: z.string(),
@@ -76,6 +77,18 @@ export const createActivitiesApi = ($: AxiosInstance) => {
     async removeParticipant(props: { activityId: number; userId: number }) {
       await $.delete("/activities/participants", {
         data: { activity_id: props.activityId, user_id: props.userId },
+      });
+    },
+
+    async setParticipantVisited(props: {
+      activityId: number;
+      userId: number;
+      visited: boolean;
+    }) {
+      await $.post("/activities/participant", {
+        activity_id: props.activityId,
+        user_id: props.userId,
+        visited: props.visited,
       });
     },
   };

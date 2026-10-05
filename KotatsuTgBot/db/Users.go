@@ -3,6 +3,7 @@ package db
 import (
 	//Внутренние пакеты проекта
 
+	"fmt"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/rr_debug"
 
@@ -35,30 +36,30 @@ const (
 
 type User struct {
 	gorm.Model
-	Step                  int         `json:"step"`              // Текущий шаг
-	UserTgID              int64       `json:"user_tg_id"`        // ID пользователя в Телеграм
-	LastMessageID         int         `json:"last_message_id"`   // ID последнего сообщения от бота
-	UserName              string      `json:"user_name"`         // Имя пользователя в Телеграм
-	FullTgName            string      `json:"full_tg_name"`      // Полное имя пользователя в Телеграм
-	Gender                Gender      `json:"gender"`            // Пол пользователя
-	IsVisitedEvents       bool        `json:"is_visited_events"` // Посетил ли пользователь достаточное количество мероприятий
-	ISU                   string      `json:"isu"`               // ИСУ для ИТМО
-	FullName              string      `json:"full_name"`         // Имя пользователя
-	PhoneNumber           string      `json:"phone_number"`      // Номер телефона пользователя
-	SecretCode            string      `json:"secret_code"`       // Секретный код пользователя
-	IsITMO                bool        `json:"is_itmo"`           // Студент ИТМО
-	ITMOStatus            ITMOStatus  `json:"itmo_status"`
-	IsClubMember          bool        `json:"is_club_member"` // Член клуба
-	ClubMemberSince       *time.Time  `json:"club_member_since"`
-	IsSubscribeNewsletter bool        `json:"is_subscribe_newsletter"`                                                     // Подписка на рассылку
-	IsSentRequest         bool        `json:"is_sent_request"`                                                             // Отправлена ли заявка
-	IsFilledData          bool        `json:"is_filled_data"`                                                              // Заполнены ли данные?
-	TempActivityID        int         `json:"temp_activity_id"`                                                            // Временное хранение при записи на мероприятие
-	MyActivities          []*Activity `json:"my_activities" gorm:"many2many:user_activities;constraint:OnDelete:CASCADE;"` // Простой список моих мероприятий
-	LinkMyAnimeList       string      `json:"link_my_anime_list"`                                                          // Мой список аниме
-	MyRequest             *Request    `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	AnimeRouletteID       *uint       `json:"anime_roulette_id"`
-	EnigmaticTitle        string      `json:"enigmatic_title"` // Загаданная тема для аниме рулетки
+	Step                  int            `json:"step"`              // Текущий шаг
+	UserTgID              int64          `json:"user_tg_id"`        // ID пользователя в Телеграм
+	LastMessageID         int            `json:"last_message_id"`   // ID последнего сообщения от бота
+	UserName              string         `json:"user_name"`         // Имя пользователя в Телеграм
+	FullTgName            string         `json:"full_tg_name"`      // Полное имя пользователя в Телеграм
+	Gender                Gender         `json:"gender"`            // Пол пользователя
+	IsVisitedEvents       bool           `json:"is_visited_events"` // Посетил ли пользователь достаточное количество мероприятий
+	ISU                   string         `json:"isu"`               // ИСУ для ИТМО
+	FullName              string         `json:"full_name"`         // Имя пользователя
+	PhoneNumber           string         `json:"phone_number"`      // Номер телефона пользователя
+	SecretCode            string         `json:"secret_code"`       // Секретный код пользователя
+	IsITMO                bool           `json:"is_itmo"`           // Студент ИТМО
+	ITMOStatus            ITMOStatus     `json:"itmo_status"`
+	IsClubMember          bool           `json:"is_club_member"` // Член клуба
+	ClubMemberSince       *time.Time     `json:"club_member_since"`
+	IsSubscribeNewsletter bool           `json:"is_subscribe_newsletter"`                           // Подписка на рассылку
+	IsSentRequest         bool           `json:"is_sent_request"`                                   // Отправлена ли заявка
+	IsFilledData          bool           `json:"is_filled_data"`                                    // Заполнены ли данные?
+	TempActivityID        int            `json:"temp_activity_id"`                                  // Временное хранение при записи на мероприятие
+	MyActivities          []UserActivity `json:"my_activities" gorm:"constraint:OnDelete:CASCADE;"` // Простой список моих мероприятий
+	LinkMyAnimeList       string         `json:"link_my_anime_list"`                                // Мой список аниме
+	MyRequest             *Request       `json:"my_request" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	AnimeRouletteID       *uint          `json:"anime_roulette_id"`
+	EnigmaticTitle        string         `json:"enigmatic_title"` // Загаданная тема для аниме рулетки
 }
 
 type User_CreateJSON struct {
@@ -68,31 +69,31 @@ type User_CreateJSON struct {
 }
 
 type User_ReadJSON struct {
-	ID                    uint              `json:"id"`
-	CreatedAt             time.Time         `json:"created_at"`
-	Step                  int               `json:"step"`
-	UserTgID              int64             `json:"user_tg_id"`
-	LastMessageID         int               `json:"last_message_id"`
-	UserName              string            `json:"user_name"`
-	FullTgName            string            `json:"full_tg_name"`
-	Gender                Gender            `json:"gender"`
-	IsVisitedEvents       bool              `json:"is_visited_events"`
-	ISU                   string            `json:"isu"`
-	FullName              string            `json:"full_name"`
-	PhoneNumber           string            `json:"phone_number"`
-	SecretCode            string            `json:"secret_code"`
-	IsITMO                bool              `json:"is_itmo"`
-	ITMOStatus            ITMOStatus        `json:"itmo_status"`
-	IsClubMember          bool              `json:"is_club_member"`
-	ClubMemberSince       *time.Time        `json:"club_member_since"`
-	IsSubscribeNewsletter bool              `json:"is_subscribe_newsletter"`
-	IsSentRequest         bool              `json:"is_sent_request"`
-	IsFilledData          bool              `json:"is_filled_data"`
-	TempActivityID        int               `json:"temp_activity_id"`
-	MyActivities          []*Activity       `json:"my_activities"`
-	LinkMyAnimeList       string            `json:"link_my_anime_list"`
-	MyRequest             *Request_ReadJSON `json:"my_request"`
-	EnigmaticTitle        string            `json:"enigmatic_title"`
+	ID                    uint                    `json:"id"`
+	CreatedAt             time.Time               `json:"created_at"`
+	Step                  int                     `json:"step"`
+	UserTgID              int64                   `json:"user_tg_id"`
+	LastMessageID         int                     `json:"last_message_id"`
+	UserName              string                  `json:"user_name"`
+	FullTgName            string                  `json:"full_tg_name"`
+	Gender                Gender                  `json:"gender"`
+	IsVisitedEvents       bool                    `json:"is_visited_events"`
+	ISU                   string                  `json:"isu"`
+	FullName              string                  `json:"full_name"`
+	PhoneNumber           string                  `json:"phone_number"`
+	SecretCode            string                  `json:"secret_code"`
+	IsITMO                bool                    `json:"is_itmo"`
+	ITMOStatus            ITMOStatus              `json:"itmo_status"`
+	IsClubMember          bool                    `json:"is_club_member"`
+	ClubMemberSince       *time.Time              `json:"club_member_since"`
+	IsSubscribeNewsletter bool                    `json:"is_subscribe_newsletter"`
+	IsSentRequest         bool                    `json:"is_sent_request"`
+	IsFilledData          bool                    `json:"is_filled_data"`
+	TempActivityID        int                     `json:"temp_activity_id"`
+	MyActivities          []UserActivity_ReadJSON `json:"my_activities"`
+	LinkMyAnimeList       string                  `json:"link_my_anime_list"`
+	MyRequest             *Request_ReadJSON       `json:"my_request"`
+	EnigmaticTitle        string                  `json:"enigmatic_title"`
 }
 
 func (user *User) ToRead() *User_ReadJSON {
@@ -123,7 +124,7 @@ func (user *User) ToRead() *User_ReadJSON {
 		IsSentRequest:         user.IsSentRequest,
 		IsFilledData:          user.IsFilledData,
 		TempActivityID:        user.TempActivityID,
-		MyActivities:          user.MyActivities,
+		MyActivities:          UserActivityToReadSlice(user.MyActivities),
 		LinkMyAnimeList:       user.LinkMyAnimeList,
 		MyRequest:             request,
 		EnigmaticTitle:        user.EnigmaticTitle,
@@ -139,7 +140,7 @@ func UserToReadSlice(users []User) []User_ReadJSON {
 }
 
 // Добавить пользователя
-func DB_CREATE_User(user_to_add *User_CreateJSON) int {
+func DB_CREATE_User(user_to_add *User_CreateJSON) (int, *User_ReadJSON) {
 
 	db := DB_Database()
 
@@ -149,13 +150,13 @@ func DB_CREATE_User(user_to_add *User_CreateJSON) int {
 	var user User
 	db.Where("user_tg_id = ?", user_to_add.UserTgID).First(&user)
 	if user.ID != 0 {
-		return DB_ANSWER_OBJECT_EXISTS
+		return DB_ANSWER_OBJECT_EXISTS, user.ToRead()
 	}
 
 	user = User{
 		UserTgID:              user_to_add.UserTgID,
 		UserName:              user_to_add.UserName,
-		FullTgName:            user.FullTgName,
+		FullTgName:            user_to_add.FullTgName,
 		Step:                  config.STEP_DEFAULT,
 		IsClubMember:          false,
 		IsSubscribeNewsletter: false,
@@ -163,7 +164,7 @@ func DB_CREATE_User(user_to_add *User_CreateJSON) int {
 	}
 
 	db.Save(&user)
-	return DB_ANSWER_SUCCESS
+	return DB_ANSWER_SUCCESS, user.ToRead()
 }
 
 // Получить пользователя по TgID
@@ -179,6 +180,8 @@ func DB_GET_User_BY_UserTgID(user_tg_id int64) (int, *User_ReadJSON) {
 	if user.ID == 0 {
 		return DB_ANSWER_OBJECT_NOT_FOUND, nil
 	}
+	fmt.Println(user)
+	fmt.Println(user.MyActivities)
 
 	return DB_ANSWER_SUCCESS, user.ToRead()
 }
