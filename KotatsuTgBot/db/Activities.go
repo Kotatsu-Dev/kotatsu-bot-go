@@ -161,11 +161,27 @@ func DB_GET_User_Active_Activities(user_id uint) []Activity_ReadJSON {
 	defer sqlDB.Close()
 
 	var activities []Activity
-	user := User{Model: gorm.Model{ID: user_id}}
 
-	db.Model(&user).
-		Association("MyActivities").
-		Find(&activities, "status = ? AND date_meeting > ?", true, time.Now())
+	db.Joins("JOIN user_activities ON user_activities.activity_id = activities.id").
+		Where("user_activities.user_id = ?", user_id).
+		Where("activities.status = ? AND activities.date_meeting > ?", true, time.Now()).
+		Find(&activities)
+
+	return ActivityToReadSlice(activities)
+}
+
+func DB_GET_User_Activities(user_id uint) []Activity_ReadJSON {
+	db := DB_Database()
+
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	var activities []Activity
+
+	db.Joins("JOIN user_activities ON user_activities.activity_id = activities.id").
+		Where("user_activities.user_id = ?", user_id).
+		Order("activities.date_meeting DESC").
+		Find(&activities)
 
 	return ActivityToReadSlice(activities)
 }

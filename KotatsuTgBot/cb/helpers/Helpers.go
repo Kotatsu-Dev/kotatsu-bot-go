@@ -145,6 +145,90 @@ func SendMessageMT(text string, data any, keyboard models.ReplyMarkup) Executor 
 	return SendMessageRawM(config.TT(text, data), keyboard)
 }
 
+type SendRichMessageS struct {
+	chat_id int64
+	blocks  []models.InputRichBlock
+}
+
+func (msg *SendRichMessageS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	_, err := b.SendRichMessage(ctx, &bot.SendRichMessageParams{
+		ChatID:      msg.chat_id,
+		RichMessage: models.InputRichMessage{Blocks: msg.blocks},
+	})
+
+	if err != nil {
+		rr_debug.PrintLOG("Helpers.go", "SendRichMessageS", "bot.SendRichMessage", "Ошибка отправки сообщения", err.Error())
+	}
+
+	return true, err
+}
+
+func SendRichMessage(chat_id int64, blocks ...models.InputRichBlock) Executor {
+	return &SendRichMessageS{chat_id: chat_id, blocks: blocks}
+}
+
+type SendRichMessageMS struct {
+	blocks []models.InputRichBlock
+}
+
+func (msg *SendRichMessageMS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	var chat_id int64
+	if update.Message != nil {
+		chat_id = update.Message.From.ID
+	} else {
+		chat_id = update.CallbackQuery.From.ID
+	}
+	return SendRichMessage(chat_id, msg.blocks...).Execute(ctx, b, update)
+}
+
+func SendRichMessageM(blocks ...models.InputRichBlock) Executor {
+	return &SendRichMessageMS{blocks: blocks}
+}
+
+func Par(text string) models.InputRichBlock {
+	return models.InputRichBlock{
+		Type: models.RichBlockTypeParagraph,
+		InputRichBlockParagraph: &models.InputRichBlockParagraph{
+			Text: models.RichText{PlainText: text},
+		},
+	}
+}
+
+func ParT(text string) models.InputRichBlock {
+	return Par(config.T(text))
+}
+
+func Buttons(buttons ...models.RichMessageButton) models.InputRichBlock {
+	return models.InputRichBlock{
+		Type: models.RichBlockTypeButtons,
+		InputRichBlockButtons: &models.InputRichBlockButtons{
+			Buttons: buttons,
+		},
+	}
+}
+
+// Кнопка с callback_data = query
+func ButtonQ(text, query string) models.RichMessageButton {
+	return models.RichMessageButton{
+		Text:         models.RichText{PlainText: text},
+		CallbackData: query,
+	}
+}
+
+func ButtonQT(text, query string) models.RichMessageButton {
+	return ButtonQ(config.T(text), query)
+}
+
+func ButtonDangerQ(text, query string) models.RichMessageButton {
+	button := ButtonQ(text, query)
+	button.Style = "danger"
+	return button
+}
+
+func ButtonDangerQT(text, query string) models.RichMessageButton {
+	return ButtonDangerQ(config.T(text), query)
+}
+
 type FirstMatchS []Executor
 
 func (fm FirstMatchS) Execute(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
@@ -418,6 +502,12 @@ func GetActiveActivities() ChainedExecutor[[]db.Activity_ReadJSON] {
 func GetUserActiveActivities(user *db.User_ReadJSON) ChainedExecutor[[]db.Activity_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) ([]db.Activity_ReadJSON, bool) {
 		return db.DB_GET_User_Active_Activities(user.ID), true
+	})
+}
+
+func GetUserActivities(user *db.User_ReadJSON) ChainedExecutor[[]db.Activity_ReadJSON] {
+	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) ([]db.Activity_ReadJSON, bool) {
+		return db.DB_GET_User_Activities(user.ID), true
 	})
 }
 

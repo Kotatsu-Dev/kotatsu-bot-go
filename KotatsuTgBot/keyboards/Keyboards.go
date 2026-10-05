@@ -146,16 +146,20 @@ func CreateInlineKbd_MyActivitiesList(my_activities []db.Activity_ReadJSON) *mod
 		k.
 			Row().
 			Data(
-				fmt.Sprintf(
-					"[%s] %s",
-					activity.DateMeeting.In(loc).Format(date_format),
-					activity.Title,
-				),
+				FormatActivityTitle(activity),
 				fmt.Sprintf("MY_ACTIVITIES::%d", activity.ID),
 			)
 	}
 
 	return k.Build()
+}
+
+func FormatActivityTitle(activity db.Activity_ReadJSON) string {
+	return fmt.Sprintf(
+		"[%s] %s",
+		activity.DateMeeting.In(loc).Format(date_format),
+		activity.Title,
+	)
 }
 
 func CreateInlineKbd_SubscribeActivity(activity_id int) *models.InlineKeyboardMarkup {
