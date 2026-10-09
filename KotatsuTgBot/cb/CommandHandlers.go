@@ -2,12 +2,14 @@ package cb
 
 import (
 	"context"
+	"fmt"
 	"io"
 	. "rr/kotatsutgbot/cb/helpers"
 	"rr/kotatsutgbot/config"
 	"rr/kotatsutgbot/db"
 	"rr/kotatsutgbot/keyboards"
 	"rr/kotatsutgbot/rr_debug"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -129,17 +131,27 @@ func LeaveClub(current_user *db.User_ReadJSON) Executor {
 }
 
 func MyActivities(user *db.User_ReadJSON) Executor {
-	return GetUserActiveActivities(user).
+	return GetUserActivities(user).
 		Then(func(activities []db.Activity_ReadJSON) Executor {
-			return If(
-				len(activities) == 0,
-				SendMessageM(
+			if len(activities) == 0 {
+				return SendMessageM(
 					"my_events.empty", nil,
-				),
-				SendMessageM(
-					"my_events.list", keyboards.CreateInlineKbd_MyActivitiesList(activities),
-				),
-			)
+				)
+			}
+			blocks := []models.InputRichBlock{
+				ParT("my_events.list"),
+			}
+			now := time.Now()
+			for _, event := range activities {
+				blocks = append(blocks, Par(keyboards.FormatActivityTitle(event)))
+				if event.DateMeeting.After(now) {
+					blocks = append(blocks, Buttons(
+						ButtonDangerQT("keyboard.cancel_registration",
+							fmt.Sprintf("ACTIVITY_UNSUBSCRIBE::%d", event.ID),
+						)))
+				}
+			}
+			return SendRichMessageM(blocks...)
 		})
 }
 

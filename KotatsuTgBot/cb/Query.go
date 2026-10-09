@@ -150,17 +150,21 @@ func UnsubscribeQuery(user *db.User_ReadJSON) Executor {
 			Then(func(activity_id uint64) Executor {
 				return GetActivityByID(uint(activity_id)).
 					Then(func(activity *db.Activity_ReadJSON) Executor {
-						return RemoveParticipant(activity, user).
-							Then(func(activity *db.Activity_ReadJSON) Executor {
-								return SendMessageMT(
-									"events.unregistered", activity,
-									keyboards.ListEvents,
-								)
-							}).
-							Otherwise(SendMessageM(
-								"events.not_registered",
-								keyboards.ListEvents,
-							))
+						return Do(
+							RemoveParticipant(activity, user).
+								Then(func(activity *db.Activity_ReadJSON) Executor {
+									return SendMessageMT(
+										"events.unregistered", activity,
+										nil,
+									)
+								}).
+								Otherwise(SendMessageM(
+									"events.not_registered",
+									nil,
+								)),
+							UpdateStep(user, config.STEP_DEFAULT),
+							SendMainMenu(user),
+						)
 					})
 			}),
 	)
@@ -183,16 +187,18 @@ func SubscribeQuery(user *db.User_ReadJSON) Executor {
 										UpdateStep(user, config.STEP_DEFAULT),
 										SendMessageMT(
 											"events.registered", activity,
-											keyboards.ListEvents,
+											nil,
 										),
+										SendMainMenu(user),
 									)
 								} else {
 									return Do(
 										UpdateStep(user, config.STEP_DEFAULT),
 										SendMessageM(
 											"events.non_existent",
-											keyboards.ListEvents,
+											nil,
 										),
+										SendMainMenu(user),
 									)
 								}
 							}),
@@ -261,7 +267,10 @@ func ShowActivity(user *db.User_ReadJSON, activity_id uint) Executor {
 						keyboards.CreateInlineKbd_SubscribeActivity(int(activity.ID)),
 					),
 				),
-				UpdateStep(user, config.STEP_ACTIVITY),
+				If(is_participant,
+					UpdateStep(user, config.STEP_DEFAULT),
+					UpdateStep(user, config.STEP_ACTIVITY),
+				),
 			)
 
 		})
