@@ -83,8 +83,8 @@ export const BroadcastTab = () => {
 
   const [rules, setRules] = useState<Rule[]>([]);
   const [ruleBuilderOpen, setRuleBuilderOpen] = useState(true);
-  const [manualTgIds, setManualTgIds] = useState<Set<number>>(new Set());
-  const [excludedTgIds, setExcludedTgIds] = useState<Set<number>>(new Set());
+  const [manualUserIds, setManualUserIds] = useState<Set<number>>(new Set());
+  const [excludedUserIds, setExcludedUserIds] = useState<Set<number>>(new Set());
 
   const [userSearchInput, setUserSearchInput] = useState("");
   const [userSearch, setUserSearch] = useDebounceValue("", 500);
@@ -230,8 +230,8 @@ export const BroadcastTab = () => {
         if (!event) continue;
         for (const participant of event.participants) {
           const user = byId.get(participant.user_id);
-          if (user && !seen.has(user.user_tg_id)) {
-            seen.add(user.user_tg_id);
+          if (user && !seen.has(user.id)) {
+            seen.add(user.id);
             base.push(user);
           }
         }
@@ -241,9 +241,9 @@ export const BroadcastTab = () => {
         const roulette = allRoulettes.find((r) => r.id === rouletteId);
         if (!roulette?.participants) continue;
         for (const participant of roulette.participants) {
-          const user = byId.get(participant.user_tg_id) ?? participant;
-          if (!seen.has(user.user_tg_id)) {
-            seen.add(user.user_tg_id);
+          const user = byId.get(participant.id) ?? participant;
+          if (!seen.has(user.id)) {
+            seen.add(user.id);
             base.push(user);
           }
         }
@@ -273,12 +273,12 @@ export const BroadcastTab = () => {
     const map = new Map<number, { user: User; sources: string[] }>();
 
     const include = (user: User, source: string) => {
-      if (excludedTgIds.has(user.user_tg_id)) return;
-      const existing = map.get(user.user_tg_id);
+      if (excludedUserIds.has(user.id)) return;
+      const existing = map.get(user.id);
       if (existing) {
         if (!existing.sources.includes(source)) existing.sources.push(source);
       } else {
-        map.set(user.user_tg_id, { user, sources: [source] });
+        map.set(user.id, { user, sources: [source] });
       }
     };
 
@@ -290,36 +290,36 @@ export const BroadcastTab = () => {
       for (const user of resolveRuleAudience(rule)) include(user, source);
     });
 
-    for (const tgId of manualTgIds) {
-      const user = byId.get(tgId);
+    for (const userId of manualUserIds) {
+      const user = byId.get(userId);
       if (user) include(user, "Manually added");
     }
 
     return Array.from(map.values());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rules, manualTgIds, excludedTgIds, allEvents, allRoulettes, allUsers, byId]);
+  }, [rules, manualUserIds, excludedUserIds, allEvents, allRoulettes, allUsers, byId]);
 
-  const recipientTgIds = useMemo(
-    () => new Set(recipients.map((r) => r.user.user_tg_id)),
+  const recipientUserIds = useMemo(
+    () => new Set(recipients.map((r) => r.user.id)),
     [recipients],
   );
 
   const addManualUser = (user: User) => {
-    setManualTgIds((prev) => new Set(prev).add(user.user_tg_id));
-    setExcludedTgIds((prev) => {
-      if (!prev.has(user.user_tg_id)) return prev;
+    setManualUserIds((prev) => new Set(prev).add(user.id));
+    setExcludedUserIds((prev) => {
+      if (!prev.has(user.id)) return prev;
       const next = new Set(prev);
-      next.delete(user.user_tg_id);
+      next.delete(user.id);
       return next;
     });
   };
 
-  const removeRecipient = (tgId: number) => {
-    setExcludedTgIds((prev) => new Set(prev).add(tgId));
-    setManualTgIds((prev) => {
-      if (!prev.has(tgId)) return prev;
+  const removeRecipient = (userId: number) => {
+    setExcludedUserIds((prev) => new Set(prev).add(userId));
+    setManualUserIds((prev) => {
+      if (!prev.has(userId)) return prev;
       const next = new Set(prev);
-      next.delete(tgId);
+      next.delete(userId);
       return next;
     });
   };
@@ -327,9 +327,9 @@ export const BroadcastTab = () => {
   const userSearchResults = useMemo(() => {
     if (userSearch.trim().length === 0) return [];
     return searchUsers(allUsers, userSearch)
-      .filter((user) => !recipientTgIds.has(user.user_tg_id))
+      .filter((user) => !recipientUserIds.has(user.id))
       .slice(0, 8);
-  }, [allUsers, userSearch, recipientTgIds]);
+  }, [allUsers, userSearch, recipientUserIds]);
 
   const handleSend = async () => {
     try {
@@ -350,8 +350,8 @@ export const BroadcastTab = () => {
       });
 
       setRules([]);
-      setManualTgIds(new Set());
-      setExcludedTgIds(new Set());
+      setManualUserIds(new Set());
+      setExcludedUserIds(new Set());
       setMessage("");
       setRuleBuilderOpen(true);
     } catch (error) {
@@ -636,7 +636,7 @@ export const BroadcastTab = () => {
                   </Table.Header>
                   <Table.Body>
                     {recipients.map(({ user, sources }) => (
-                      <Table.Row key={user.user_tg_id}>
+                      <Table.Row key={user.id}>
                         <Table.Cell>{displayName(user)}</Table.Cell>
                         <Table.Cell>{sources.join(", ")}</Table.Cell>
                         <Table.Cell>
@@ -644,7 +644,7 @@ export const BroadcastTab = () => {
                             aria-label="Remove recipient"
                             size="xs"
                             variant="ghost"
-                            onClick={() => removeRecipient(user.user_tg_id)}
+                            onClick={() => removeRecipient(user.id)}
                           >
                             <FaTimes />
                           </IconButton>
