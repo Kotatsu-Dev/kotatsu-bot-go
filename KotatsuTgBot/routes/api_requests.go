@@ -144,12 +144,10 @@ func Handler_API_Requests_UpdateObject_Choice(c *gin.Context) {
 		}
 
 		if status == 1 {
-			params.Text = "Котацу анимэ-бу э ёукосо! Твоя заявка на вступление в клуб принята, поздравляю!"
+			params.Text = config.T("request.accepted")
 			params.ReplyMarkup = keyboards.Keyboard_MainMenuButtonsClubMember
 		} else {
-			params.Text = "К сожалению, заявка на вступление в клуб отклонена :(" + "\n" +
-				"Если руководитель не связывался с тобой, напиши в сообщения канала @anime_itmo (значок чата внизу канала)" + "\n" +
-				"Напомним, что посещать мероприятия можно без вступления в клуб"
+			params.Text = config.T("request.declined")
 		}
 
 		// Удаляем заявку по ID
