@@ -8,7 +8,6 @@ export const User = z.object({
   created_at: z.iso.datetime({ offset: true }),
   step: z.int(),
   user_tg_id: z.int(), // Not particularly safe, but...
-  last_message_id: z.int(),
   user_name: z.string(),
   full_tg_name: z.string(),
   gender: z.enum(["male", "female", ""]).or(z.null()),
