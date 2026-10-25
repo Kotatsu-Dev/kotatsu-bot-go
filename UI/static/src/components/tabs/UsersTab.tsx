@@ -1,5 +1,7 @@
 import { handleError, useAPI } from "../../api/api";
 import {
+  Badge,
+  Box,
   Button,
   Card,
   Checkbox,
@@ -11,9 +13,12 @@ import {
   Field,
   Fieldset,
   Flex,
+  Float,
+  Grid,
   Group,
   Heading,
   Icon,
+  IconButton,
   Input,
   Link,
   Portal,
@@ -25,11 +30,12 @@ import {
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toaster } from "../ui/toaster";
 import type { User } from "@/api/users";
+import type { Activity } from "@/api/activities";
 import { formatDate, formatDistanceToNow } from "date-fns";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCalendarCheck, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   genders,
   itmoStatuses as statuses,
@@ -48,6 +54,9 @@ type Inputs = {
 };
 
 const PAGE_SIZE = 10;
+
+type UserEvent = { event: Activity; visited: boolean };
+const NO_EVENTS: UserEvent[] = [];
 
 type ClubFilter = "all" | "member" | "not_member";
 type GenderFilter = "all" | "male" | "female" | "unknown";
@@ -214,7 +223,86 @@ const UserEditDialog = (props: { value: User; reload: () => void }) => {
   );
 };
 
-const UserCard = memo((props: { value: User; reload: () => void }) => {
+const UserEventsDialog = (props: { events: UserEvent[] }) => {
+  return (
+    <Dialog.Root scrollBehavior={"inside"}>
+      <Box position={"relative"}>
+        <Dialog.Trigger asChild>
+          <IconButton variant={"outline"} aria-label={"User events"}>
+            <FaCalendarCheck />
+          </IconButton>
+        </Dialog.Trigger>
+        {props.events.length > 0 ? (
+          <Float>
+            <Badge size={"xs"} variant={"solid"} borderRadius={"full"}>
+              {props.events.length}
+            </Badge>
+          </Float>
+        ) : null}
+      </Box>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>User events</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              {props.events.length === 0 ? (
+                <Text textAlign={"center"} color={"fg.muted"}>
+                  No events
+                </Text>
+              ) : (
+                <Stack gap={2}>
+                  {props.events.map(({ event, visited }) => (
+                    <Grid
+                      key={event.id}
+                      templateColumns={"auto minmax(0, 1fr) auto"}
+                      alignItems={"center"}
+                      gap={3}
+                      px={3}
+                      py={2}
+                      borderWidth={"2px"}
+                      borderRadius={"md"}
+                      borderColor={
+                        visited ? "green.solid" : "border.emphasized"
+                      }
+                    >
+                      <Text
+                        color={"fg.muted"}
+                        fontVariantNumeric={"tabular-nums"}
+                      >
+                        {formatDate(event.date_meeting, "yyyy-MM-dd")}
+                      </Text>
+                      <Text truncate title={event.title}>
+                        {event.title}
+                      </Text>
+                      <Checkbox.Root
+                        checked={visited}
+                        readOnly
+                        colorPalette={"green"}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                      </Checkbox.Root>
+                    </Grid>
+                  ))}
+                </Stack>
+              )}
+            </Dialog.Body>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
+};
+
+type UserCardProps = { value: User; events: UserEvent[]; reload: () => void };
+
+const UserCard = memo((props: UserCardProps) => {
   const api = useAPI();
   const user = props.value;
 
@@ -408,7 +496,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
         </DataList.Root>
       </Card.Body>
       <Card.Footer>
-        <Group grow w={"full"}>
+        <Group grow flex={1}>
           {user.my_request ? (
             user.my_request.status == 0 ? (
               <>
@@ -432,6 +520,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
           {/* <Button colorPalette={"red"}>Delete</Button> */}
           <UserEditDialog {...props} />
         </Group>
+        <UserEventsDialog events={props.events} />
       </Card.Footer>
     </Card.Root>
   );
@@ -440,6 +529,7 @@ const UserCard = memo((props: { value: User; reload: () => void }) => {
 export const UsersTab = () => {
   const api = useAPI();
   const [users, setUsers] = useState<User[]>([]);
+  const [events, setEvents] = useState<Activity[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useDebounceValue("", 500);
   const [clubFilter, setClubFilter] = useState<ClubFilter>("all");
@@ -502,9 +592,35 @@ export const UsersTab = () => {
     setUsers(await api.users.getAll());
   }, []);
 
+  const loadEvents = useCallback(async () => {
+    try {
+      setEvents(await api.activities.getAll());
+    } catch (e) {
+      handleError(e);
+    }
+  }, []);
+
   useEffect(() => {
     loadUsers();
+    loadEvents();
   }, []);
+
+  // Мероприятия каждого пользователя, от новых к старым
+  const eventsByUserId = useMemo(() => {
+    const sorted = [...events].sort(
+      (a, b) =>
+        new Date(b.date_meeting).getTime() - new Date(a.date_meeting).getTime(),
+    );
+    const result = new Map<number, UserEvent[]>();
+    for (const event of sorted) {
+      for (const p of event.participants) {
+        const list = result.get(p.user_id) ?? [];
+        list.push({ event, visited: p.visited ?? false });
+        result.set(p.user_id, list);
+      }
+    }
+    return result;
+  }, [events]);
 
   return (
     <Container maxW={"lg"} mb={5}>
@@ -662,7 +778,12 @@ export const UsersTab = () => {
             items={currentUsers}
             pageSize={PAGE_SIZE}
             render={(user) => (
-              <UserCard key={user.id} value={user} reload={loadUsers} />
+              <UserCard
+                key={user.id}
+                value={user}
+                events={eventsByUserId.get(user.id) ?? NO_EVENTS}
+                reload={loadUsers}
+              />
             )}
           />
         )}

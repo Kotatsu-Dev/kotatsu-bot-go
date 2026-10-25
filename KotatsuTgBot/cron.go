@@ -104,16 +104,9 @@ func check_step(b *bot.Bot) {
 	users_outdated := db.DB_GET_Users_BY_Step(config.STEP_ACTIVITY_OUTDATED)
 
 	for _, user := range users_outdated {
-		text := "Ты прочитал(а) описание мероприятия, но не нажал(а) «Запиши меня».\n" +
-			"Если хочешь записаться на мероприятие, выбери его ещё раз и не забудь нажать кнопку под описанием."
-
-		if !user.IsITMO {
-			text += " Без записи я не смогу попросить для тебя пропуск в Университет."
-		}
-
 		params := &bot.SendMessageParams{
 			ChatID: user.UserTgID,
-			Text:   text,
+			Text:   config.TT("events.registration_reminder", user),
 		}
 
 		b.SendMessage(context.TODO(), params)

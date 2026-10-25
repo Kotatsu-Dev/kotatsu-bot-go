@@ -358,6 +358,7 @@ func AppointQuery(user *db.User_ReadJSON) Executor {
 	)
 }
 
+// TODO: format with a localization library (e.g. golang.org/x/text or goodsign/monday) instead of hand-written names
 func FormatDate(t time.Time) string {
 	var weekday, month string
 	switch t.Weekday() {
