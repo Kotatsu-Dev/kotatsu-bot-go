@@ -53,3 +53,13 @@ export const itmoTraitCollection = createListCollection({ items: itmoTraits });
 
 export const traitsOf = (itmoStatus: string | null | undefined): ItmoTrait[] =>
   ITMO_TRAITS[itmoStatus ?? ""] ?? ["unknown"];
+
+const ITMO_MEMBER_STATUSES = [
+  "student",
+  "employee",
+  "graduate_employee",
+  "student_employee",
+];
+
+export const isItmo = (itmoStatus: string | null | undefined): boolean =>
+  ITMO_MEMBER_STATUSES.includes(itmoStatus ?? "");

@@ -42,6 +42,7 @@ import {
   itmoTraits,
   traitsOf,
   type ItmoTrait,
+  isItmo,
 } from "../../constants/users";
 import { searchUsers } from "../../lib/userSearch";
 
@@ -306,12 +307,7 @@ const UserCard = memo((props: UserCardProps) => {
   const api = useAPI();
   const user = props.value;
 
-  const isItmo = [
-    "student",
-    "employee",
-    "graduate_employee",
-    "student_employee",
-  ].includes(user.itmo_status ?? "");
+  const fromItmo = isItmo(user.itmo_status);
 
   const acceptRequest = async () => {
     if (user.my_request) {
@@ -441,7 +437,7 @@ const UserCard = memo((props: UserCardProps) => {
           <DataList.Item>
             <DataList.ItemLabel>From ITMO</DataList.ItemLabel>
             <DataList.ItemValue>
-              {isItmo ? (
+              {fromItmo ? (
                 <Status.Root colorPalette={"green"}>
                   <Status.Indicator />
                   Yes

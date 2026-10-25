@@ -18,6 +18,7 @@ import {
   Heading,
   IconButton,
   Input,
+  Link,
   Portal,
   Stack,
   Status,
@@ -38,6 +39,7 @@ import { Calendar } from "../Calendar";
 import { PaginatedList } from "./PaginatedList";
 import { useDebounceValue } from "usehooks-ts";
 import { searchUsers } from "../../lib/userSearch";
+import { isItmo } from "../../constants/users";
 
 const PAGE_SIZE = 10;
 
@@ -323,7 +325,9 @@ const EventCard = (props: {
       const user = byId.get(raw.user_id);
       if (user) result.push(user);
     }
-    return result;
+    return result.sort(
+      (a, b) => a.full_name.localeCompare(b.full_name, "ru") || a.id - b.id,
+    );
   }, [event.participants, byId]);
 
   const participantIds = useMemo(
@@ -531,65 +535,84 @@ const EventCard = (props: {
                       <Table.Header>
                         <Table.Row>
                           <Table.ColumnHeader>Name</Table.ColumnHeader>
-                          <Table.ColumnHeader>Telegram</Table.ColumnHeader>
-                          <Table.ColumnHeader>From ITMO</Table.ColumnHeader>
-                          <Table.ColumnHeader>Phone Number</Table.ColumnHeader>
+                          <Table.ColumnHeader>Contacts</Table.ColumnHeader>
                           <Table.ColumnHeader>Visited</Table.ColumnHeader>
                           <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
                       </Table.Header>
                       <Table.Body>
-                        {participants.map((user) => (
-                          <Table.Row key={user.id}>
-                            <Table.Cell>{user.full_name}</Table.Cell>
-                            <Table.Cell>{user.user_name}</Table.Cell>
-                            <Table.Cell>
-                              {[
-                                "student",
-                                "employee",
-                                "graduate_employee",
-                                "student_employee",
-                              ].includes(user.itmo_status ?? "") ? (
-                                <Status.Root colorPalette={"green"}>
+                        {participants.map((user) => {
+                          const itmoTitle = isItmo(user.itmo_status)
+                            ? "From ITMO"
+                            : "Not from ITMO";
+                          return (
+                            <Table.Row key={user.id}>
+                              <Table.Cell title={itmoTitle}>
+                                <Status.Root
+                                  colorPalette={
+                                    isItmo(user.itmo_status) ? "green" : "red"
+                                  }
+                                >
                                   <Status.Indicator />
-                                  Yes
+                                  {user.full_name}
                                 </Status.Root>
-                              ) : (
-                                <Status.Root colorPalette={"red"}>
-                                  <Status.Indicator />
-                                  No
-                                </Status.Root>
-                              )}
-                            </Table.Cell>
-                            <Table.Cell>{user.phone_number}</Table.Cell>
-                            <Table.Cell>
-                              <Checkbox.Root
-                                aria-label="Visited"
-                                checked={
-                                  visitedOverrides.get(user.id) ??
-                                  visitedByUserId.get(user.id) ??
-                                  false
-                                }
-                                onCheckedChange={({ checked }) =>
-                                  setParticipantVisited(user, checked === true)
-                                }
-                              >
-                                <Checkbox.HiddenInput />
-                                <Checkbox.Control />
-                              </Checkbox.Root>
-                            </Table.Cell>
-                            <Table.Cell>
-                              <IconButton
-                                aria-label="Remove participant"
-                                size="xs"
-                                variant="ghost"
-                                onClick={() => removeParticipant(user)}
-                              >
-                                <FaTimes />
-                              </IconButton>
-                            </Table.Cell>
-                          </Table.Row>
-                        ))}
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Stack gap={0}>
+                                  {user.user_name && (
+                                    <Link
+                                      href={`tg://resolve?domain=${user.user_name}`}
+                                    >
+                                      @{user.user_name}
+                                    </Link>
+                                  )}
+                                  {user.isu && (
+                                    <Link
+                                      target="_blank"
+                                      href={`https://my.itmo.ru/persons/${user.isu}`}
+                                    >
+                                      ISU {user.isu}
+                                    </Link>
+                                  )}
+                                  {user.phone_number && (
+                                    <Link href={`tel:${user.phone_number}`}>
+                                      {user.phone_number}
+                                    </Link>
+                                  )}
+                                </Stack>
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Checkbox.Root
+                                  aria-label="Visited"
+                                  checked={
+                                    visitedOverrides.get(user.id) ??
+                                    visitedByUserId.get(user.id) ??
+                                    false
+                                  }
+                                  onCheckedChange={({ checked }) =>
+                                    setParticipantVisited(
+                                      user,
+                                      checked === true,
+                                    )
+                                  }
+                                >
+                                  <Checkbox.HiddenInput />
+                                  <Checkbox.Control />
+                                </Checkbox.Root>
+                              </Table.Cell>
+                              <Table.Cell>
+                                <IconButton
+                                  aria-label="Remove participant"
+                                  size="xs"
+                                  variant="ghost"
+                                  onClick={() => removeParticipant(user)}
+                                >
+                                  <FaTimes />
+                                </IconButton>
+                              </Table.Cell>
+                            </Table.Row>
+                          );
+                        })}
                       </Table.Body>
                     </Table.Root>
                   </Box>
