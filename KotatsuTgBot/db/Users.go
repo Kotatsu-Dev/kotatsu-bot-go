@@ -38,7 +38,6 @@ type User struct {
 	gorm.Model
 	Step                  int            `json:"step"`              // Текущий шаг
 	UserTgID              int64          `json:"user_tg_id"`        // ID пользователя в Телеграм
-	LastMessageID         int            `json:"last_message_id"`   // ID последнего сообщения от бота
 	UserName              string         `json:"user_name"`         // Имя пользователя в Телеграм
 	FullTgName            string         `json:"full_tg_name"`      // Полное имя пользователя в Телеграм
 	Gender                Gender         `json:"gender"`            // Пол пользователя
@@ -73,7 +72,6 @@ type User_ReadJSON struct {
 	CreatedAt             time.Time               `json:"created_at"`
 	Step                  int                     `json:"step"`
 	UserTgID              int64                   `json:"user_tg_id"`
-	LastMessageID         int                     `json:"last_message_id"`
 	UserName              string                  `json:"user_name"`
 	FullTgName            string                  `json:"full_tg_name"`
 	Gender                Gender                  `json:"gender"`
@@ -107,7 +105,6 @@ func (user *User) ToRead() *User_ReadJSON {
 		CreatedAt:             user.CreatedAt,
 		Step:                  user.Step,
 		UserTgID:              user.UserTgID,
-		LastMessageID:         user.LastMessageID,
 		UserName:              user.UserName,
 		FullTgName:            user.FullTgName,
 		Gender:                user.Gender,
@@ -245,9 +242,13 @@ func DB_UPDATE_User(update_json map[string]interface{}) (int, *User, bool) {
 			if v, ok := value.(int); ok && v != user.Step {
 				user.Step = v
 			}
-		case "last_message_id":
-			if v, ok := value.(int); ok && v != user.LastMessageID {
-				user.LastMessageID = v
+		case "user_name":
+			if v, ok := value.(string); ok && v != user.UserName {
+				user.UserName = v
+			}
+		case "full_tg_name":
+			if v, ok := value.(string); ok && v != user.FullTgName {
+				user.FullTgName = v
 			}
 		case "isu":
 			if v, ok := value.(string); ok && v != user.ISU {

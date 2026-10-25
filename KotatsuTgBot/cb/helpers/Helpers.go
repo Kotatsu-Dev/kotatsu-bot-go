@@ -356,11 +356,10 @@ func GetCurrentUser() ChainedExecutor[*db.User_ReadJSON] {
 
 func CreateOrGetUser() ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, update *models.Update) (*db.User_ReadJSON, bool) {
-		full_tg_name := update.Message.From.FirstName + " " + update.Message.From.LastName
 		user_to_add := db.User_CreateJSON{
 			UserTgID:   update.Message.From.ID,
 			UserName:   update.Message.From.Username,
-			FullTgName: full_tg_name,
+			FullTgName: FullTgName(update.Message.From),
 		}
 
 		code, user := db.DB_CREATE_User(&user_to_add)
@@ -395,8 +394,30 @@ func UpdateCurrentUser(user *db.User_ReadJSON, update map[string]any) (int, *db.
 	return db.DB_UPDATE_User(update_user)
 }
 
+func UpdateSender(update *models.Update) *models.User {
+	if update == nil {
+		return nil
+	}
+	if update.Message != nil && update.Message.From != nil {
+		return update.Message.From
+	}
+	if update.CallbackQuery != nil {
+		return &update.CallbackQuery.From
+	}
+	return nil
+}
+
+func FullTgName(tg_user *models.User) string {
+	return strings.TrimSpace(tg_user.FirstName + " " + tg_user.LastName)
+}
+
 func UpdateUser(user *db.User_ReadJSON, update map[string]any) ChainedExecutor[*db.User_ReadJSON] {
 	return Source(func(ctx context.Context, b *bot.Bot, upd *models.Update) (*db.User_ReadJSON, bool) {
+		update := maps.Clone(update)
+		if sender := UpdateSender(upd); sender != nil && sender.ID == user.UserTgID {
+			update["user_name"] = sender.Username
+			update["full_tg_name"] = FullTgName(sender)
+		}
 		code, updated, _ := UpdateCurrentUser(user, update)
 		if code != db.DB_ANSWER_SUCCESS {
 			return nil, false
