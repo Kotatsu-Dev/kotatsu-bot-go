@@ -354,7 +354,7 @@ const EventCard = (props: {
   const participantSearchResults = useMemo(() => {
     if (participantSearch.trim().length === 0) return [];
     return searchUsers(props.allUsers, participantSearch)
-      .filter((u) => !participantIds.has(u.user_tg_id))
+      .filter((u) => !participantIds.has(u.id))
       .slice(0, 8);
   }, [props.allUsers, participantSearch, participantIds]);
 
