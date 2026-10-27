@@ -306,6 +306,11 @@ const EventEditDialog = (props: { value: Activity; reload: () => void }) => {
   );
 };
 
+const contactLinkFocus = {
+  focusRing: "none",
+  focusVisibleRing: "outside",
+} as const;
+
 const EventCard = (props: {
   value: Activity;
   reload: () => void;
@@ -536,7 +541,7 @@ const EventCard = (props: {
                         <Table.Row>
                           <Table.ColumnHeader>Name</Table.ColumnHeader>
                           <Table.ColumnHeader>Contacts</Table.ColumnHeader>
-                          <Table.ColumnHeader>Visited</Table.ColumnHeader>
+                          <Table.ColumnHeader>Visit</Table.ColumnHeader>
                           <Table.ColumnHeader></Table.ColumnHeader>
                         </Table.Row>
                       </Table.Header>
@@ -561,21 +566,29 @@ const EventCard = (props: {
                                 <Stack gap={0}>
                                   {user.user_name && (
                                     <Link
+                                      {...contactLinkFocus}
                                       href={`tg://resolve?domain=${user.user_name}`}
                                     >
                                       @{user.user_name}
                                     </Link>
                                   )}
                                   {user.isu && (
-                                    <Link
-                                      target="_blank"
-                                      href={`https://my.itmo.ru/persons/${user.isu}`}
-                                    >
-                                      ISU {user.isu}
-                                    </Link>
+                                    <Text>
+                                      ISU:{" "}
+                                      <Link
+                                        {...contactLinkFocus}
+                                        target="_blank"
+                                        href={`https://my.itmo.ru/persons/${user.isu}`}
+                                      >
+                                        {user.isu}
+                                      </Link>
+                                    </Text>
                                   )}
                                   {user.phone_number && (
-                                    <Link href={`tel:${user.phone_number}`}>
+                                    <Link
+                                      {...contactLinkFocus}
+                                      href={`tel:${user.phone_number}`}
+                                    >
                                       {user.phone_number}
                                     </Link>
                                   )}
